@@ -90,6 +90,7 @@ sonar {
         property "sonar.organization", "final17"
         property "sonar.host.url", "https://sonarcloud.io"
         property "sonar.sources", "src/main/java"
+        property 'sonar.exclusions', jacocoExcludePatterns.join(",") // 제외
         property "sonar.tests", "src/test/java"
         property 'sonar.language', 'java'
         property 'sonar.sourceEncoding', 'UTF-8'
