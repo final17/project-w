@@ -11,7 +11,7 @@ import com.projectw.common.exceptions.AccessDeniedException;
 import com.projectw.common.exceptions.InvalidRequestException;
 import com.projectw.domain.auth.dto.AuthRequest;
 import com.projectw.domain.auth.dto.AuthResponse.Signup;
-import com.projectw.domain.user.entitiy.User;
+import com.projectw.domain.user.entity.User;
 import com.projectw.domain.user.repository.UserRepository;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
