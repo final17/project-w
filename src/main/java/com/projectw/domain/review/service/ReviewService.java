@@ -3,7 +3,7 @@ package com.projectw.domain.review.service;
 import com.projectw.domain.review.dto.request.ReviewRequestDto;
 import com.projectw.domain.review.dto.response.ReviewResponseDto;
 import com.projectw.domain.review.repository.ReviewRepository;
-import com.projectw.domain.user.entitiy.User;
+import com.projectw.domain.user.entity.User;
 import com.projectw.domain.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
