@@ -2,7 +2,6 @@ package com.projectw.domain.user.entity;
 
 import com.projectw.common.entity.Timestamped;
 import com.projectw.common.enums.UserRole;
-import com.projectw.domain.reservation.entity.Reservation;
 import com.projectw.security.AuthUser;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
