@@ -77,11 +77,11 @@ def jacocoExcludePatterns = [
         "**/*Resolver*",
         "**/test/**",
         "**/resources/**",
-        "**/entity/**/*",
-        "**/dto/**/*",
-        "**/security/**/",
-        "**/common/**/*",
-        "**/controller/**/*"
+        "**/entity/**",
+        "**/dto/**",
+        "**/security/**",
+        "**/common/**",
+        "**/controller/**"
 ]
 
 sonar {
