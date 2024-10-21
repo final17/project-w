@@ -46,4 +46,5 @@ public class User extends Timestamped {
         this.nickname = nickname;
         this.role = role;
     }
+    // hihi hi
 }
