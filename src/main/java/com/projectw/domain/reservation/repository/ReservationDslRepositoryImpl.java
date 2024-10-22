@@ -1,10 +1,6 @@
 package com.projectw.domain.reservation.repository;
 
 
-import static com.projectw.domain.reservation.entity.QReservation.reservation;
-import static com.projectw.domain.store.entity.QStore.store;
-import static com.projectw.domain.user.entity.QUser.user;
-
 import com.projectw.domain.reservation.dto.ReserveRequest;
 import com.projectw.domain.reservation.dto.ReserveResponse;
 import com.projectw.domain.reservation.entity.QReservation;
@@ -12,7 +8,6 @@ import com.projectw.domain.reservation.enums.ReservationStatus;
 import com.projectw.domain.reservation.enums.ReservationType;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.Wildcard;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.JPQLQuery;
@@ -24,8 +19,11 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.List;
+
+import static com.projectw.domain.reservation.entity.QReservation.reservation;
+import static com.projectw.domain.store.entity.QStore.store;
+import static com.projectw.domain.user.entity.QUser.user;
 
 @Slf4j
 @RequiredArgsConstructor
