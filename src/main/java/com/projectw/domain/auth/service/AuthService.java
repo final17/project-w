@@ -13,7 +13,7 @@ import com.projectw.domain.auth.dto.AuthResponse;
 import com.projectw.domain.auth.dto.AuthResponse.DuplicateCheck;
 import com.projectw.domain.auth.dto.AuthResponse.Reissue;
 import com.projectw.domain.auth.dto.AuthResponse.Signup;
-import com.projectw.domain.user.entitiy.User;
+import com.projectw.domain.user.entity.User;
 import com.projectw.domain.user.repository.UserRepository;
 import com.projectw.security.AuthUser;
 import com.projectw.security.JwtUtil;

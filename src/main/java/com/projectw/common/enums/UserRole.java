@@ -1,15 +1,17 @@
 package com.projectw.common.enums;
 
-import java.util.Arrays;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+
+import java.util.Arrays;
 
 @Getter
 @RequiredArgsConstructor
 public enum UserRole {
 
     ROLE_USER(Authority.USER),
-    ROLE_ADMIN(Authority.ADMIN);
+    ROLE_ADMIN(Authority.ADMIN),
+    ROLE_OWNER(Authority.OWNER);
 
     private final String userRole;
 
@@ -23,5 +25,6 @@ public enum UserRole {
     public static class Authority {
         public static final String USER = "ROLE_USER";
         public static final String ADMIN = "ROLE_ADMIN";
+        public static final String OWNER = "ROLE_OWNER";
     }
 }
