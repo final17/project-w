@@ -16,6 +16,7 @@ public class StoreResponseDto {
     private LocalTime lastOrder;
     private LocalTime closeTime;
     private LocalTime turnover;
+    private Long reservationTableCount;
     private Long tableCount;
     private String phoneNumber;
     private String address;
@@ -29,6 +30,7 @@ public class StoreResponseDto {
         lastOrder = saveStore.getLastOrder();
         closeTime = saveStore.getCloseTime();
         turnover = saveStore.getTurnover();
+        reservationTableCount = saveStore.getReservationTableCount();
         tableCount = saveStore.getTableCount();
         phoneNumber = saveStore.getPhoneNumber();
         address = saveStore.getAddress();
