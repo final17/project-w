@@ -1,4 +1,4 @@
-package com.projectw.domain.notification;
+package com.projectw.domain.notification.client;
 
 public interface MessageClient {
 

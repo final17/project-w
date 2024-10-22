@@ -1,4 +1,4 @@
-package com.projectw.domain.notification;
+package com.projectw.domain.notification.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.slack.api.Slack;

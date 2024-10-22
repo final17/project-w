@@ -4,8 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.projectw.common.annotations.SlackAlert;
 import com.projectw.common.utils.CustomSpringELParser;
-import com.projectw.domain.notification.MessageClient;
-import com.projectw.domain.notification.SlackClient;
+import com.projectw.domain.notification.client.MessageClient;
+import com.projectw.domain.notification.client.SlackClient;
 import com.projectw.security.AuthUser;
 import com.projectw.security.JwtAuthenticationToken;
 import io.jsonwebtoken.lang.Objects;
@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.expression.ExpressionException;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.access.intercept.FilterSecurityInterceptor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 

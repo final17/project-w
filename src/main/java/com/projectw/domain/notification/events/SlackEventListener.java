@@ -1,5 +1,7 @@
-package com.projectw.domain.notification;
+package com.projectw.domain.notification.events;
 
+import com.projectw.domain.notification.client.MessageClient;
+import com.projectw.domain.notification.client.SlackClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
