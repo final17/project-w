@@ -1,5 +1,6 @@
 package com.projectw.common.config;
 
+import com.projectw.common.enums.UserRole;
 import com.projectw.security.SecurityFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -39,6 +40,9 @@ public class WebSecurityConfig {
                 .requestMatchers("/auth/signup", "/auth/login", "/auth/reissue").permitAll()
                 .requestMatchers("/user/**").permitAll()
                 .requestMatchers("/auth/logout").authenticated()
+                .requestMatchers("/api/v1/user/**").hasAnyAuthority(UserRole.Authority.USER, UserRole.Authority.ADMIN)
+                .requestMatchers("/api/v1/owner/**").hasAnyAuthority(UserRole.Authority.OWNER, UserRole.Authority.ADMIN)
+                .requestMatchers("/api/v1/admin/**").hasAuthority(UserRole.Authority.ADMIN)
                 .anyRequest().authenticated()
             );
         http.formLogin((x)->x.loginPage("/user/login"));
