@@ -3,18 +3,23 @@ package com.projectw.common.aop;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.projectw.common.annotations.SlackAlert;
+import com.projectw.common.utils.CustomSpringELParser;
 import com.projectw.domain.notification.MessageClient;
 import com.projectw.domain.notification.SlackClient;
 import com.projectw.security.AuthUser;
 import com.projectw.security.JwtAuthenticationToken;
 import io.jsonwebtoken.lang.Objects;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.expression.ExpressionException;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -23,9 +28,12 @@ import java.lang.reflect.Method;
 import java.text.MessageFormat;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 @Component
 @Aspect
+@Slf4j
 @RequiredArgsConstructor
 public class SlackAlertAop {
 
@@ -33,7 +41,6 @@ public class SlackAlertAop {
     private String defaultSlackWebhookUrl;  // 여기에서 설정 값 주입
 
     private final MessageClient slackClient;
-
     private final ObjectMapper objectMapper;
 
 
@@ -57,6 +64,14 @@ public class SlackAlertAop {
         } finally {
             Method method = ((MethodSignature) joinPoint.getSignature()).getMethod();
             SlackAlert annotation = method.getAnnotation(SlackAlert.class);
+            Secured secured = method.getAnnotation(Secured.class);
+            String[] authorities = secured.value();
+
+            // 스프링 EL 파싱
+            String[] spELs = annotation.requestEL();
+
+            Map<String, Object> objects = parseSpEl(joinPoint, annotation, spELs);
+
             String webhookUrl = StringUtils.hasText(annotation.hookUrl()) ? annotation.hookUrl() : defaultSlackWebhookUrl;
             String msg = isExceptionOccurred
                     ? "["+ exception.getClass().getSimpleName() + "] " + (StringUtils.hasText(annotation.onFailure()) ? annotation.onFailure() : exception.getMessage())
@@ -77,15 +92,16 @@ public class SlackAlertAop {
                     "\n"+"""
                 ```
                 🔔 [Slack Alert] 🔔
-                
-                👤 Auth: {0}
-                📌 Method: {1}
-                ✉️ Message: {2}
-                {6} Result: {3}
-                ⏳ ExecutionTime: {4}ms
-                🕒 Timestamp: {5}{7}
+                🔒 Method Secured: {0}
+                👤 Auth: {1}
+                📌 Method: {2}
+                ✉️ Message: {3}
+                {6} Result: {4}
+                ⏳ ExecutionTime: {5}ms
+                🕒 Timestamp: {7}{8}{9}
                 ```
                 """ +"\n",
+                    authorities == null ? "NONE" : String.join(",", authorities),
                     authInfo,
                     joinPoint.getSignature().toShortString(),
                     msg,
@@ -93,6 +109,7 @@ public class SlackAlertAop {
                     executionTime,
                     LocalDateTime.now().toString(),
                     isExceptionOccurred ? "🔴" : "🟢",
+                    objects.isEmpty() ? "" :  "\n\n💾 Request Data\n" + getPrettyString(objects),
                     annotation.attachResult() ? (isExceptionOccurred ? "" :  "\n\n💾 Result Data\n" + getPrettyString(result)) : ""
             );
 
@@ -101,6 +118,26 @@ public class SlackAlertAop {
     }
 
 
+    private Map<String, Object> parseSpEl(JoinPoint joinPoint, SlackAlert annotation, String[] request) {
+        // 스프링 EL 파싱
+        String[] spELs = annotation.requestEL();
+        if(spELs == null || spELs.length == 0) {
+            return Map.of();
+        }
+
+        Map<String, Object> objects = new HashMap<>();
+        for(String spEl : spELs) {
+            try {
+                Object requestData = CustomSpringELParser.getDynamicValue(((MethodSignature) joinPoint.getSignature()).getParameterNames(), joinPoint.getArgs(), spEl);
+                spEl = spEl.substring(1);
+                objects.put(spEl, requestData);
+            } catch (ExpressionException e) {
+                log.error("SpEL parse Failed: {}",e.getExpressionString());
+            }
+        }
+
+        return objects;
+    }
     private String getPrettyString(Object  object) throws JsonProcessingException {
         if(Objects.nullSafeEquals(object, null)) {
             return "";

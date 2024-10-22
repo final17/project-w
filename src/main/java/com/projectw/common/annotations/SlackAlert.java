@@ -11,6 +11,8 @@ public @interface SlackAlert {
 
     String onSuccess() default "";
     String onFailure() default "";
-    boolean attachResult() default false;
     String hookUrl() default "";
+
+    boolean attachResult() default false;
+    String[] requestEL() default "";
 }
