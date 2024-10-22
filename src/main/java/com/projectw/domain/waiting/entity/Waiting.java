@@ -1,14 +1,17 @@
 package com.projectw.domain.waiting.entity;
 
 import com.projectw.common.entity.Timestamped;
+import com.projectw.domain.store.entity.Store;
 import com.projectw.domain.user.entity.User;
 import com.projectw.domain.waiting.enums.WaitingStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "waiting")
+@Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Waiting extends Timestamped {
     @Id
@@ -18,6 +21,9 @@ public class Waiting extends Timestamped {
     @Column(nullable = false)
     @Enumerated(value = EnumType.STRING)
     private WaitingStatus status;
+
+    @Column(nullable = false)
+    private boolean completed = false;
 
     @Column(nullable = false)
     private String waitDt;
@@ -32,8 +38,7 @@ public class Waiting extends Timestamped {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "store_id", nullable = false)
-//    private Store store;
-
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "store_id", nullable = false)
+    private Store store;
 }

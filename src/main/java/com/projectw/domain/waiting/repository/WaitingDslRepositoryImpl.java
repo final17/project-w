@@ -4,7 +4,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class WaitingRepositoryQueryImpl implements WaitingRepositoryQuery {
+public class WaitingDslRepositoryImpl implements WaitingDslRepository {
     private final JPAQueryFactory jpaQueryFactory;
 
 }

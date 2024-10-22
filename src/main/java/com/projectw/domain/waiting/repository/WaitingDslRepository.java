@@ -1,4 +1,4 @@
 package com.projectw.domain.waiting.repository;
 
-public interface WaitingRepositoryQuery {
+public interface WaitingDslRepository {
 }

@@ -1,5 +1,7 @@
 package com.projectw.domain.review.entity;
 
+import com.projectw.domain.store.entity.Store;
+import com.projectw.domain.waiting.entity.Waiting;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,5 +19,14 @@ public class Review {
     @Column(nullable = true)
     private String contents;
 
+    private String image;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "store_id")
+    private Store store;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "waiting_id")
+    private Waiting waiting;
 
 }
