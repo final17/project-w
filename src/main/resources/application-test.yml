@@ -15,10 +15,6 @@ spring:
         format_sql: true
         show_sql: true
         use_sql_comments: true
-  data:
-    redis:
-      host: ${HOST_IP}
-      port: 6379
 redis:
   cluster:
     nodes: "${HOST_IP}:7001,${HOST_IP}:7002,${HOST_IP}:7003,${HOST_IP}:7004,${HOST_IP}:7005,${HOST_IP}:7006"
