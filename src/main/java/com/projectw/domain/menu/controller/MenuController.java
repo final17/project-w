@@ -60,4 +60,15 @@ public class MenuController {
         List<MenuResponseDto> menus = menuService.getOwnerMenus(authUser, storeId);
         return ResponseEntity.ok(SuccessResponse.of(menus));
     }
+
+    // 오너만 메뉴 삭제 가능
+    @DeleteMapping("/owner/stores/{storeId}/menus/{menuId}")
+    public ResponseEntity<SuccessResponse<Void>> deleteMenu(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long storeId,
+            @PathVariable Long menuId) {
+
+        menuService.deleteMenu(authUser, storeId, menuId);
+        return ResponseEntity.ok(SuccessResponse.empty());
+    }
 }

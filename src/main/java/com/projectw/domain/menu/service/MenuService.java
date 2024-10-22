@@ -134,4 +134,26 @@ public class MenuService {
                 )
         ).collect(Collectors.toList());
     }
+
+    // 메뉴 삭제 (ROLE_OWNER 권한만 가능)
+    public void deleteMenu(AuthUser authUser, Long storeId, Long menuId) {
+        // 오너 권한 확인
+        if (authUser.getRole() != UserRole.ROLE_OWNER) {
+            throw new AccessDeniedException(ResponseCode.FORBIDDEN); // 권한 없음 예외 처리
+        }
+
+        // 스토어 및 메뉴 조회
+        Store store = storeRepository.findById(storeId)
+                .orElseThrow(() -> new IllegalArgumentException("스토어를 찾을 수 없습니다."));
+        Menu menu = menuRepository.findById(menuId)
+                .orElseThrow(() -> new IllegalArgumentException("메뉴를 찾을 수 없습니다."));
+
+        // 메뉴가 해당 스토어에 속해 있는지 확인
+        if (!menu.getStore().getId().equals(store.getId())) {
+            throw new AccessDeniedException(ResponseCode.FORBIDDEN); // 스토어 주인이 아닌 경우 예외 처리
+        }
+
+        // 메뉴 삭제
+        menuRepository.delete(menu);
+    }
 }

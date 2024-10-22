@@ -16,4 +16,8 @@ public class SuccessResponse<T> extends BaseResponse {
     public static <T> SuccessResponse<T> of(T data) {
         return new SuccessResponse<>(data);
     }
+
+    public static SuccessResponse<Void> empty() {
+        return new SuccessResponse<>(null);
+    }
 }
