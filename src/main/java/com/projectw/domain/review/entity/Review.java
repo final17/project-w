@@ -1,7 +1,7 @@
 package com.projectw.domain.review.entity;
 
+import com.projectw.domain.reservation.entity.Reservation;
 import com.projectw.domain.store.entity.Store;
-import com.projectw.domain.waiting.entity.Waiting;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,7 +26,7 @@ public class Review {
     private Store store;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "waiting_id")
-    private Waiting waiting;
+    @JoinColumn(name = "reservation_id")
+    private Reservation reservation;
 
 }
