@@ -1,7 +1,7 @@
 package com.projectw.domain.waiting.entity;
 
 import com.projectw.common.entity.Timestamped;
-import com.projectw.domain.user.entitiy.User;
+import com.projectw.domain.user.entity.User;
 import jakarta.persistence.*;
 
 @Entity
