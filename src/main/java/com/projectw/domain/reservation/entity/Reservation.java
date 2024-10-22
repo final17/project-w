@@ -1,7 +1,6 @@
 package com.projectw.domain.reservation.entity;
 
 import com.projectw.common.entity.Timestamped;
-import com.projectw.domain.reservation.enums.ReservationStatus;
 import com.projectw.domain.store.entity.Store;
 import com.projectw.domain.user.entity.User;
 import jakarta.persistence.*;
@@ -18,9 +17,9 @@ public class Reservation extends Timestamped {
     private Long id;
 
 
-    @Column(nullable = false)
-    @Enumerated(value = EnumType.STRING)
-    private ReservationStatus status;  // 상태값 웨이팅 , 예약에 같은 기준으로 묶을수 있는거 명칭
+//    @Column(nullable = false)
+//    @Enumerated(value = EnumType.STRING)
+//    private ReservationStatus status;  // 상태값 웨이팅 , 예약에 같은 기준으로 묶을수 있는거 명칭
 
     @Column(nullable = false)
     private String type; // 예약 , 웨이팅
