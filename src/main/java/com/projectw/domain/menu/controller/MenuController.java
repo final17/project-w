@@ -10,9 +10,10 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/owner/stores/{storeId}/menus")
+@RequestMapping("/api/v1")
 public class MenuController {
 
     private final MenuService menuService;
@@ -21,7 +22,7 @@ public class MenuController {
         this.menuService = menuService;
     }
 
-    @PostMapping
+    @PostMapping("/owner/stores/{storeId}/menus")
     public ResponseEntity<SuccessResponse<MenuResponseDto>> createMenu(
             @AuthenticationPrincipal AuthUser authUser,
             @RequestBody MenuRequestDto menuRequestDto,
@@ -32,7 +33,7 @@ public class MenuController {
         return ResponseEntity.ok(SuccessResponse.of(menuResponseDto));
     }
 
-    @PutMapping("/{menuId}")
+    @PutMapping("/owner/stores/{storeId}/menus/{menuId}")
     public ResponseEntity<SuccessResponse<MenuResponseDto>> updateMenu(
             @AuthenticationPrincipal AuthUser authUser,
             @RequestBody MenuRequestDto requestDto,
@@ -41,5 +42,22 @@ public class MenuController {
 
         MenuResponseDto menuResponseDto = menuService.updateMenu(authUser, requestDto, storeId, menuId);
         return ResponseEntity.ok(SuccessResponse.of(menuResponseDto));
+    }
+
+    // 모든 유저가 특정 가게의 메뉴 조회
+    @GetMapping("/user/stores/{storeId}/menus")
+    public ResponseEntity<SuccessResponse<List<MenuResponseDto>>> getMenusByStore(@PathVariable Long storeId) {
+        List<MenuResponseDto> menus = menuService.getMenusByStore(storeId);
+        return ResponseEntity.ok(SuccessResponse.of(menus));
+    }
+
+    // 오너가 자신의 가게 메뉴 조회
+    @GetMapping("/owner/stores/{storeId}/menus")
+    public ResponseEntity<SuccessResponse<List<MenuResponseDto>>> getOwnerMenus(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long storeId) {
+
+        List<MenuResponseDto> menus = menuService.getOwnerMenus(authUser, storeId);
+        return ResponseEntity.ok(SuccessResponse.of(menus));
     }
 }

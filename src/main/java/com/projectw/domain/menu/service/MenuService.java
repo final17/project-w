@@ -15,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -88,5 +90,48 @@ public class MenuService {
                 updatedMenu.getAllergies(),
                 updatedMenu.getMenuImageUrl()
         );
+    }
+
+    // 모든 유저가 특정 가게의 메뉴 조회
+    public List<MenuResponseDto> getMenusByStore(Long storeId) {
+        // 스토어 조회
+        Store store = storeRepository.findById(storeId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 스토어를 찾을 수 없습니다."));
+
+        // 해당 가게의 메뉴 조회
+        List<Menu> menus = menuRepository.findAllByStore(store);
+
+        return menus.stream().map(menu ->
+                new MenuResponseDto(
+                        menu.getId(),
+                        menu.getName(),
+                        menu.getPrice(),
+                        menu.getAllergies(),
+                        menu.getMenuImageUrl()
+                )
+        ).collect(Collectors.toList());
+    }
+
+    // 오너가 자신의 가게 메뉴만 조회
+    public List<MenuResponseDto> getOwnerMenus(AuthUser authUser, Long storeId) {
+        if (authUser.getRole() != UserRole.ROLE_OWNER) {
+            throw new AccessDeniedException(ResponseCode.FORBIDDEN);
+        }
+
+        Store store = storeRepository.findById(storeId)
+                .orElseThrow(() -> new IllegalArgumentException("스토어를 찾을 수 없습니다."));
+
+        // 해당 스토어의 메뉴만 조회
+        List<Menu> menus = menuRepository.findAllByStore(store);
+
+        return menus.stream().map(menu ->
+                new MenuResponseDto(
+                        menu.getId(),
+                        menu.getName(),
+                        menu.getPrice(),
+                        menu.getAllergies(),
+                        menu.getMenuImageUrl()
+                )
+        ).collect(Collectors.toList());
     }
 }
