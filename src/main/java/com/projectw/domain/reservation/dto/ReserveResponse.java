@@ -1,22 +1,37 @@
 package com.projectw.domain.reservation.dto;
 
-import com.projectw.common.enums.ReservationStatus;
-import com.projectw.domain.reservation.dto.ReserveResponse.Info;
+import com.projectw.domain.reservation.enums.ReservationStatus;
+import com.projectw.domain.reservation.enums.ReservationType;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 
-public sealed interface ReserveResponse permits Info {
-
-    record Info (
-            Long reserveId,
+public sealed interface ReserveResponse permits ReserveResponse.Infos, ReserveResponse.Info {
+    record Infos (
             Long userId,
             Long storeId,
-            Long reservationNumber,
-            Integer numberOfGuests,
+            Long reserveId,
+            Long reservationNo,
+            Long numberPeople,
             LocalDate reservationDate,
             LocalTime reservationTime,
+            ReservationType type,
             ReservationStatus status
     ) implements ReserveResponse {
+    }
+
+    record Info (
+            Long userId,
+            Long storeId,
+            Long reserveId,
+            Long reservationNo,
+            Long numberPeople,
+            Long remainTime,
+            LocalDate reservationDate,
+            LocalTime reservationTime,
+            ReservationType type,
+            ReservationStatus status
+    ) implements ReserveResponse {
+
     }
 }
