@@ -92,18 +92,18 @@ public class ReservationController {
 
     @Secured({UserRole.Authority.OWNER})
     @GetMapping("/onwer")
-    public ResponseEntity<SuccessResponse<Page<ReserveResponse.Infos>>> getOnwerReservation(
+    public ResponseEntity<SuccessResponse<Page<ReserveResponse.Infos>>> getOnwerReservations(
             @AuthenticationPrincipal AuthUser authUser ,
             @ModelAttribute ReserveRequest.Parameter parameter) {
-        return ResponseEntity.ok(SuccessResponse.of(reservationService.getOnwerReservation(authUser.getUserId() , parameter)));
+        return ResponseEntity.ok(SuccessResponse.of(reservationService.getOnwerReservations(authUser.getUserId() , parameter)));
     }
 
     @Secured({UserRole.Authority.USER})
     @GetMapping("/user")
-    public ResponseEntity<SuccessResponse<Page<ReserveResponse.Infos>>> getUserReservation(
+    public ResponseEntity<SuccessResponse<Page<ReserveResponse.Infos>>> getUserReservations(
             @AuthenticationPrincipal AuthUser authUser ,
             @ModelAttribute ReserveRequest.Parameter parameter) {
-        return ResponseEntity.ok(SuccessResponse.of(reservationService.getUserReservation(authUser.getUserId() , parameter)));
+        return ResponseEntity.ok(SuccessResponse.of(reservationService.getUserReservations(authUser.getUserId() , parameter)));
     }
 
     @Secured({UserRole.Authority.USER})
@@ -111,7 +111,6 @@ public class ReservationController {
     public ResponseEntity<SuccessResponse<ReserveResponse.Info>> getReservation(
             @AuthenticationPrincipal AuthUser authUser ,
             @PathVariable Long reservationId) {
-        reservationService.getReservation(authUser.getUserId() , reservationId);
-        return null;
+        return ResponseEntity.ok(SuccessResponse.of(reservationService.getReservation(authUser.getUserId() , reservationId)));
     }
 }
