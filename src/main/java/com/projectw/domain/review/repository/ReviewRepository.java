@@ -1,22 +1,24 @@
 package com.projectw.domain.review.repository;
 
 import com.projectw.domain.menu.entity.Menu;
-import com.projectw.domain.reservation.entity.Reservation;
 import com.projectw.domain.review.entity.Review;
 import com.projectw.domain.user.entity.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.List;
-
 public interface ReviewRepository extends JpaRepository<Review, Long>, ReviewDslRepository{
-    @Query("SELECT r FROM Review r " +
+    @Query("SELECT r, COUNT(rl) " +
+            "FROM Review r " +
             "JOIN FETCH r.user " +
             "JOIN FETCH r.reservation res " +
+            "LEFT JOIN Like rl ON rl.review = r " +
             "WHERE res.store = (SELECT m.store FROM Menu m WHERE m = :menu) " +
+            "GROUP BY r " +
             "ORDER BY r.createdAt DESC")
-    List<Review> findAllByMenuWithUser(@Param("menu") Menu menu);
+    Page<Object[]> findAllByMenuWithUserAndLikeCount(@Param("menu") Menu menu, Pageable pageable);
 
     @Query("SELECT COUNT(r) > 0 FROM Review r " +
             "WHERE r.user = :user " +
@@ -25,4 +27,6 @@ public interface ReviewRepository extends JpaRepository<Review, Long>, ReviewDsl
             @Param("user") User user,
             @Param("menu") Menu menu
     );
+
+
 }

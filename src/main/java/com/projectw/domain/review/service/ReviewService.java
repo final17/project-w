@@ -1,5 +1,6 @@
 package com.projectw.domain.review.service;
 
+import com.projectw.domain.like.repository.LikeRepository;
 import com.projectw.domain.menu.entity.Menu;
 import com.projectw.domain.menu.repository.MenuRepository;
 import com.projectw.domain.reservation.entity.Reservation;
@@ -16,6 +17,8 @@ import com.projectw.domain.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -32,6 +35,7 @@ public class ReviewService {
     private final MenuRepository menuRepository;
     private final UserRepository userRepository;
     private final ReservationRepository reservationRepository;
+    private final LikeRepository likeRepository;
 
     @Value("${DB_DIR}")
     private String fileDir;
@@ -83,17 +87,33 @@ public class ReviewService {
         }
 
         Review savedReview = reviewRepository.save(review);
-        return ReviewResponseDto.from(savedReview);
+        return ReviewResponseDto.from(savedReview, 0L, false);
     }
 
-    public List<ReviewResponseDto> getMenuReviews(Long menuId) {
+    public Page<ReviewResponseDto> getMenuReviews(Long menuId, Pageable pageable) {
         Menu menu = menuRepository.findById(menuId)
                 .orElseThrow(() -> new IllegalArgumentException("메뉴를 찾을 수 없습니다."));
 
-        return reviewRepository.findAllByMenuWithUser(menu).stream()
-                .map(ReviewResponseDto::from)
-                .collect(Collectors.toList());
+        Page<Object[]> reviewsWithCount = reviewRepository.findAllByMenuWithUserAndLikeCount(menu, pageable);
+
+        return reviewsWithCount.map(objects -> {
+            Review review = (Review) objects[0];
+            Long likeCount = (Long) objects[1];
+
+            return ReviewResponseDto.builder()
+                    .id(review.getId())
+                    .content(review.getContent())
+                    .rating(review.getRating())
+                    .username(review.getUser().getUsername())
+                    .createdAt(review.getCreatedAt())
+                    .likeCount(likeCount)
+                    .imageUrls(review.getImages().stream()
+                            .map(ReviewImage::getImageUrl)
+                            .collect(Collectors.toList()))
+                    .build();
+        });
     }
+
 
     @Transactional
     public ReviewResponseDto updateReview(Long reviewId, ReviewUpdateDto updateDto, String email) {
@@ -135,14 +155,23 @@ public class ReviewService {
         // 리뷰 내용과 평점 업데이트
         review.update(updateDto.getContent(), updateDto.getRating());
 
-        return ReviewResponseDto.from(review);
+        Long likeCount = likeRepository.countByReview(review);
+
+        // 현재 사용자의 좋아요 여부 확인
+        boolean liked = likeRepository.existsByReviewAndUser(review, user);
+
+        return ReviewResponseDto.from(review, likeCount, liked);
     }
 
     public ReviewResponseDto deleteReview(Long reviewId, String email) {
         Review review = reviewRepository.findById(reviewId).orElseThrow(()-> new IllegalArgumentException("리뷰를 찾을 수 없습니다."));
-        userRepository.findByEmail(email).orElseThrow(()-> new IllegalArgumentException("삭제 권한이 없습니다."));
+        User user = userRepository.findByEmail(email).orElseThrow(()-> new IllegalArgumentException("삭제 권한이 없습니다."));
         reviewRepository.delete(review);
-        return ReviewResponseDto.from(review);
+        Long likeCount = likeRepository.countByReview(review);
+
+        // 현재 사용자의 좋아요 여부 확인
+        boolean liked = likeRepository.existsByReviewAndUser(review, user);
+        return ReviewResponseDto.from(review, likeCount, liked);
 
 
     }

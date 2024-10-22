@@ -1,16 +1,15 @@
 package com.projectw.domain.review.controller;
 
-import com.projectw.common.dto.SuccessResponse;
 import com.projectw.domain.review.dto.request.ReviewRequestDto;
 import com.projectw.domain.review.dto.request.ReviewUpdateDto;
 import com.projectw.domain.review.dto.response.ReviewResponseDto;
 import com.projectw.domain.review.service.ReviewService;
 import com.projectw.security.AuthUser;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -45,8 +44,12 @@ public class ReviewController {
     }
 
     @GetMapping("/review/{menuId}")
-    public ResponseEntity<List<ReviewResponseDto>> getMenuReviews(@PathVariable Long menuId) {
-        List<ReviewResponseDto> reviews = reviewService.getMenuReviews(menuId);
+    public ResponseEntity<Page<ReviewResponseDto>> getMenuReviews(
+            @PathVariable Long menuId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<ReviewResponseDto> reviews = reviewService.getMenuReviews(menuId, pageable);
         return ResponseEntity.ok(reviews);
     }
 
@@ -54,6 +57,7 @@ public class ReviewController {
     public ResponseEntity<ReviewResponseDto> updateReview(
             @PathVariable Long reviewId,
             @Valid @ModelAttribute ReviewUpdateDto updateDto,
+            @RequestParam(value = "newImages", required = false) List<MultipartFile> images,
             @AuthenticationPrincipal AuthUser user
     ) {
         ReviewResponseDto responseDto = reviewService.updateReview(

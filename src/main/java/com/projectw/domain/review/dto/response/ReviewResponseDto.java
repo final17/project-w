@@ -23,10 +23,13 @@ public class ReviewResponseDto {
     private int rating;
     private String username;
     private String storeName;
+    private String menuName;
+    private Long likeCount;     // 좋아요 수
+    private boolean liked;      // 현재 사용자의 좋아요 여부
     private LocalDateTime reservationDate;
     private LocalDateTime createdAt;
 
-    public static ReviewResponseDto from(Review review) {
+    public static ReviewResponseDto from(Review review, Long likeCount, boolean liked) {
         return ReviewResponseDto.builder()
                 .id(review.getId())
                 .content(review.getContent())
@@ -34,10 +37,14 @@ public class ReviewResponseDto {
                 .username(review.getReservation().getUser().getNickname())
                 .storeName(review.getReservation().getStore().getTitle())
                 .reservationDate(review.getReservation().getCreatedAt())
+                .menuName(review.getReservation().getStore().getMenu().toString())
                 .createdAt(review.getCreatedAt())
+                .liked(liked)
+                .likeCount(likeCount)
                 .imageUrls(review.getImages().stream()
                         .map(ReviewImage::getImageUrl)
                         .collect(Collectors.toList()))
+
                 .build();
     }
 

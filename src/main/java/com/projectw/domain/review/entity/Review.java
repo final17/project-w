@@ -1,6 +1,7 @@
 package com.projectw.domain.review.entity;
 
 import com.projectw.common.entity.Timestamped;
+import com.projectw.domain.like.entity.Like;
 import com.projectw.domain.menu.entity.Menu;
 import com.projectw.domain.reservation.entity.Reservation;
 import com.projectw.domain.store.entity.Store;
@@ -43,6 +44,9 @@ public class Review extends Timestamped {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
+
+    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Like> likes = new ArrayList<>();
 
     @Builder
     public Review(String content, int rating, Reservation reservation) {
