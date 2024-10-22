@@ -3,13 +3,11 @@ package com.projectw.domain.menu.entity;
 
 import com.projectw.domain.store.entity.Store;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@AllArgsConstructor
 @NoArgsConstructor
 public class Menu {
     @Id
@@ -24,4 +22,12 @@ public class Menu {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "store_id")
     private Store store;
+
+    public Menu(String name, int price, String allergies, String menuImageUrl, Store store) {
+        this.name = name;
+        this.price = price;
+        this.allergies = allergies;
+        this.menuImageUrl = menuImageUrl;
+        this.store = store;
+    }
 }

@@ -2,3 +2,13 @@ spring:
   profiles:
     active: dev
     include: private
+
+cloud:
+  aws:
+    credentials:
+      access-key: ${AWS_ACCESS_KEY}
+      secret-key: ${AWS_SECRET_KEY}
+    s3:
+      bucket-name: ${AWS_S3_BUCKET}
+    region:
+      static: ${AWS_REGION}
