@@ -2,6 +2,7 @@ package com.projectw.domain.store.entity;
 
 import com.projectw.common.entity.Timestamped;
 import com.projectw.domain.reservation.entity.Reservation;
+import com.projectw.domain.store.dto.request.StoreRequestDto;
 import com.projectw.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.Builder;
@@ -31,10 +32,10 @@ public class Store extends Timestamped {
     private String description;
 
     @Column(nullable = false)
-    private LocalTime open;
+    private LocalTime openTime;
 
     @Column(nullable = false)
-    private LocalTime close;
+    private LocalTime closeTime;
 
     private Boolean isNextDay = false;
 
@@ -53,6 +54,9 @@ public class Store extends Timestamped {
     @Column(nullable = false)
     private LocalTime turnover;
 
+    @Column(nullable = false)
+    private Boolean isDeleted = false;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
     private User user;
@@ -61,12 +65,12 @@ public class Store extends Timestamped {
     private List<Reservation> reservations = new ArrayList<>();
 
     @Builder
-    public Store(String image, String title, String description, LocalTime open, LocalTime close, Boolean isNextDay, Long tableCount, String phoneNumber, String address, LocalTime lastOrder, LocalTime turnover, User user, List<Reservation> reservations) {
+    public Store(String image, String title, String description, LocalTime openTime, LocalTime closeTime, Boolean isNextDay, Long tableCount, String phoneNumber, String address, LocalTime lastOrder, LocalTime turnover, User user, List<Reservation> reservations) {
         this.image = image;
         this.title = title;
         this.description = description;
-        this.open = open;
-        this.close = close;
+        this.openTime = openTime;
+        this.closeTime = closeTime;
         this.isNextDay = isNextDay;
         this.tableCount = tableCount;
         this.phoneNumber = phoneNumber;
@@ -75,5 +79,23 @@ public class Store extends Timestamped {
         this.turnover = turnover;
         this.user = user;
         this.reservations = reservations;
+    }
+
+    public Store putStore(StoreRequestDto storeRequestDto) {
+        this.image = null;
+        this.title = storeRequestDto.getTitle();
+        this.description = storeRequestDto.getDescription();
+        this.openTime = storeRequestDto.getOpenTime();
+        this.lastOrder = storeRequestDto.getLastOrder();
+        this.closeTime = storeRequestDto.getCloseTime();
+        this.turnover = storeRequestDto.getTurnover();
+        this.tableCount = storeRequestDto.getTableCount();
+        this.address = storeRequestDto.getAddress();
+        this.isNextDay = openTime.isAfter(lastOrder);
+        return this;
+    }
+
+    public void deleteStore() {
+        this.isDeleted = true;
     }
 }
