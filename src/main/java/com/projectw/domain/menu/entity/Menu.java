@@ -1,5 +1,7 @@
 package com.projectw.domain.menu.entity;
 
+
+import com.projectw.domain.store.entity.Store;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -19,7 +21,7 @@ public class Menu {
     private String allergies; // 알레르기 정보
     private String menuImageUrl; // 메뉴 이미지 URL
 
-//    @ManyToOne
-//    @JoinColumn(name = "restaurant_id")
-//    private Restaurant restaurant;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "store_id")
+    private Store store;
 }

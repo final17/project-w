@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/restaurants")
+@RequestMapping("/stores")
 public class MenuController {
 
     private final MenuService menuService;

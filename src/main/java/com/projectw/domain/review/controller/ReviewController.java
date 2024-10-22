@@ -14,11 +14,11 @@ import org.springframework.web.bind.annotation.*;
 public class ReviewController {
     private final ReviewService reviewService;
 
-//    @PostMapping("/{menuId}")
-//    ResponseEntity<ReviewResponseDto> createReview(@PathVariable Long menuId,
-//                                                   @RequestBody ReviewRequestDto reviewRequestDto,
-//                                                   HttpServletRequest request) {
-//        String email = (String) request.getAttribute("email");
-//        ResponseEntity.ok(reviewService.createReview(menuId, reviewRequestDto, email));
-//    }
+    @PostMapping("/{menuId}")
+    ResponseEntity<ReviewResponseDto> createReview(@PathVariable Long menuId,
+                                                   @RequestBody ReviewRequestDto reviewRequestDto,
+                                                   HttpServletRequest request) {
+        String email = (String) request.getAttribute("email");
+        return ResponseEntity.ok(reviewService.createReview(menuId, reviewRequestDto, email));
+    }
 }
