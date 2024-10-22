@@ -4,7 +4,7 @@ import com.projectw.domain.auth.dto.AuthResponse.DuplicateCheck;
 import com.projectw.domain.auth.dto.AuthResponse.Reissue;
 import com.projectw.domain.auth.dto.AuthResponse.Login;
 import com.projectw.domain.auth.dto.AuthResponse.Signup;
-import com.projectw.domain.user.entitiy.User;
+import com.projectw.domain.user.entity.User;
 
 public sealed interface AuthResponse permits Signup, Login, Reissue, DuplicateCheck {
 
