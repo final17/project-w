@@ -9,4 +9,6 @@ public interface ReservationDslRepository {
     Page<ReserveResponse.Infos> getOwnerReservations(Long userId , ReserveRequest.Parameter parameter , Pageable pageable);
 
     Page<ReserveResponse.Infos> getUserReservations(Long userId , ReserveRequest.Parameter parameter , Pageable pageable);
+
+    ReserveResponse.Info getReservation(Long userId , Long reservationId);
 }
