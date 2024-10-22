@@ -12,6 +12,7 @@ public class StoreRequestDto {
     private LocalTime lastOrder;
     private LocalTime closeTime;
     private LocalTime turnover;
+    private Long reservationTableCount;
     private Long tableCount;
     private String phoneNumber;
     private String address;
