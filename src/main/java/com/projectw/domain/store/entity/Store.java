@@ -40,6 +40,9 @@ public class Store extends Timestamped {
     private Boolean isNextDay = false;
 
     @Column(nullable = false)
+    private Long reservationTableCount;
+
+    @Column(nullable = false)
     private Long tableCount;
 
     @Column(nullable = false)
