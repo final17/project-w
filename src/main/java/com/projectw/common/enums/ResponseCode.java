@@ -42,7 +42,8 @@ public enum ResponseCode {
     CANCEL_FORBIDDEN("해당 예약건은 취소가 불가능합니다."),
     REFUSAL_FORBIDDEN("해당 예약건은 거절이 불가능합니다."),
     APPLY_FORBIDDEN("해당 예약건은 거절이 불가능합니다."),
-    COMPLETE_FORBIDDEN("해당 예약건은 완료가 불가능합니다.");
+    COMPLETE_FORBIDDEN("해당 예약건은 완료가 불가능합니다."),
+    INVALID_RESERVATION_TIME("예약 불가능한 시간대입니다.");
 
 
     private final String message;

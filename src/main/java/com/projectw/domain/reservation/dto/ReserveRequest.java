@@ -1,9 +1,13 @@
 package com.projectw.domain.reservation.dto;
 
 
+import com.projectw.domain.reservation.enums.ReservationStatus;
+import com.projectw.domain.reservation.enums.ReservationType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Objects;
 
 public sealed interface ReserveRequest permits ReserveRequest.Wait , ReserveRequest.Reservation , ReserveRequest.Parameter {
@@ -13,9 +17,9 @@ public sealed interface ReserveRequest permits ReserveRequest.Wait , ReserveRequ
             @NotNull(message = "입장인원값은 필수입니다.")
             Long numberPeople,
             @NotBlank(message = "예약날짜는 필수입니다.")
-            String reservationDate,
+            LocalDate reservationDate,
             @NotBlank(message = "예약시간은 필수입니다.")
-            String reservationTime
+            LocalTime reservationTime
     ) implements ReserveRequest {}
 
     record Wait(
@@ -25,10 +29,10 @@ public sealed interface ReserveRequest permits ReserveRequest.Wait , ReserveRequ
     ) implements ReserveRequest {}
 
     record Parameter(
-            String type,
-            String status,
-            String startDt,
-            String endDt,
+            ReservationType type,
+            ReservationStatus status,
+            LocalDate startDt,
+            LocalDate endDt,
             Integer page,
             Integer size
     ) implements ReserveRequest {

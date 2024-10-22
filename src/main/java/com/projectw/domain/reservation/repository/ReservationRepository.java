@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
 import java.util.Optional;
 
 public interface ReservationRepository extends JpaRepository<Reservation, Long>, ReservationDslRepository {
@@ -18,4 +20,14 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long>,
 
     @Query("SELECT r FROM Reservation r INNER JOIN FETCH r.store s INNER JOIN FETCH s.user u WHERE r.id = :id")
     Optional<Reservation> findReservationById(@Param("id") Long id);
+
+    @Query("SELECT count(r) FROM Reservation r " +
+            "WHERE r.type = :type " +
+            "AND r.status NOT IN(:statuses) " +   // status에 여러 값
+            "AND r.reservationDate = :date " +
+            "AND r.reservationTime = :time")
+    long countReservationByDate(@Param("type") ReservationType type,
+                                @Param("statuses") List<ReservationStatus> statuses,
+                                @Param("date") LocalDate date,
+                                @Param("time") LocalTime time);
 }

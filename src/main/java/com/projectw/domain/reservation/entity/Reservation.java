@@ -35,10 +35,10 @@ public class Reservation extends Timestamped {
 
     private boolean menuYN; // 메뉴 선택 여부
 
-    @Column(nullable = false , columnDefinition = "date")
+    @Column(nullable = false)
     private LocalDate reservationDate;
 
-    @Column(nullable = false , columnDefinition = "time")
+    @Column(nullable = false)
     private LocalTime reservationTime;
 
     @Column(nullable = false)
