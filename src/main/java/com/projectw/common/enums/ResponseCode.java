@@ -32,7 +32,18 @@ public enum ResponseCode {
     CONNECTION_ERROR("연결 오류가 발생했습니다."),
 
     // token
-    INVALID_TOKEN("잘못된 ");
+    INVALID_TOKEN("잘못된 "),
+
+    // 웨이팅예약 , 예약
+    DUPLICATE_RESERVATION("이미 예약되어 있습니다."),
+    STORE_NOT_OPEN("해당 식당은 오픈중이지 않습니다."),
+    UNAUTHORIZED_RESERVATION("본인 예약 건이 아닙니다."),
+    UNAUTHORIZED_STORE_RESERVATION("본인 가게에는 예약이 불가능합니다."),
+    CANCEL_FORBIDDEN("해당 예약건은 취소가 불가능합니다."),
+    REFUSAL_FORBIDDEN("해당 예약건은 거절이 불가능합니다."),
+    APPLY_FORBIDDEN("해당 예약건은 거절이 불가능합니다."),
+    COMPLETE_FORBIDDEN("해당 예약건은 완료가 불가능합니다.");
+
 
     private final String message;
 }

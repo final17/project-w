@@ -11,6 +11,7 @@ public enum ReservationStatus {
     RESERVATION(Status.RESERVATION),
     CANCEL(Status.CANCEL),
     AUTOMATIC_CANCEL(Status.AUTOMATIC_CANCEL),
+    APPLY(Status.APPLY),
     COMPLETE(Status.COMPLETE);
 
     private final String status;
@@ -26,6 +27,7 @@ public enum ReservationStatus {
         public static final String RESERVATION = "RESERVATION";
         public static final String CANCEL = "CANCEL";
         public static final String AUTOMATIC_CANCEL = "AUTOMATIC_CANCEL";
+        public static final String APPLY = "APPLY";
         public static final String COMPLETE = "COMPLETE";
     }
 }
