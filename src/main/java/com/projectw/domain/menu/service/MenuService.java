@@ -35,13 +35,11 @@ public class MenuService {
         Store store = storeRepository.findById(storeId)
                 .orElseThrow(() -> new IllegalArgumentException("스토어를 찾을 수 없습니다."));
 
-//        // 사용자가 이 스토어의 주인인지 확인
-//        if (!store.getOwnerId().equals(authUser.getUserId())) {
-//            throw new AccessDeniedException(ResponseCode.FORBIDDEN); // 스토어 주인이 아닌 경우 예외 발생
-//        }
-
-        // S3에 이미지 업로드
-        String menuImageUrl = s3Service.uploadFile(requestDto.getMenuImage());
+        // S3에 이미지 업로드 (이미지가 있는 경우에만)
+        String menuImageUrl = null;
+        if (requestDto.getMenuImage() != null) {
+            menuImageUrl = s3Service.uploadFile(requestDto.getMenuImage());
+        }
 
         Menu menu = new Menu(
                 requestDto.getName(),
@@ -59,6 +57,36 @@ public class MenuService {
                 savedMenu.getPrice(),
                 savedMenu.getAllergies(),
                 savedMenu.getMenuImageUrl()
+        );
+    }
+
+    // 메뉴 수정 (ROLE_OWNER 권한만 가능)
+    public MenuResponseDto updateMenu(AuthUser authUser, MenuRequestDto requestDto, Long storeId, Long menuId) throws IOException {
+        // 사용자 권한 확인 (ROLE_OWNER만 메뉴 수정 가능)
+        if (authUser.getRole() != UserRole.ROLE_OWNER) {
+            throw new AccessDeniedException(ResponseCode.FORBIDDEN); // 권한 없을 때 예외 발생
+        }
+
+        // 메뉴 및 스토어 조회
+        Menu menu = menuRepository.findById(menuId)
+                .orElseThrow(() -> new IllegalArgumentException("메뉴를 찾을 수 없습니다."));
+        Store store = storeRepository.findById(storeId)
+                .orElseThrow(() -> new IllegalArgumentException(ResponseCode.NOT_FOUND_STORE.getMessage()));
+
+        // S3에 이미지 업로드 (이미지가 변경되었을 경우)
+        String menuImageUrl = requestDto.getMenuImage() != null ? s3Service.uploadFile(requestDto.getMenuImage()) : menu.getMenuImageUrl();
+
+        // 메뉴 수정
+        menu.updateMenu(requestDto.getName(), requestDto.getPrice(), requestDto.getAllergies(), menuImageUrl);
+        Menu updatedMenu = menuRepository.save(menu);
+
+        // MenuResponseDTO로 반환
+        return new MenuResponseDto(
+                updatedMenu.getId(),
+                updatedMenu.getName(),
+                updatedMenu.getPrice(),
+                updatedMenu.getAllergies(),
+                updatedMenu.getMenuImageUrl()
         );
     }
 }

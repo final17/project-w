@@ -30,4 +30,14 @@ public class Menu {
         this.menuImageUrl = menuImageUrl;
         this.store = store;
     }
+
+    // 메뉴 업데이트 메서드
+    public void updateMenu(String name, int price, String allergies, String menuImageUrl) {
+        this.name = name;
+        this.price = price;
+        this.allergies = allergies;
+        if (menuImageUrl != null) {
+            this.menuImageUrl = menuImageUrl;
+        }
+    }
 }

@@ -7,10 +7,9 @@ import com.projectw.domain.menu.service.MenuService;
 import com.projectw.security.AuthUser;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/v1/owner/stores/{storeId}/menus")
@@ -25,10 +24,22 @@ public class MenuController {
     @PostMapping
     public ResponseEntity<SuccessResponse<MenuResponseDto>> createMenu(
             @AuthenticationPrincipal AuthUser authUser,
-            @RequestBody MenuRequestDto menuRequestDto) {
+            @RequestBody MenuRequestDto menuRequestDto,
+            @PathVariable Long storeId) throws IOException {
 
-        MenuResponseDto menuResponseDto = null;
+        MenuResponseDto menuResponseDto = menuService.createMenu(authUser, menuRequestDto, storeId);
 
+        return ResponseEntity.ok(SuccessResponse.of(menuResponseDto));
+    }
+
+    @PutMapping("/{menuId}")
+    public ResponseEntity<SuccessResponse<MenuResponseDto>> updateMenu(
+            @AuthenticationPrincipal AuthUser authUser,
+            @RequestBody MenuRequestDto requestDto,
+            @PathVariable Long storeId,
+            @PathVariable Long menuId) throws IOException {
+
+        MenuResponseDto menuResponseDto = menuService.updateMenu(authUser, requestDto, storeId, menuId);
         return ResponseEntity.ok(SuccessResponse.of(menuResponseDto));
     }
 }
