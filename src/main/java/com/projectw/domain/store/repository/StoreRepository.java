@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 public interface StoreRepository extends JpaRepository<Store, Long>, StoreDslRepository{
     @Query("SELECT COUNT(s) FROM Store s " +
             "WHERE s.id = :id AND " +
-            "((s.open <= CURRENT_TIME AND s.close >= CURRENT_TIME AND s.close > s.open) " +  // 같은 날에 문을 닫는 경우
-            "OR (s.open <= CURRENT_TIME OR s.close >= CURRENT_TIME AND s.close < s.open))")  // 다음 날까지 문을 여는 경우
+            "((s.openTime <= CURRENT_TIME AND s.closeTime >= CURRENT_TIME AND s.closeTime > s.openTime) " +  // 같은 날에 문을 닫는 경우
+            "OR (s.openTime <= CURRENT_TIME OR s.closeTime >= CURRENT_TIME AND s.closeTime < s.openTime))")  // 다음 날까지 문을 여는 경우
     long countStoresOpenNow(Long id);
 }
