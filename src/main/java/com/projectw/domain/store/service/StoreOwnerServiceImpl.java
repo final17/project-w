@@ -42,6 +42,7 @@ public class StoreOwnerServiceImpl implements StoreOwnerService{
                 .isNextDay(storeRequestDto.getOpenTime().isAfter(storeRequestDto.getLastOrder()))
                 .closeTime(storeRequestDto.getCloseTime())
                 .turnover(storeRequestDto.getTurnover())
+                .reservationTableCount(storeRequestDto.getReservationTableCount())
                 .tableCount(storeRequestDto.getTableCount())
                 .phoneNumber(storeRequestDto.getPhoneNumber())
                 .address(storeRequestDto.getAddress())
