@@ -1,5 +1,6 @@
 package com.projectw.domain.menu.entity;
 
+
 import com.projectw.domain.store.entity.Store;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
