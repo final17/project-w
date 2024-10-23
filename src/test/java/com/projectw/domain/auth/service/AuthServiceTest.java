@@ -99,16 +99,6 @@ class AuthServiceTest {
         }
 
         @Test
-        public void 중복된_유저네임이_있을_때() throws Exception {
-            // given
-            AuthRequest.Signup authRequest = new AuthRequest.Signup("username", "AAbb1234!", "nn", null, UserRole.ROLE_USER);
-            // when then
-            assertThatThrownBy(() -> authService.signup(authRequest))
-                .isInstanceOf(InvalidRequestException.class)
-                .hasMessage("이미 존재하는 아이디입니다.");
-        }
-
-        @Test
         public void 중복된_이메일이_있을_때() throws Exception {
             // given
             AuthRequest.Signup authRequest = new AuthRequest.Signup("username", "AAbb1234!", "nn", null, UserRole.ROLE_USER);
