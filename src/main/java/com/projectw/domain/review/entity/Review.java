@@ -24,7 +24,10 @@ public class Review extends Timestamped {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = true)
+    @Column(nullable = false)
+    private String title;
+
+    @Column(nullable = false)
     private String content;
 
     @Column(nullable = false)
@@ -49,7 +52,8 @@ public class Review extends Timestamped {
     private List<Like> likes = new ArrayList<>();
 
     @Builder
-    public Review(String content, int rating, Reservation reservation) {
+    public Review(String title, String content, int rating, Reservation reservation) {
+        this.title = title;
         this.content = content;
         this.rating = rating;
         this.reservation = reservation;

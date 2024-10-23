@@ -3,10 +3,13 @@ package com.projectw.domain.reservation.repository;
 import com.projectw.domain.reservation.entity.Reservation;
 import com.projectw.domain.reservation.enums.ReservationStatus;
 import com.projectw.domain.reservation.enums.ReservationType;
+import com.projectw.domain.store.entity.Store;
+import com.projectw.domain.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.awt.print.Pageable;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
@@ -32,4 +35,17 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long>,
                                 @Param("time") LocalTime time);
 
     Optional<Reservation> findByIdAndStoreId(Long id, Long storeId);
+
+    @Query("SELECT r FROM Reservation r " +
+            "JOIN FETCH r.user u " +
+            "JOIN FETCH r.store s " +
+            "WHERE r.user = :user " +
+            "AND r.store = :store " +
+            "AND r.status = 'COMPLETE' " +
+            "ORDER BY r.createdAt DESC " +
+            "LIMIT 1")  // MySQL
+    Optional<Reservation> findByUserAndStore(
+            @Param("user") User user,
+            @Param("store") Store store
+    );
 }

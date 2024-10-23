@@ -21,6 +21,5 @@ public class ReviewRequestDto {
     @Min(value = 1, message = "평점은 1점 이상이어야 합니다.")
     @Max(value = 5, message = "평점은 5점 이하여야 합니다.")
     private int rating;
-    private List<MultipartFile> images;
 
 }

@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name = "likes")
 public class Like extends Timestamped {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
