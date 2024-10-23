@@ -23,16 +23,6 @@ public class ReservationController {
     private final ReservationService reservationService;
 
     @Secured({UserRole.Authority.USER})
-    @PostMapping("/store/{storeId}/wait")
-    public ResponseEntity<SuccessResponse<Void>> saveWait(
-            @AuthenticationPrincipal AuthUser authUser ,
-            @PathVariable Long storeId ,
-            @RequestBody ReserveRequest.Wait wait) {
-        reservationService.saveWait(authUser.getUserId() , storeId , wait);
-        return ResponseEntity.ok(SuccessResponse.of(null));
-    }
-
-    @Secured({UserRole.Authority.USER})
     @PostMapping("/store/{storeId}/reservation")
     public ResponseEntity<SuccessResponse<Void>> saveReservation(
             @AuthenticationPrincipal AuthUser authUser,
@@ -53,29 +43,10 @@ public class ReservationController {
     }
 
     @Secured({UserRole.Authority.USER})
-    @PatchMapping("/store/{storeId}/wait/{reservationId}")
-    public ResponseEntity<SuccessResponse<Void>> waitCancelReservation(
-            @AuthenticationPrincipal AuthUser authUser ,
-            @PathVariable Long storeId,
-            @PathVariable Long reservationId) {
-        reservationService.waitCancelReservation(authUser.getUserId() , storeId , reservationId);
-        return ResponseEntity.ok(SuccessResponse.of(null));
-    }
-
-    @Secured({UserRole.Authority.USER})
     @GetMapping("/reservations")
     public ResponseEntity<SuccessResponse<Page<ReserveResponse.Infos>>> getUserReservations(
             @AuthenticationPrincipal AuthUser authUser ,
             @ModelAttribute ReserveRequest.Parameter parameter) {
         return ResponseEntity.ok(SuccessResponse.of(reservationService.getUserReservations(authUser.getUserId() , parameter)));
-    }
-
-    @Secured({UserRole.Authority.USER})
-    @GetMapping("/store/{storeId}/info/{reservationId}")
-    public ResponseEntity<SuccessResponse<ReserveResponse.Info>> getReservation(
-            @AuthenticationPrincipal AuthUser authUser ,
-            @PathVariable Long storeId,
-            @PathVariable Long reservationId) {
-        return ResponseEntity.ok(SuccessResponse.of(reservationService.getReservation(authUser.getUserId() , storeId , reservationId)));
     }
 }
