@@ -1,4 +1,4 @@
-package com.projectw.domain.notification;
+package com.projectw.domain.waiting.service;
 
 import com.projectw.common.annotations.RedisLock;
 import com.projectw.common.enums.ResponseCode;
@@ -6,6 +6,7 @@ import com.projectw.common.exceptions.ForbiddenException;
 import com.projectw.common.exceptions.UserAlreadyInQueueException;
 import com.projectw.domain.notification.service.SseNotificationService;
 import com.projectw.domain.store.repository.StoreRepository;
+import com.projectw.domain.waiting.dto.WaitingQueueResponse;
 import com.projectw.security.AuthUser;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RScoredSortedSet;
@@ -41,12 +42,10 @@ public class WaitingQueueService {
         return notificationService.subscribe(getSseKey(storeId, String.valueOf(authUser.getUserId())), data);
     }
 
-    @RedisLock("#storeId")
+    @RedisLock(value = "#storeId")
     public void addUserToQueue(AuthUser authUser, long storeId){
-
         RScoredSortedSet<String> sortedSet = redissonClient.getScoredSortedSet(getRedisSortedSetKey(storeId));
         Integer rank = sortedSet.rank(String.valueOf(authUser.getUserId()));
-
         if(rank != null) {
             throw new UserAlreadyInQueueException(ResponseCode.ALREADY_WAITING);
         }
