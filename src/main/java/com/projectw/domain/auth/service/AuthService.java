@@ -7,6 +7,7 @@ import com.projectw.common.enums.UserRole;
 import com.projectw.common.exceptions.AccessDeniedException;
 import com.projectw.common.exceptions.InvalidRequestException;
 import com.projectw.common.exceptions.InvalidTokenException;
+import com.projectw.common.exceptions.NotFoundException;
 import com.projectw.domain.auth.dto.AuthRequest;
 import com.projectw.domain.auth.dto.AuthRequest.Login;
 import com.projectw.domain.auth.dto.AuthResponse;
@@ -59,15 +60,10 @@ public class AuthService {
             }
         }
 
-        String username = request.username();
         String password = passwordEncoder.encode(request.password());
         String email = request.email();
         String nickname = request.nickname();
 
-        // 회원 중복 확인
-        if (userRepository.existsByUsername(username)) {
-            throw new InvalidRequestException(ResponseCode.DUPLICATE_USERNAME);
-        }
 
         // email 중복확인
         if (userRepository.existsByEmail(email)) {
@@ -80,7 +76,7 @@ public class AuthService {
         }
 
         // 사용자 등록
-        User user = new User(username, password, email, nickname, request.userRole());
+        User user = new User(password, email, nickname, request.userRole());
         user = userRepository.save(user);
 
         return SuccessResponse.of(new AuthResponse.Signup(user.getId()));
@@ -92,8 +88,12 @@ public class AuthService {
      * @return
      */
     public SuccessResponse<AuthResponse.Login> login(Login request) {
-        User user = userRepository.findByUsername(request.username())
-            .orElseThrow(()-> new InvalidRequestException(ResponseCode.WRONG_USERNAME_OR_PASSWORD));
+        User user = userRepository.findByEmail(request.email())
+            .orElseThrow(()-> new InvalidRequestException(ResponseCode.WRONG_EMAIL_OR_PASSWORD));
+
+        if(user.isDeleted()) {
+            throw new InvalidRequestException(ResponseCode.ALREADY_DELETED_USER);
+        }
 
         if(!passwordEncoder.matches(request.password(), user.getPassword())) {
             throw new InvalidRequestException(ResponseCode.WRONG_PASSWORD);
@@ -221,14 +221,16 @@ public class AuthService {
     }
 
     /**
-     * 유저 아이디 중복 체크
-     * @param request
-     * @return
+     * 회원탈퇴
      */
-    public SuccessResponse<AuthResponse.DuplicateCheck> checkUsername(AuthRequest.CheckUsername request) {
-        DuplicateCheck duplicateCheck = new DuplicateCheck(
-            userRepository.existsByUsername(request.username()));
+    public void deleteAccount(AuthUser authUser) {
+        User user = userRepository.findById(authUser.getUserId())
+                .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_USER));
 
-        return SuccessResponse.of(duplicateCheck);
+        if(user.isDeleted()){
+            throw new InvalidRequestException(ResponseCode.ALREADY_DELETED_USER);
+        }
+
+        user.delete();
     }
 }

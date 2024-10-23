@@ -39,16 +39,14 @@ public class WebSecurityConfig {
             .httpBasic(AbstractHttpConfigurer::disable) // BasicAuthenticationFilter 비활성화
             .logout(AbstractHttpConfigurer::disable) // LogoutFilter 비활성화
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/signup", "/auth/login", "/auth/reissue").permitAll()
-                .requestMatchers("/user/**").permitAll()
-                .requestMatchers("/test/connect").permitAll()
+                .requestMatchers("/api/v1/auth/**").permitAll()
+                .requestMatchers("/api/v2/user/stores/*/waitings/connection").permitAll() // sse 연결끊으면 에러 때문에 permitAll 처리
                 .requestMatchers("/auth/logout").authenticated()
-                .requestMatchers("/api/v1/user/**").hasAnyAuthority(UserRole.Authority.USER, UserRole.Authority.ADMIN)
-                .requestMatchers("/api/v1/owner/**").hasAnyAuthority(UserRole.Authority.OWNER, UserRole.Authority.ADMIN)
-                .requestMatchers("/api/v1/admin/**").hasAuthority(UserRole.Authority.ADMIN)
+                .requestMatchers("/api/v1/user/**", "/api/v2/user/**").hasAnyAuthority(UserRole.Authority.USER, UserRole.Authority.ADMIN)
+                .requestMatchers("/api/v1/owner/**", "/api/v2/owner/**").hasAnyAuthority(UserRole.Authority.OWNER, UserRole.Authority.ADMIN)
+                .requestMatchers("/api/v1/owner/**", "/api/v2/owner/**").hasAuthority(UserRole.Authority.ADMIN)
                 .anyRequest().authenticated()
             );
-        http.formLogin((x)->x.loginPage("/user/login"));
         http.cors(c -> {
             c.configurationSource(corsConfigurationSource);});
 
