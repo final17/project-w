@@ -12,7 +12,6 @@ import com.projectw.domain.reservation.enums.ReservationStatus;
 import com.projectw.domain.reservation.enums.ReservationType;
 import com.projectw.domain.reservation.exception.DuplicateReservationException;
 import com.projectw.domain.reservation.exception.InvalidReservationTimeException;
-import com.projectw.domain.reservation.exception.StoreNotOpenException;
 import com.projectw.domain.reservation.repository.ReservationRepository;
 import com.projectw.domain.store.entity.Store;
 import com.projectw.domain.store.repository.StoreRepository;

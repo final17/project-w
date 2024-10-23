@@ -12,14 +12,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/v1")
 public class AuthController {
 
     private final AuthService authService;
@@ -44,6 +41,12 @@ public class AuthController {
         return ResponseEntity.ok(authService.reissue(refreshToken));
     }
 
+    @DeleteMapping("/auth/account")
+    public ResponseEntity<SuccessResponse<SuccessResponse<Void>>> account(@AuthenticationPrincipal AuthUser user) {
+        authService.deleteAccount(user);
+        return ResponseEntity.ok(SuccessResponse.of(null));
+    }
+
     @GetMapping("/auth/nickname/check")
     public ResponseEntity<SuccessResponse<AuthResponse.DuplicateCheck>> checkNickname(@RequestBody AuthRequest.CheckNickname request) {
         return ResponseEntity.ok(authService.checkNickname(request));
@@ -52,9 +55,4 @@ public class AuthController {
     public ResponseEntity<SuccessResponse<AuthResponse.DuplicateCheck>> checkEmail(@RequestBody AuthRequest.CheckEmail request) {
         return ResponseEntity.ok(authService.checkEmail(request));
     }
-    @GetMapping("/auth/username/check")
-    public ResponseEntity<SuccessResponse<AuthResponse.DuplicateCheck>> checkUsername(@RequestBody AuthRequest.CheckUsername request) {
-        return ResponseEntity.ok(authService.checkUsername(request));
-    }
-
 }

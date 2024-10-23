@@ -20,10 +20,9 @@ public enum ResponseCode {
     NOT_FOUND_RESERVATION("해당 예약은 존재하지 않습니다."),
     INVALID_USER_AUTHORITY("해당 사용자 권한은 유효하지 않습니다."),
     DUPLICATE_EMAIL("이미 존재하는 이메일입니다."),
-    WRONG_USERNAME_OR_PASSWORD("아이디 혹은 비밀번호가 일치하지 않습니다."),
+    WRONG_EMAIL_OR_PASSWORD("이메일 혹은 비밀번호가 일치하지 않습니다."),
     WRONG_PASSWORD("비밀번호가 일치하지 않습니다."),
     DUPLICATE_NICKNAME("이미 존재하는 닉네임입니다."),
-    DUPLICATE_USERNAME("이미 존재하는 아이디입니다."),
 
     // 매니저
     MANAGER_ALREADY_EXISTS("이미 매니저가 존재합니다."),
@@ -44,7 +43,8 @@ public enum ResponseCode {
     APPLY_FORBIDDEN("해당 예약건은 거절이 불가능합니다."),
     COMPLETE_FORBIDDEN("해당 예약건은 완료가 불가능합니다."),
     INVALID_RESERVATION_TIME("예약 불가능한 시간대입니다."),
-    ALREADY_WAITING("이미 웨이팅 중 입니다.");
+    ALREADY_WAITING("이미 웨이팅 중 입니다."),
+    ALREADY_DELETED_USER("회원탈퇴한 유저입니다.");
 
 
     private final String message;

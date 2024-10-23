@@ -10,10 +10,10 @@ public sealed interface AuthResponse permits Signup, Login, Reissue, DuplicateCh
 
     record Signup(Long userId) implements AuthResponse { }
 
-    record Login(Long id, String userId, String userNickname, String accessToken,
+    record Login(Long id, String email, String userNickname, String accessToken,
                  String refreshToken) implements AuthResponse {
         public Login(User user, String access, String refresh) {
-            this(user.getId(), user.getUsername(), user.getNickname(), access, refresh);
+            this(user.getId(), user.getEmail(), user.getNickname(), access, refresh);
         }
     }
 
