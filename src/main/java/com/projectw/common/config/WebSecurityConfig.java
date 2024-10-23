@@ -19,7 +19,9 @@ import org.springframework.web.cors.CorsConfigurationSource;
 @Configuration
 @RequiredArgsConstructor
 @EnableWebSecurity // Spring Security 지원을 가능하게 함
-@EnableMethodSecurity(securedEnabled  = true) // @Secured 사용가능하게
+@EnableMethodSecurity(
+        prePostEnabled = true,
+        securedEnabled  = true) // @Secured 사용가능하게
 public class WebSecurityConfig {
 
     private final SecurityFilter securityFilter;
@@ -39,6 +41,7 @@ public class WebSecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/auth/signup", "/auth/login", "/auth/reissue").permitAll()
                 .requestMatchers("/user/**").permitAll()
+                .requestMatchers("/test/connect").permitAll()
                 .requestMatchers("/auth/logout").authenticated()
                 .requestMatchers("/api/v1/user/**").hasAnyAuthority(UserRole.Authority.USER, UserRole.Authority.ADMIN)
                 .requestMatchers("/api/v1/owner/**").hasAnyAuthority(UserRole.Authority.OWNER, UserRole.Authority.ADMIN)
