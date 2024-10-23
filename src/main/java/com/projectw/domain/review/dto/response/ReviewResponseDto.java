@@ -1,5 +1,6 @@
 package com.projectw.domain.review.dto.response;
 
+import com.projectw.domain.menu.entity.Menu;
 import com.projectw.domain.review.entity.Review;
 import com.projectw.domain.review.entity.ReviewImage;
 import jakarta.validation.constraints.Max;
@@ -24,28 +25,37 @@ public class ReviewResponseDto {
     private String username;
     private String storeName;
     private String menuName;
-    private Long likeCount;     // 좋아요 수
-    private boolean liked;      // 현재 사용자의 좋아요 여부
+    private Long likeCount;
+    private boolean liked;
     private LocalDateTime reservationDate;
     private LocalDateTime createdAt;
 
     public static ReviewResponseDto from(Review review, Long likeCount, boolean liked) {
         return ReviewResponseDto.builder()
                 .id(review.getId())
+                .title(review.getTitle())
                 .content(review.getContent())
                 .rating(review.getRating())
-                .username(review.getReservation().getUser().getNickname())
-                .storeName(review.getReservation().getStore().getTitle())
+                .username(review.getUser().getNickname())
+                .storeName(review.getStore().getTitle())
+                .menuName("") // 일단 빈 문자열로 설정
                 .reservationDate(review.getReservation().getCreatedAt())
-                .menuName(review.getReservation().getStore().getMenu().toString())
                 .createdAt(review.getCreatedAt())
                 .liked(liked)
                 .likeCount(likeCount)
                 .imageUrls(review.getImages().stream()
                         .map(ReviewImage::getImageUrl)
                         .collect(Collectors.toList()))
-
                 .build();
+    }
+
+    // 메뉴 정보를 포함하는 새로운 팩토리 메서드
+    public static ReviewResponseDto fromWithMenu(Review review, Long likeCount, boolean liked, Menu menu) {
+        ReviewResponseDto dto = from(review, likeCount, liked);
+        if (menu != null) {
+            dto.menuName = menu.getName();
+        }
+        return dto;
     }
 
 }

@@ -16,6 +16,7 @@ import com.projectw.domain.user.entity.User;
 import com.projectw.domain.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +31,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final MenuRepository menuRepository;
@@ -41,7 +43,7 @@ public class ReviewService {
     private String fileDir;
 
     @Transactional
-    public ReviewResponseDto createReview(Long menuId, ReviewRequestDto reviewRequestDto, String email) {
+    public ReviewResponseDto createReview(Long menuId, ReviewRequestDto reviewRequestDto, String email, List<MultipartFile> images) {
         Menu menu = menuRepository.findById(menuId)
                 .orElseThrow(() -> new IllegalArgumentException("메뉴를 찾을 수 없습니다."));
 
@@ -63,16 +65,17 @@ public class ReviewService {
         }
 
         Review review = Review.builder()
+                .title(reviewRequestDto.getTitle())
                 .content(reviewRequestDto.getContent())
                 .rating(reviewRequestDto.getRating())
                 .reservation(reservation)
                 .build();
 
         // 이미지 업로드 처리
-        if (reviewRequestDto.getImages() != null && !reviewRequestDto.getImages().isEmpty()) {
-            for (MultipartFile image : reviewRequestDto.getImages()) {
+        if (images != null && !images.isEmpty()) {
+            for (MultipartFile image : images) {
                 try {
-                    String savedFileName = uploadFile(image);
+                    String savedFileName = uploadFile(image, email);
                     if (savedFileName != null) {
                         ReviewImage reviewImage = ReviewImage.builder()
                                 .imageUrl(savedFileName)
@@ -87,7 +90,7 @@ public class ReviewService {
         }
 
         Review savedReview = reviewRepository.save(review);
-        return ReviewResponseDto.from(savedReview, 0L, false);
+        return ReviewResponseDto.fromWithMenu(savedReview, 0L, false, menu);
     }
 
     public Page<ReviewResponseDto> getMenuReviews(Long menuId, Pageable pageable) {
@@ -102,6 +105,7 @@ public class ReviewService {
 
             return ReviewResponseDto.builder()
                     .id(review.getId())
+                    .title(review.getTitle())
                     .content(review.getContent())
                     .rating(review.getRating())
                     .username(review.getUser().getUsername())
@@ -138,7 +142,7 @@ public class ReviewService {
         if (updateDto.getNewImages() != null && !updateDto.getNewImages().isEmpty()) {
             for (MultipartFile image : updateDto.getNewImages()) {
                 try {
-                    String savedFileName = uploadFile(image);
+                    String savedFileName = uploadFile(image, email);
                     if (savedFileName != null) {
                         ReviewImage reviewImage = ReviewImage.builder()
                                 .imageUrl(savedFileName)
@@ -176,19 +180,58 @@ public class ReviewService {
 
     }
 
-    public String uploadFile(MultipartFile file) throws IOException {
-        if (file.isEmpty()) {
+    public String uploadFile(MultipartFile file, String email) throws IOException {
+        if (file == null || file.isEmpty()) {
             return null;
         }
 
-        String originalName = file.getOriginalFilename();
-        String extension = originalName.substring(originalName.lastIndexOf("."));
-        String savedFileName = UUID.randomUUID().toString() + extension;
-        String savedPath = fileDir + savedFileName;
+        // 원본 파일명 추출
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null || originalFilename.isBlank()) {
+            throw new IllegalArgumentException("파일명이 유효하지 않습니다.");
+        }
 
-        file.transferTo(new File(savedPath));
+        // 이메일로 된 디렉토리 경로 생성
+        File emailDirectory = new File(fileDir, email);
+        if (!emailDirectory.exists()) {
+            boolean created = emailDirectory.mkdirs();
+            if (!created) {
+                throw new IOException("사용자 디렉토리 생성에 실패했습니다: " + emailDirectory.getPath());
+            }
+        }
 
-        return savedFileName;  // DB에는 파일명만 저장
+        // 파일 확장자 추출
+        String ext = originalFilename.substring(originalFilename.lastIndexOf("."));
+
+        // 새로운 파일명 생성 (UUID + 확장자)
+        String newFileName = UUID.randomUUID().toString() + ext;
+
+        // 전체 경로 (디렉토리 + 이메일 + 파일명)
+        File dest = new File(emailDirectory, newFileName);
+
+        try {
+            // 파일 저장
+            file.transferTo(dest);
+
+            // 파일이 실제로 저장되었는지 확인
+            if (!dest.exists()) {
+                throw new IOException("파일 저장에 실패했습니다.");
+            }
+
+            log.info("파일 저장 완료: {}", dest.getAbsolutePath());
+            // 이메일 폴더명/파일명 형태로 저장
+            return email + "/" + newFileName;
+
+        } catch (IOException e) {
+            log.error("파일 저장 중 에러 발생: {}", e.getMessage());
+            if (dest.exists()) {
+                boolean deleted = dest.delete();
+                if (!deleted) {
+                    log.error("실패한 파일 삭제 실패: {}", dest.getAbsolutePath());
+                }
+            }
+            throw e;
+        }
     }
 }
 

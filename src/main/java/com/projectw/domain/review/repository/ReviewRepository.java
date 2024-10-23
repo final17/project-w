@@ -10,11 +10,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface ReviewRepository extends JpaRepository<Review, Long>, ReviewDslRepository{
-    @Query("SELECT r, COUNT(rl) " +
+    @Query("SELECT r, COUNT(l) " +
             "FROM Review r " +
             "JOIN FETCH r.user " +
             "JOIN FETCH r.reservation res " +
-            "LEFT JOIN Like rl ON rl.review = r " +
+            "LEFT JOIN Like l ON l.review = r " +  // 엔티티명은 그대로 Like 사용
             "WHERE res.store = (SELECT m.store FROM Menu m WHERE m = :menu) " +
             "GROUP BY r " +
             "ORDER BY r.createdAt DESC")

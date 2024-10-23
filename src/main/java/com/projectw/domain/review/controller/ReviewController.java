@@ -21,11 +21,11 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/reviews")
+@RequestMapping("api/v1/reviews")
 public class ReviewController {
     private final ReviewService reviewService;
 
-    @PostMapping(value = "/review/{menuId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "{menuId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ReviewResponseDto> createReview(
             @PathVariable Long menuId,
             @ModelAttribute ReviewRequestDto reviewRequestDto,
@@ -37,13 +37,14 @@ public class ReviewController {
         ReviewResponseDto responseDto = reviewService.createReview(
                 menuId,
                 reviewRequestDto,
-                user.getEmail()
+                user.getEmail(),
+                images
         );
 
         return new ResponseEntity<>(responseDto, HttpStatus.CREATED);
     }
 
-    @GetMapping("/review/{menuId}")
+    @GetMapping("/{menuId}")
     public ResponseEntity<Page<ReviewResponseDto>> getMenuReviews(
             @PathVariable Long menuId,
             @RequestParam(defaultValue = "0") int page,
@@ -69,7 +70,7 @@ public class ReviewController {
         return ResponseEntity.ok(responseDto);
     }
 
-    @DeleteMapping("review/{reviewId}")
+    @DeleteMapping("{reviewId}")
     public ResponseEntity<ReviewResponseDto> deleteReview(@PathVariable Long reviewId,
                                                           @AuthenticationPrincipal AuthUser user) {
         String email = user.getEmail();
