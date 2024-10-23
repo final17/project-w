@@ -42,49 +42,6 @@ public class ReservationService {
     private final StoreRepository storeRepository;
 
     @Transactional
-    @RedisLock("#waiting")
-    public void saveWait(Long userId , Long storeId , ReserveRequest.Wait wait) {
-        // 유저 있는지?
-        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_USER));
-        // 식당이 있는지?
-        Store store = storeRepository.findById(storeId).orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_STORE));
-
-        // 본인이 본인 식당에 예약 가능 한지?
-        if (store.getUser().equals(user)) {
-            throw new UnauthorizedException(ResponseCode.UNAUTHORIZED_STORE_RESERVATION);
-        }
-
-        // 웨이팅 예약 가능한 시간대인지?
-        if (storeRepository.countStoresOpenNow(storeId) < 1) {
-            throw new StoreNotOpenException(ResponseCode.STORE_NOT_OPEN);
-        }
-
-        // 같은 아이디로 두번 예약 불가
-        if (reservationRepository.existsByUserIdAndStoreIdAndTypeAndStatus(userId , storeId , ReservationType.WAIT , ReservationStatus.APPLY)) {
-            throw new DuplicateReservationException(ResponseCode.DUPLICATE_RESERVATION);
-        }
-
-        // 예약번호 채번하기
-        LocalDate now = LocalDate.now();
-        Long reservationNo = reservationRepository.findMaxReservationDate(ReservationType.WAIT , now);
-        
-        // 예약 Entity 만들기
-        Reservation reservation = Reservation.builder()
-                .status(ReservationStatus.APPLY)
-                .type(ReservationType.WAIT)
-                .menuYN(wait.menuYN())
-                .numberPeople(wait.numberPeople())
-                .reservationNo(reservationNo)
-                .reservationDate(LocalDate.now())
-                .reservationTime(LocalTime.now())
-                .user(user)
-                .store(store)
-                .build();
-
-        reservationRepository.save(reservation);
-    }
-
-    @Transactional
     @RedisLock("#reservation")
     public void saveReservation(Long userId , Long storeId , ReserveRequest.Reservation reserv) {
         // 현재시간대를 기준으로 예약 가능한 시간 값이 들어왔는지 검증
@@ -180,35 +137,8 @@ public class ReservationService {
 
     }
 
-    @Transactional
-    public void waitCancelReservation(Long userId , Long storeId , Long reservationId) {
-        // 예약 어떤지?
-        Reservation reservation = reservationRepository.findByIdAndStoreId(reservationId , storeId).orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_RESERVATION));
-
-        // 본인 예약건인지?
-        if (!reservation.getUser().getId().equals(userId)) {
-            throw new UnauthorizedException(ResponseCode.UNAUTHORIZED_RESERVATION);
-        }
-
-        if (reservation.getType() != ReservationType.WAIT) {
-            throw new ForbiddenException(ResponseCode.CANCEL_FORBIDDEN);
-        }
-
-        switch (reservation.getStatus()) {
-            case APPLY:
-                reservation.updateStatus(ReservationStatus.CANCEL);
-                break;
-            default:
-                throw new ForbiddenException(ResponseCode.CANCEL_FORBIDDEN);
-        }
-    }
-
     public Page<ReserveResponse.Infos> getUserReservations(Long userId , ReserveRequest.Parameter parameter) {
         Pageable pageable = PageRequest.of(parameter.page() - 1, parameter.size());
         return reservationRepository.getUserReservations(userId , parameter , pageable);
-    }
-
-    public ReserveResponse.Info getReservation(Long userId , Long storeId , Long reservationId) {
-        return reservationRepository.getReservation(userId , storeId , reservationId);
     }
 }
