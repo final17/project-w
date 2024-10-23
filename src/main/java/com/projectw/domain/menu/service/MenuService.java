@@ -1,11 +1,10 @@
 package com.projectw.domain.menu.service;
 
-import com.projectw.common.config.S3Service;
 import com.projectw.common.enums.ResponseCode;
 import com.projectw.common.enums.UserRole;
 import com.projectw.common.exceptions.AccessDeniedException;
-import com.projectw.domain.menu.dto.MenuRequestDto;
-import com.projectw.domain.menu.dto.MenuResponseDto;
+import com.projectw.domain.menu.dto.request.MenuRequestDto;
+import com.projectw.domain.menu.dto.response.MenuResponseDto;
 import com.projectw.domain.menu.entity.Menu;
 import com.projectw.domain.menu.repository.MenuRepository;
 import com.projectw.domain.store.entity.Store;
@@ -24,7 +23,6 @@ public class MenuService {
 
     private final MenuRepository menuRepository;
     private final StoreRepository storeRepository;
-    private final S3Service s3Service;
 
     // 메뉴 생성 (ROLE_OWNER 권한만 가능)
     public MenuResponseDto createMenu(AuthUser authUser, MenuRequestDto requestDto, Long storeId) throws IOException {
@@ -37,17 +35,10 @@ public class MenuService {
         Store store = storeRepository.findById(storeId)
                 .orElseThrow(() -> new IllegalArgumentException("스토어를 찾을 수 없습니다."));
 
-        // S3에 이미지 업로드 (이미지가 있는 경우에만)
-        String menuImageUrl = null;
-        if (requestDto.getMenuImage() != null) {
-            menuImageUrl = s3Service.uploadFile(requestDto.getMenuImage());
-        }
-
         Menu menu = new Menu(
                 requestDto.getName(),
                 requestDto.getPrice(),
                 requestDto.getAllergies(),
-                menuImageUrl,
                 store
         );
         Menu savedMenu = menuRepository.save(menu);
@@ -57,8 +48,7 @@ public class MenuService {
                 savedMenu.getId(),
                 savedMenu.getName(),
                 savedMenu.getPrice(),
-                savedMenu.getAllergies(),
-                savedMenu.getMenuImageUrl()
+                savedMenu.getAllergies()
         );
     }
 
@@ -75,11 +65,8 @@ public class MenuService {
         Store store = storeRepository.findById(storeId)
                 .orElseThrow(() -> new IllegalArgumentException(ResponseCode.NOT_FOUND_STORE.getMessage()));
 
-        // S3에 이미지 업로드 (이미지가 변경되었을 경우)
-        String menuImageUrl = requestDto.getMenuImage() != null ? s3Service.uploadFile(requestDto.getMenuImage()) : menu.getMenuImageUrl();
-
         // 메뉴 수정
-        menu.updateMenu(requestDto.getName(), requestDto.getPrice(), requestDto.getAllergies(), menuImageUrl);
+        menu.updateMenu(requestDto.getName(), requestDto.getPrice(), requestDto.getAllergies());
         Menu updatedMenu = menuRepository.save(menu);
 
         // MenuResponseDTO로 반환
@@ -87,8 +74,7 @@ public class MenuService {
                 updatedMenu.getId(),
                 updatedMenu.getName(),
                 updatedMenu.getPrice(),
-                updatedMenu.getAllergies(),
-                updatedMenu.getMenuImageUrl()
+                updatedMenu.getAllergies()
         );
     }
 
@@ -106,8 +92,7 @@ public class MenuService {
                         menu.getId(),
                         menu.getName(),
                         menu.getPrice(),
-                        menu.getAllergies(),
-                        menu.getMenuImageUrl()
+                        menu.getAllergies()
                 )
         ).collect(Collectors.toList());
     }
@@ -129,8 +114,7 @@ public class MenuService {
                         menu.getId(),
                         menu.getName(),
                         menu.getPrice(),
-                        menu.getAllergies(),
-                        menu.getMenuImageUrl()
+                        menu.getAllergies()
                 )
         ).collect(Collectors.toList());
     }

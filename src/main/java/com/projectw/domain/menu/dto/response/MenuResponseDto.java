@@ -1,4 +1,4 @@
-package com.projectw.domain.menu.dto;
+package com.projectw.domain.menu.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -12,5 +12,4 @@ public class MenuResponseDto {
     private String name;
     private int price;
     private String allergies;
-    private String menuImageUrl;
 }
