@@ -117,38 +117,6 @@ public class ReservationDslRepositoryImpl implements ReservationDslRepository{
         return new PageImpl<>(results, pageable, totalCount);
     }
 
-    @Override
-    public ReserveResponse.Info getReservation(Long userId , Long storeId , Long reservationId) {
-
-        QReservation r2 = new QReservation("r2");
-        JPQLQuery<Long> subquery = JPAExpressions
-                .select(r2.count())
-                .from(r2)
-                .where(r2.reservationNo.lt(reservation.reservationNo),
-                        r2.type.eq(ReservationType.WAIT),
-                        r2.status.in(ReservationStatus.APPLY),
-                        r2.reservationDate.eq(LocalDate.now()),
-                        r2.reservationTime.lt(reservation.reservationTime));
-
-        return queryFactory
-                .select(Projections.constructor(ReserveResponse.Info.class ,
-                        user.id,
-                        store.id,
-                        reservation.id,
-                        reservation.reservationNo,
-                        reservation.numberPeople,
-                        subquery ,
-                        reservation.reservationDate,
-                        reservation.reservationTime,
-                        reservation.type,
-                        reservation.status))
-                .from(user)
-                .innerJoin(reservation).on(reservation.user.id.eq(user.id))
-                .innerJoin(reservation.store , store)
-                .where(user.id.eq(userId) , reservation.store.id.eq(storeId) , reservation.id.eq(reservationId))
-                .fetchOne();
-    }
-
     private BooleanExpression typeEquals(ReservationType type) {
         return type != null ? reservation.type.eq(type) : null;
     }
