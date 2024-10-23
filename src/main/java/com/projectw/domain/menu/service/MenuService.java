@@ -138,6 +138,7 @@ public class MenuService {
         }
 
         // 메뉴 삭제
+        menu.deleteMenu();
         menuRepository.delete(menu);
     }
 }

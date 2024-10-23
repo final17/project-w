@@ -22,6 +22,9 @@ public class Menu {
     @JoinColumn(name = "store_id")
     private Store store;
 
+    @Column(nullable = false)
+    private Boolean isDeleted = false;
+
     public Menu(String name, int price, String allergies, Store store) {
         this.name = name;
         this.price = price;
@@ -34,5 +37,9 @@ public class Menu {
         this.name = name;
         this.price = price;
         this.allergies = allergies;
+    }
+
+    public void deleteMenu() {
+        this.isDeleted = true;
     }
 }
