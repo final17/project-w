@@ -73,13 +73,14 @@ public class Store extends Timestamped {
     private Menu menu;
 
     @Builder
-    public Store(String image, String title, String description, LocalTime openTime, LocalTime closeTime, Boolean isNextDay, Long tableCount, String phoneNumber, String address, LocalTime lastOrder, LocalTime turnover, User user, List<Reservation> reservations) {
+    public Store(String image, String title, String description, LocalTime openTime, LocalTime closeTime, Boolean isNextDay, Long reservationTableCount, Long tableCount, String phoneNumber, String address, LocalTime lastOrder, LocalTime turnover, User user, List<Reservation> reservations) {
         this.image = image;
         this.title = title;
         this.description = description;
         this.openTime = openTime;
         this.closeTime = closeTime;
         this.isNextDay = isNextDay;
+        this.reservationTableCount = reservationTableCount;
         this.tableCount = tableCount;
         this.phoneNumber = phoneNumber;
         this.address = address;
@@ -97,6 +98,7 @@ public class Store extends Timestamped {
         this.lastOrder = storeRequestDto.getLastOrder();
         this.closeTime = storeRequestDto.getCloseTime();
         this.turnover = storeRequestDto.getTurnover();
+        this.reservationTableCount = storeRequestDto.getReservationTableCount();
         this.tableCount = storeRequestDto.getTableCount();
         this.address = storeRequestDto.getAddress();
         this.isNextDay = openTime.isAfter(lastOrder);

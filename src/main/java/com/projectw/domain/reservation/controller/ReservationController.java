@@ -17,26 +17,23 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/api/v1/reservation")
-// TODO : user 용 onwer 용 따로 컨트롤러로 빼서 진행 예정
-// user의 경우 : /api/v1/store/{storeId}/reservation
-// onwer의 경우 : /api/v1/reservation-management
+@RequestMapping("/api/v1")
 public class ReservationController {
 
     private final ReservationService reservationService;
 
     @Secured({UserRole.Authority.USER})
-    @PostMapping("/wait/{storedId}")
+    @PostMapping("/store/{storeId}/wait")
     public ResponseEntity<SuccessResponse<Void>> saveWait(
             @AuthenticationPrincipal AuthUser authUser ,
-            @PathVariable Long storedId ,
+            @PathVariable Long storeId ,
             @RequestBody ReserveRequest.Wait wait) {
-        reservationService.saveWait(authUser.getUserId() , storedId , wait);
+        reservationService.saveWait(authUser.getUserId() , storeId , wait);
         return ResponseEntity.ok(SuccessResponse.of(null));
     }
 
     @Secured({UserRole.Authority.USER})
-    @PostMapping("/reservation/{storeId}")
+    @PostMapping("/store/{storeId}/reservation")
     public ResponseEntity<SuccessResponse<Void>> saveReservation(
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long storeId ,
@@ -46,72 +43,39 @@ public class ReservationController {
     }
 
     @Secured({UserRole.Authority.USER})
-    @PatchMapping("/{reservationId}/reservation-cancel")
+    @PatchMapping("/store/{storeId}/reservation/{reservationId}")
     public ResponseEntity<SuccessResponse<Void>> reservationCancelReservation(
             @AuthenticationPrincipal AuthUser authUser ,
+            @PathVariable Long storeId,
             @PathVariable Long reservationId) {
-        reservationService.reservationCancelReservation(authUser.getUserId() , reservationId);
+        reservationService.reservationCancelReservation(authUser.getUserId() , storeId , reservationId);
         return ResponseEntity.ok(SuccessResponse.of(null));
     }
 
     @Secured({UserRole.Authority.USER})
-    @PatchMapping("/{reservationId}/wait-cancel")
+    @PatchMapping("/store/{storeId}/wait/{reservationId}")
     public ResponseEntity<SuccessResponse<Void>> waitCancelReservation(
             @AuthenticationPrincipal AuthUser authUser ,
+            @PathVariable Long storeId,
             @PathVariable Long reservationId) {
-        reservationService.waitCancelReservation(authUser.getUserId() , reservationId);
+        reservationService.waitCancelReservation(authUser.getUserId() , storeId , reservationId);
         return ResponseEntity.ok(SuccessResponse.of(null));
-    }
-
-    @Secured({UserRole.Authority.OWNER})
-    @PatchMapping("/{reservationId}/refusal")
-    public ResponseEntity<SuccessResponse<Void>> refusalReservation(
-            @AuthenticationPrincipal AuthUser authUser ,
-            @PathVariable Long reservationId) {
-        reservationService.refusalReservation(authUser.getUserId() , reservationId);
-        return ResponseEntity.ok(SuccessResponse.of(null));
-    }
-
-    @Secured({UserRole.Authority.OWNER})
-    @PatchMapping("/{reservationId}/apply")
-    public ResponseEntity<SuccessResponse<Void>> applyReservation(
-            @AuthenticationPrincipal AuthUser authUser ,
-            @PathVariable Long reservationId) {
-        reservationService.applyReservation(authUser.getUserId() , reservationId);
-        return ResponseEntity.ok(SuccessResponse.of(null));
-    }
-
-    @Secured({UserRole.Authority.OWNER})
-    @PatchMapping("/{reservationId}/complete")
-    public ResponseEntity<SuccessResponse<Void>> completeReservation(
-            @AuthenticationPrincipal AuthUser authUser ,
-            @PathVariable Long reservationId) {
-        reservationService.completeReservation(authUser.getUserId() , reservationId);
-        return ResponseEntity.ok(SuccessResponse.of(null));
-    }
-
-    @Secured({UserRole.Authority.OWNER})
-    @GetMapping("/onwer")
-    public ResponseEntity<SuccessResponse<Page<ReserveResponse.Infos>>> getOnwerReservation(
-            @AuthenticationPrincipal AuthUser authUser ,
-            @ModelAttribute ReserveRequest.Parameter parameter) {
-        return ResponseEntity.ok(SuccessResponse.of(reservationService.getOnwerReservation(authUser.getUserId() , parameter)));
     }
 
     @Secured({UserRole.Authority.USER})
-    @GetMapping("/user")
-    public ResponseEntity<SuccessResponse<Page<ReserveResponse.Infos>>> getUserReservation(
+    @GetMapping("/reservations")
+    public ResponseEntity<SuccessResponse<Page<ReserveResponse.Infos>>> getUserReservations(
             @AuthenticationPrincipal AuthUser authUser ,
             @ModelAttribute ReserveRequest.Parameter parameter) {
-        return ResponseEntity.ok(SuccessResponse.of(reservationService.getUserReservation(authUser.getUserId() , parameter)));
+        return ResponseEntity.ok(SuccessResponse.of(reservationService.getUserReservations(authUser.getUserId() , parameter)));
     }
 
     @Secured({UserRole.Authority.USER})
-    @GetMapping("/{reservationId}/info")
+    @GetMapping("/store/{storeId}/info/{reservationId}")
     public ResponseEntity<SuccessResponse<ReserveResponse.Info>> getReservation(
             @AuthenticationPrincipal AuthUser authUser ,
+            @PathVariable Long storeId,
             @PathVariable Long reservationId) {
-        reservationService.getReservation(authUser.getUserId() , reservationId);
-        return null;
+        return ResponseEntity.ok(SuccessResponse.of(reservationService.getReservation(authUser.getUserId() , storeId , reservationId)));
     }
 }

@@ -60,7 +60,7 @@ public class ReservationService {
         }
 
         // 같은 아이디로 두번 예약 불가
-        if (reservationRepository.existsByUserIdAndStoreIdAndTypeAndStatus(userId , storeId , ReservationType.WAIT , ReservationStatus.RESERVATION)) {
+        if (reservationRepository.existsByUserIdAndStoreIdAndTypeAndStatus(userId , storeId , ReservationType.WAIT , ReservationStatus.APPLY)) {
             throw new DuplicateReservationException(ResponseCode.DUPLICATE_RESERVATION);
         }
 
@@ -87,6 +87,17 @@ public class ReservationService {
     @Transactional
     @RedisLock("#reservation")
     public void saveReservation(Long userId , Long storeId , ReserveRequest.Reservation reserv) {
+        // 현재시간대를 기준으로 예약 가능한 시간 값이 들어왔는지 검증
+        LocalDate nowDate = LocalDate.now();
+        LocalTime nowTime = LocalTime.now();
+        if (reserv.reservationDate().isBefore(nowDate)) {
+            throw new InvalidReservationTimeException(ResponseCode.INVALID_RESERVATION_TIME);
+        } else if(reserv.reservationDate().equals(nowDate)) {
+            if(reserv.reservationTime().isBefore(nowTime)) {
+                throw new InvalidReservationTimeException(ResponseCode.INVALID_RESERVATION_TIME);
+            }
+        }
+
         // 유저 있는지?
         User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_USER));
         // 식당이 있는지?
@@ -110,6 +121,7 @@ public class ReservationService {
 
         // 2. turnover 값을 나누기 - 예외처리!!
         if (minutes % baseMinutes != 0) {
+            log.error("예약 불가능한 시간대로 값이 들어왔음!!");
             throw new InvalidReservationTimeException(ResponseCode.INVALID_RESERVATION_TIME);
         }
 
@@ -118,7 +130,8 @@ public class ReservationService {
         long remainder = reservationRepository.countReservationByDate(ReservationType.RESERVATION , statusList , reserv.reservationDate() , reserv.reservationTime());
 
         // 4. 예약개수 비교 작업 - 예외처리!!
-        if (store.getReservationTableCount() >= remainder) {
+        if (store.getReservationTableCount() <= remainder) {
+            log.error("해당 시간대에 예약수가 꽉 참!!");
             throw new InvalidReservationTimeException(ResponseCode.INVALID_RESERVATION_TIME);
         }
 
@@ -129,7 +142,7 @@ public class ReservationService {
         // 예약 Entity 만들기
         Reservation reservation = Reservation.builder()
                 .status(ReservationStatus.RESERVATION)
-                .type(ReservationType.WAIT)
+                .type(ReservationType.RESERVATION)
                 .menuYN(reserv.menuYN())
                 .numberPeople(reserv.numberPeople())
                 .reservationNo(reservationNo)
@@ -143,9 +156,9 @@ public class ReservationService {
     }
 
     @Transactional
-    public void reservationCancelReservation(Long userId , Long reservationId) {
+    public void reservationCancelReservation(Long userId , Long storeId , Long reservationId) {
         // 예약 어떤지?
-        Reservation reservation = reservationRepository.findById(reservationId).orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_RESERVATION));
+        Reservation reservation = reservationRepository.findByIdAndStoreId(reservationId , storeId).orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_RESERVATION));
 
         // 본인 예약건인지?
         if (!reservation.getUser().getId().equals(userId)) {
@@ -168,9 +181,9 @@ public class ReservationService {
     }
 
     @Transactional
-    public void waitCancelReservation(Long userId , Long reservationId) {
+    public void waitCancelReservation(Long userId , Long storeId , Long reservationId) {
         // 예약 어떤지?
-        Reservation reservation = reservationRepository.findById(reservationId).orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_RESERVATION));
+        Reservation reservation = reservationRepository.findByIdAndStoreId(reservationId , storeId).orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_RESERVATION));
 
         // 본인 예약건인지?
         if (!reservation.getUser().getId().equals(userId)) {
@@ -190,85 +203,12 @@ public class ReservationService {
         }
     }
 
-    @Transactional
-    public void refusalReservation(Long userId , Long reservationId) {
-        Reservation reservation = reservationRepository.findReservationById(reservationId).orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_RESERVATION));
-
-        // 본인 가게 예약건인지 검증
-        if (!reservation.getStore().getUser().getId().equals(userId)) {
-            throw new ForbiddenException(ResponseCode.FORBIDDEN);
-        }
-
-        // 거절 가능한지? (예약 상태만 거절 가능)
-        if (reservation.getStatus() != ReservationStatus.RESERVATION) {
-            throw new ForbiddenException(ResponseCode.REFUSAL_FORBIDDEN);
-        }
-
-        reservation.updateStatus(ReservationStatus.CANCEL);
-    }
-
-    @Transactional
-    public void applyReservation(Long userId , Long reservationId) {
-        // 예약 어떤지?
-        Reservation reservation = reservationRepository.findReservationById(reservationId).orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_RESERVATION));
-
-        // 본인 가게 예약건인지 검증
-        if (!reservation.getStore().getUser().getId().equals(userId)) {
-            throw new ForbiddenException(ResponseCode.FORBIDDEN);
-        }
-
-        // 승인 가능한지? (예약 상태만 승인 가능)
-        if (reservation.getStatus() != ReservationStatus.RESERVATION) {
-            throw new ForbiddenException(ResponseCode.APPLY_FORBIDDEN);
-        }
-
-        reservation.updateStatus(ReservationStatus.APPLY);
-    }
-
-    @Transactional
-    public void completeReservation(Long userId , Long reservationId) {
-        // 예약 어떤지?
-        Reservation reservation = reservationRepository.findReservationById(reservationId).orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_RESERVATION));
-
-        // 본인 가게 예약건인지 검증
-        if (!reservation.getStore().getUser().getId().equals(userId)) {
-            throw new ForbiddenException(ResponseCode.FORBIDDEN);
-        }
-
-        // 승인 상태만 완료 가능
-        if (reservation.getStatus() != ReservationStatus.APPLY) {
-            throw new ForbiddenException(ResponseCode.COMPLETE_FORBIDDEN);
-        }
-
-        reservation.updateStatus(ReservationStatus.COMPLETE);
-    }
-
-    public Page<ReserveResponse.Infos> getOnwerReservation(Long userId , ReserveRequest.Parameter parameter) {
-        Pageable pageable = PageRequest.of(parameter.page() - 1, parameter.size());
-        return reservationRepository.getOwnerReservations(userId , parameter , pageable);
-    }
-
-    public Page<ReserveResponse.Infos> getUserReservation(Long userId , ReserveRequest.Parameter parameter) {
+    public Page<ReserveResponse.Infos> getUserReservations(Long userId , ReserveRequest.Parameter parameter) {
         Pageable pageable = PageRequest.of(parameter.page() - 1, parameter.size());
         return reservationRepository.getUserReservations(userId , parameter , pageable);
     }
 
-    public void getReservation(Long userId , Long reservationId) {
-        // 웨이팅 경우에는
-
-        // RESERVATION  <- 제외
-        // CANCEL
-        // AUTOMATIC_CANCEL
-        // APPLY        // 남은 팀 보여주는 방법?
-        // COMPLETE
-
-        // 예약일 경우에는
-
-        // RESERVATION
-        // CANCEL
-        // AUTOMATIC_CANCEL
-        // APPLY
-        // COMPLETE
-
+    public ReserveResponse.Info getReservation(Long userId , Long storeId , Long reservationId) {
+        return reservationRepository.getReservation(userId , storeId , reservationId);
     }
 }

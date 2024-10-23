@@ -26,7 +26,7 @@ public sealed interface ReserveResponse permits ReserveResponse.Infos, ReserveRe
             Long reserveId,
             Long reservationNo,
             Long numberPeople,
-            Long remainTime,
+            Long remainReservationCnt,
             LocalDate reservationDate,
             LocalTime reservationTime,
             ReservationType type,
