@@ -30,4 +30,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long>,
                                 @Param("statuses") List<ReservationStatus> statuses,
                                 @Param("date") LocalDate date,
                                 @Param("time") LocalTime time);
+
+    Optional<Reservation> findByIdAndStoreId(Long id, Long storeId);
 }

@@ -118,7 +118,7 @@ public class ReservationDslRepositoryImpl implements ReservationDslRepository{
     }
 
     @Override
-    public ReserveResponse.Info getReservation(Long userId , Long reservationId) {
+    public ReserveResponse.Info getReservation(Long userId , Long storeId , Long reservationId) {
 
         QReservation r2 = new QReservation("r2");
         JPQLQuery<Long> subquery = JPAExpressions
@@ -145,7 +145,7 @@ public class ReservationDslRepositoryImpl implements ReservationDslRepository{
                 .from(user)
                 .innerJoin(reservation).on(reservation.user.id.eq(user.id))
                 .innerJoin(reservation.store , store)
-                .where(user.id.eq(userId) , reservation.id.eq(reservationId))
+                .where(user.id.eq(userId) , reservation.store.id.eq(storeId) , reservation.id.eq(reservationId))
                 .fetchOne();
     }
 
