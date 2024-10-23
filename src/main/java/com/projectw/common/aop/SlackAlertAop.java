@@ -21,7 +21,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.expression.ExpressionException;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.access.intercept.FilterSecurityInterceptor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -65,8 +64,6 @@ public class SlackAlertAop {
         } finally {
             Method method = ((MethodSignature) joinPoint.getSignature()).getMethod();
             SlackAlert annotation = method.getAnnotation(SlackAlert.class);
-            Secured secured = method.getAnnotation(Secured.class);
-            String[] authorities = secured.value();
 
             // 스프링 EL 파싱
             String[] spELs = annotation.requestEL();
@@ -93,16 +90,14 @@ public class SlackAlertAop {
                     "\n"+"""
                 ```
                 🔔 [Slack Alert] 🔔
-                🔒 Method Secured: {0}
-                👤 Auth: {1}
-                📌 Method: {2}
-                ✉️ Message: {3}
-                {6} Result: {4}
-                ⏳ ExecutionTime: {5}ms
-                🕒 Timestamp: {7}{8}{9}
+                👤 Auth: {0}
+                📌 Method: {1}
+                ✉️ Message: {2}
+                {5} Result: {3}
+                ⏳ ExecutionTime: {4}ms
+                🕒 Timestamp: {6}{7}{8}
                 ```
                 """ +"\n",
-                    authorities == null ? "NONE" : String.join(",", authorities),
                     authInfo,
                     joinPoint.getSignature().toShortString(),
                     msg,

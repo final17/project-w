@@ -1,4 +1,4 @@
-package com.projectw.domain.notification.events;
+package com.projectw.domain.notification.events.slack;
 
 import com.projectw.domain.notification.client.MessageClient;
 import com.projectw.domain.notification.client.SlackClient;

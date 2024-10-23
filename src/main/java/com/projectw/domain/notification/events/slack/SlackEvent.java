@@ -1,4 +1,4 @@
-package com.projectw.domain.notification.events;
+package com.projectw.domain.notification.events.slack;
 
 import org.springframework.context.ApplicationEvent;
 

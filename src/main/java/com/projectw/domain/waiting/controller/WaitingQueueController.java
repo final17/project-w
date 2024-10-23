@@ -1,11 +1,12 @@
-package com.projectw.domain.notification;
+package com.projectw.domain.waiting.controller;
 
 import com.projectw.common.dto.SuccessResponse;
 import com.projectw.common.enums.UserRole;
+import com.projectw.domain.waiting.dto.WaitingQueueResponse;
+import com.projectw.domain.waiting.service.WaitingQueueService;
 import com.projectw.security.AuthUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -38,7 +39,7 @@ public class WaitingQueueController {
             @RequestParam long userId,
             @RequestParam long storeId) {
         // sse 연결
-        return storeQueueService.connect(authUser, storeId);
+        return storeQueueService.connect(new AuthUser(userId, null, UserRole.ROLE_USER), storeId);
     }
 
     /**
