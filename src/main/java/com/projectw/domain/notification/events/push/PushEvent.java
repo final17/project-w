@@ -1,9 +1,9 @@
 package com.projectw.domain.notification.events.push;
 
-public interface PushEvent<Sender, Target> {
+public interface PushEvent<SENDER, TARGET> {
 
     String getMessage();
-    Sender getSender();
-    Target getTarget();
+    SENDER getSender();
+    TARGET getTarget();
     void send();
 }
