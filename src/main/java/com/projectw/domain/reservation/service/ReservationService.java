@@ -1,5 +1,6 @@
 package com.projectw.domain.reservation.service;
 
+import com.projectw.common.annotations.RedisListener;
 import com.projectw.common.annotations.RedisLock;
 import com.projectw.common.enums.ResponseCode;
 import com.projectw.common.exceptions.ForbiddenException;
@@ -17,6 +18,7 @@ import com.projectw.domain.store.entity.Store;
 import com.projectw.domain.store.repository.StoreRepository;
 import com.projectw.domain.user.entity.User;
 import com.projectw.domain.user.repository.UserRepository;
+import com.projectw.domain.waiting.dto.WaitingPoll;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -26,9 +28,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -139,5 +143,31 @@ public class ReservationService {
     public Page<ReserveResponse.Infos> getUserReservations(Long userId , ReserveRequest.Parameter parameter) {
         Pageable pageable = PageRequest.of(parameter.page() - 1, parameter.size());
         return reservationRepository.getUserReservations(userId , parameter , pageable);
+    }
+
+    @Transactional
+    @RedisListener(topic = "waiting-poll")
+    public void onWaitingPoll(WaitingPoll waitingPoll){
+        LocalDateTime at = waitingPoll.createdAt();
+        Long userId = waitingPoll.userId();
+        Long storeId = waitingPoll.storeId();
+        Long num = waitingPoll.waitingNum();
+
+        User user = userRepository.findById(userId).orElseThrow(()-> new NotFoundException(ResponseCode.NOT_FOUND_USER));
+        Store store = storeRepository.findById(storeId).orElseThrow(()-> new NotFoundException(ResponseCode.NOT_FOUND_STORE));
+
+        Reservation reservation = Reservation.builder()
+                .status(ReservationStatus.APPLY)
+                .type(ReservationType.WAIT)
+                .user(user)
+                .store(store)
+                .reservationDate(at.toLocalDate())
+                .reservationTime(at.toLocalTime().truncatedTo(TimeUnit.SECONDS.toChronoUnit()))
+                .numberPeople(1L)
+                .reservationNo(num)
+                .menuYN(false)
+                .build();
+
+        reservationRepository.save(reservation);
     }
 }
