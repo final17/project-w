@@ -14,8 +14,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
 @RequiredArgsConstructor
 public class CommentService {
@@ -26,7 +24,7 @@ public class CommentService {
     @Transactional
     public CommentResponseDto createComment(Long reviewId, CommentRequestDto requestDto, String email) {
         Review review = reviewRepository.findById(reviewId).orElseThrow(()-> new IllegalArgumentException("리뷰를 찾을 수 없습니다."));
-        User user = userRepository.findByEmail(email).orElseThrow(()-> new IllegalArgumentException("권한이 없습니다."));
+        User user = findUser(email);
         Comment savedComment = new Comment(review, requestDto, user);
         commentRepository.save(savedComment);
         return new CommentResponseDto(savedComment);
@@ -44,15 +42,20 @@ public class CommentService {
     @Transactional
     public CommentResponseDto updateComment(Long commentId, CommentRequestDto requestDto, String email) {
         Comment comment = commentRepository.findById(commentId).orElseThrow(()-> new IllegalArgumentException("대댓글을 찾을 수 없습니다."));
-        User user = userRepository.findByEmail(email).orElseThrow(()-> new IllegalArgumentException("권한이 없습니다."));
+        User user = findUser(email);
         comment.update(requestDto);
         return new CommentResponseDto(requestDto, user);
     }
 
     public CommentResponseDto deleteComment(Long commentId, String email) {
         Comment comment = commentRepository.findById(commentId).orElseThrow(()-> new IllegalArgumentException("대댓글을 찾을 수 없습니다."));
-        User user = userRepository.findByEmail(email).orElseThrow(()-> new IllegalArgumentException("권한이 없습니다."));
+        User user = findUser(email);
         commentRepository.delete(comment);
         return new CommentResponseDto(comment, user);
+    }
+
+    private User findUser(String email) {
+        User user = userRepository.findByEmail(email).orElseThrow(()-> new IllegalArgumentException("권한이 없습니다."));
+        return user;
     }
 }

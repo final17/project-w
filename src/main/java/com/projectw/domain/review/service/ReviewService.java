@@ -1,5 +1,7 @@
 package com.projectw.domain.review.service;
 
+import com.projectw.common.exceptions.FileUploadException;
+import com.projectw.common.utils.FileUtil;
 import com.projectw.domain.like.repository.LikeRepository;
 import com.projectw.domain.menu.entity.Menu;
 import com.projectw.domain.menu.repository.MenuRepository;
@@ -84,7 +86,7 @@ public class ReviewService {
                         review.addImage(reviewImage);
                     }
                 } catch (IOException e) {
-                    throw new RuntimeException("이미지 업로드에 실패했습니다: " + e.getMessage());
+                    throw new IllegalArgumentException("이미지 업로드에 실패했습니다: " + e.getMessage());
                 }
             }
         }
@@ -108,12 +110,12 @@ public class ReviewService {
                     .title(review.getTitle())
                     .content(review.getContent())
                     .rating(review.getRating())
-                    .username(review.getUser().getUsername())
+                    .nickname(review.getUser().getNickname())
                     .createdAt(review.getCreatedAt())
                     .likeCount(likeCount)
                     .imageUrls(review.getImages().stream()
                             .map(ReviewImage::getImageUrl)
-                            .collect(Collectors.toList()))
+                            .toList())
                     .build();
         });
     }
@@ -151,7 +153,7 @@ public class ReviewService {
                         review.addImage(reviewImage);
                     }
                 } catch (IOException e) {
-                    throw new RuntimeException("이미지 업로드에 실패했습니다: " + e.getMessage());
+                    throw new FileUploadException("이미지 업로드에 실패했습니다: " + e.getMessage());
                 }
             }
         }
@@ -180,58 +182,107 @@ public class ReviewService {
 
     }
 
-    public String uploadFile(MultipartFile file, String email) throws IOException {
-        if (file == null || file.isEmpty()) {
-            return null;
-        }
+    private String uploadFile(MultipartFile file, String email) throws IOException {
+        // 파일 검증
+        FileUtil.validateFile(file);
 
-        // 원본 파일명 추출
-        String originalFilename = file.getOriginalFilename();
-        if (originalFilename == null || originalFilename.isBlank()) {
-            throw new IllegalArgumentException("파일명이 유효하지 않습니다.");
-        }
-
-        // 이메일로 된 디렉토리 경로 생성
-        File emailDirectory = new File(fileDir, email);
-        if (!emailDirectory.exists()) {
-            boolean created = emailDirectory.mkdirs();
-            if (!created) {
-                throw new IOException("사용자 디렉토리 생성에 실패했습니다: " + emailDirectory.getPath());
-            }
-        }
-
-        // 파일 확장자 추출
-        String ext = originalFilename.substring(originalFilename.lastIndexOf("."));
-
-        // 새로운 파일명 생성 (UUID + 확장자)
-        String newFileName = UUID.randomUUID().toString() + ext;
-
-        // 전체 경로 (디렉토리 + 이메일 + 파일명)
-        File dest = new File(emailDirectory, newFileName);
+        // 안전한 파일 생성
+        File dest = FileUtil.createSecureFile(fileDir, email, file.getOriginalFilename());
 
         try {
             // 파일 저장
             file.transferTo(dest);
 
-            // 파일이 실제로 저장되었는지 확인
+            // 파일 저장 확인
             if (!dest.exists()) {
-                throw new IOException("파일 저장에 실패했습니다.");
+                throw new FileUploadException("파일 저장에 실패했습니다.");
             }
 
-            log.info("파일 저장 완료: {}", dest.getAbsolutePath());
-            // 이메일 폴더명/파일명 형태로 저장
-            return email + "/" + newFileName;
+            // 이메일/UUID.확장자 형태로 반환
+            return email + "/" + dest.getName();
 
         } catch (IOException e) {
-            log.error("파일 저장 중 에러 발생: {}", e.getMessage());
+            // 실패한 파일 정리
             if (dest.exists()) {
-                boolean deleted = dest.delete();
-                if (!deleted) {
-                    log.error("실패한 파일 삭제 실패: {}", dest.getAbsolutePath());
-                }
+                dest.delete();
             }
-            throw e;
+            log.error("파일 업로드 실패: {}", e.getMessage(), e);
+            throw new FileUploadException("파일 저장 중 오류가 발생했습니다.", e);
         }
     }
+
+    @Transactional
+    public void processImages(List<MultipartFile> images, Review review, String email) {
+        if (images == null || images.isEmpty()) return;
+
+        for (MultipartFile image : images) {
+            try {
+                String savedFileName = uploadFile(image, email);
+                if (savedFileName != null) {
+                    ReviewImage reviewImage = ReviewImage.builder()
+                            .imageUrl(savedFileName)
+                            .review(review)
+                            .build();
+                    review.addImage(reviewImage);
+                }
+            } catch (IOException e) {
+                throw new FileUploadException("이미지 업로드 중 오류가 발생했습니다.", e);
+            }
+        }
+    }
+
+//    public String uploadFile(MultipartFile file, String email) throws IOException {
+//        if (file == null || file.isEmpty()) {
+//            return null;
+//        }
+//
+//        // 원본 파일명 추출
+//        String originalFilename = file.getOriginalFilename();
+//        if (originalFilename == null || originalFilename.isBlank()) {
+//            throw new IllegalArgumentException("파일명이 유효하지 않습니다.");
+//        }
+//
+//        // 이메일로 된 디렉토리 경로 생성
+//        File emailDirectory = new File(fileDir, email);
+//        if (!emailDirectory.exists()) {
+//            boolean created = emailDirectory.mkdirs();
+//            if (!created) {
+//                throw new IOException("사용자 디렉토리 생성에 실패했습니다: " + emailDirectory.getPath());
+//            }
+//        }
+//
+//        // 파일 확장자 추출
+//        String ext = originalFilename.substring(originalFilename.lastIndexOf("."));
+//
+//        // 새로운 파일명 생성 (UUID + 확장자)
+//        String newFileName = UUID.randomUUID().toString() + ext;
+//
+//        // 전체 경로 (디렉토리 + 이메일 + 파일명)
+//        File dest = new File(emailDirectory, newFileName);
+//
+//        try {
+//            // 파일 저장
+//            file.transferTo(dest);
+//
+//            // 파일이 실제로 저장되었는지 확인
+//            if (!dest.exists()) {
+//                throw new IOException("파일 저장에 실패했습니다.");
+//            }
+//
+//            log.info("파일 저장 완료: {}", dest.getAbsolutePath());
+//            // 이메일 폴더명/파일명 형태로 저장
+//            return email + "/" + newFileName;
+//
+//        } catch (IOException e) {
+//            log.error("파일 저장 중 에러 발생: {}", e.getMessage());
+//            if (dest.exists()) {
+//                boolean deleted = dest.delete();
+//                if (!deleted) {
+//                    log.error("실패한 파일 삭제 실패: {}", dest.getAbsolutePath());
+//                }
+//            }
+//            throw e;
+//        }
+//    }
 }
 

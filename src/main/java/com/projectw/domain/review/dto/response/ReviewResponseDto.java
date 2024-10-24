@@ -22,7 +22,7 @@ public class ReviewResponseDto {
     private String content;
     private List<String> imageUrls;
     private int rating;
-    private String username;
+    private String nickname;
     private String storeName;
     private String menuName;
     private Long likeCount;
@@ -36,7 +36,7 @@ public class ReviewResponseDto {
                 .title(review.getTitle())
                 .content(review.getContent())
                 .rating(review.getRating())
-                .username(review.getUser().getNickname())
+                .nickname(review.getUser().getNickname())
                 .storeName(review.getStore().getTitle())
                 .menuName("") // 일단 빈 문자열로 설정
                 .reservationDate(review.getReservation().getCreatedAt())
