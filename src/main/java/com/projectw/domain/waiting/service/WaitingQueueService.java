@@ -3,20 +3,25 @@ package com.projectw.domain.waiting.service;
 import com.projectw.common.annotations.RedisLock;
 import com.projectw.common.enums.ResponseCode;
 import com.projectw.common.exceptions.ForbiddenException;
+import com.projectw.common.exceptions.NotFoundException;
 import com.projectw.common.exceptions.UserAlreadyInQueueException;
 import com.projectw.domain.notification.service.SseNotificationService;
+import com.projectw.domain.store.entity.Store;
 import com.projectw.domain.store.repository.StoreRepository;
+import com.projectw.domain.waiting.dto.WaitingPoll;
+import com.projectw.domain.waiting.dto.WaitingPollEvent;
 import com.projectw.domain.waiting.dto.WaitingQueueResponse;
 import com.projectw.security.AuthUser;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RScoredSortedSet;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.protocol.ScoredEntry;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -28,6 +33,7 @@ public class WaitingQueueService {
     private final RedissonClient redissonClient;
     private final SseNotificationService notificationService;
     private final StoreRepository storeRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
 
     public SseEmitter connect(AuthUser authUser, long storeId) {
@@ -43,41 +49,45 @@ public class WaitingQueueService {
     }
 
     @RedisLock(value = "#storeId")
-    public void addUserToQueue(AuthUser authUser, long storeId){
+    public WaitingQueueResponse.Info addUserToQueue(AuthUser authUser, long storeId){
         RScoredSortedSet<String> sortedSet = redissonClient.getScoredSortedSet(getRedisSortedSetKey(storeId));
         Integer rank = sortedSet.rank(String.valueOf(authUser.getUserId()));
+
         if(rank != null) {
             throw new UserAlreadyInQueueException(ResponseCode.ALREADY_WAITING);
         }
 
-        // 현재 시간을 score로 설정하여 대기열에 추가
-        double score = Instant.now().getEpochSecond();  // UNIX 타임스탬프 사용
+        // 발권 번호를 score로 설정하여 대기열에 추가
+        long score = redissonClient.getAtomicLong(getRedisWaitingNumKey(storeId)).incrementAndGet();
         sortedSet.add(score, String.valueOf(authUser.getUserId()));
         updateAllUsers(storeId);
+
+        return new WaitingQueueResponse.Info(sortedSet.size(), authUser.getUserId());
     }
 
     /**
      * 웨이팅 1번 받음
      */
-    // @RedisLock("#storeId")
-    public void popFirstUser(AuthUser authUser, long storeId) {
+    @RedisLock("#storeId")
+    public void pollFirstUser(AuthUser authUser, long storeId) {
 
         RScoredSortedSet<String> sortedSet = redissonClient.getScoredSortedSet(getRedisSortedSetKey(storeId));
         if(sortedSet.isEmpty()) {
            return;
         }
 
-//        Store store = storeRepository.findWithUserById(storeId)
-//                .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_STORE));
-//
-//        // 가게의 주인이 아니면
-//        if(!store.getUser().getId().equals(authUser.getUserId())) {
-//            throw new ForbiddenException(ResponseCode.FORBIDDEN);
-//        }
+        Store store = storeRepository.findWithUserById(storeId)
+                .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_STORE));
 
+        // 가게의 주인이 아니면
+        if(!store.getUser().getId().equals(authUser.getUserId())) {
+            throw new ForbiddenException(ResponseCode.FORBIDDEN);
+        }
 
+        Double score = sortedSet.firstScore();
         String popUserId = sortedSet.pollFirst();
         notificationService.delete(getSseKey(storeId, popUserId));
+        eventPublisher.publishEvent(new WaitingPollEvent(new WaitingPoll(score.longValue(), storeId, Long.parseLong(popUserId), LocalDateTime.now())));
         updateAllUsers(storeId);
     }
 
@@ -95,6 +105,7 @@ public class WaitingQueueService {
     /**
      * cutline 뒤에 번호부터 웨이팅 취소처리
      */
+    @RedisLock("#storeId")
     public void clearQueueFromRank(AuthUser authUser, long storeId, int cutline) {
         RScoredSortedSet<String> sortedSet = redissonClient.getScoredSortedSet(getRedisSortedSetKey(storeId));
         cutline = Math.max(cutline, 0);
@@ -124,7 +135,7 @@ public class WaitingQueueService {
         List<WaitingQueueResponse.Info> ids = new ArrayList<>();
         int rank = 1;
         for(ScoredEntry<String> scoredEntry : scoredEntries) {
-            ids.add(new WaitingQueueResponse.Info(rank++, scoredEntry.getValue()));
+            ids.add(new WaitingQueueResponse.Info(rank++, Long.parseLong(scoredEntry.getValue())));
         }
 
         return new WaitingQueueResponse.List(ids.size(), ids);
@@ -133,7 +144,6 @@ public class WaitingQueueService {
     /**
      * 대기번호 최신화
      */
-    @RedisLock("#storeId")
     private void updateAllUsers(long storeId) {
         RScoredSortedSet<String> sortedSet = redissonClient.getScoredSortedSet(getRedisSortedSetKey(storeId));
         Collection<String> values = sortedSet.valueRange(0, -1);
@@ -144,6 +154,7 @@ public class WaitingQueueService {
         }
     }
 
+    private String getRedisWaitingNumKey(long storeId) {return "waiting:store:" + storeId;}
     private String getRedisSortedSetKey(long storeId) {
         return "waitingQueue:store:" + storeId + ":user:";
     }

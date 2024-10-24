@@ -9,9 +9,6 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> , UserDslRepository {
 
-    @Query("SELECT u FROM User u WHERE u.username=:username")
-    Optional<User> findByUsername(@Param("username") String username);
-
     @Query("SELECT u FROM User u WHERE u.email=:email")
     Optional<User> findByEmail(@Param("email") String email);
 
@@ -22,5 +19,6 @@ public interface UserRepository extends JpaRepository<User, Long> , UserDslRepos
 
     boolean existsByEmail(String email);
 
-    boolean existsByUsername(String username);
+    @Query("SELECT COUNT(u) > 0 FROM User u WHERE u.id = :id AND u.isDeleted = true")
+    boolean isDeletedUser(@Param("id") String userId);
 }

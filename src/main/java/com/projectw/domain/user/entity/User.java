@@ -21,9 +21,6 @@ public class User extends Timestamped {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String username;
-
     @Column(nullable = false)
     private String password;
 
@@ -37,6 +34,8 @@ public class User extends Timestamped {
     @Column(nullable = false)
     private UserRole role;
 
+    private boolean isDeleted;
+
     @ManyToMany
     @JoinTable(
             name = "user_allergies", // 유저-알레르기 중간 테이블
@@ -46,8 +45,7 @@ public class User extends Timestamped {
     private Set<Allergy> allergies = new HashSet<>();
 
     @Builder
-    public User(String username, String password, String email, String nickname, UserRole role) {
-        this.username = username;
+    public User(String password, String email, String nickname, UserRole role) {
         this.password = password;
         this.email = email;
         this.nickname = nickname;
@@ -62,6 +60,10 @@ public class User extends Timestamped {
 
     public static User fromAuthUser(AuthUser authUser) {
         return new User(authUser.getUserId(), authUser.getEmail(), authUser.getRole());
+    }
+
+    public void delete() {
+        isDeleted = true;
     }
 
     // 유저 알레르기 업데이트
