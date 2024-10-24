@@ -11,12 +11,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/likes")
+@RequestMapping("/api/v2/reviews/{reviewId}/likes")
 @RequiredArgsConstructor
 public class LikeController {
     private final LikeService likeService;
 
-    @PatchMapping("/{reviewId}")
+    @PatchMapping
     public ResponseEntity<Map<String, Object>> toggleLike(
             @PathVariable Long reviewId,
             @AuthenticationPrincipal AuthUser user
@@ -31,7 +31,7 @@ public class LikeController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{reviewId}")
+    @GetMapping
     public ResponseEntity<Map<String, Object>> getLikeStatus(
             @PathVariable Long reviewId,
             @AuthenticationPrincipal AuthUser user
