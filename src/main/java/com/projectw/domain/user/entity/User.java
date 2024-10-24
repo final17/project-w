@@ -2,12 +2,16 @@ package com.projectw.domain.user.entity;
 
 import com.projectw.common.entity.Timestamped;
 import com.projectw.common.enums.UserRole;
+import com.projectw.domain.allergy.entity.Allergy;
 import com.projectw.security.AuthUser;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -33,6 +37,14 @@ public class User extends Timestamped {
     @Column(nullable = false)
     private UserRole role;
 
+    @ManyToMany
+    @JoinTable(
+            name = "user_allergies", // 유저-알레르기 중간 테이블
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "allergy_id")
+    )
+    private Set<Allergy> allergies = new HashSet<>();
+
     @Builder
     public User(String username, String password, String email, String nickname, UserRole role) {
         this.username = username;
@@ -50,5 +62,10 @@ public class User extends Timestamped {
 
     public static User fromAuthUser(AuthUser authUser) {
         return new User(authUser.getUserId(), authUser.getEmail(), authUser.getRole());
+    }
+
+    // 유저 알레르기 업데이트
+    public void updateAllergies(Set<Allergy> allergies) {
+        this.allergies = allergies;
     }
 }

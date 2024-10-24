@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Set;
+
 @RestController
 @RequiredArgsConstructor
 public class AuthController {
@@ -56,5 +58,9 @@ public class AuthController {
     public ResponseEntity<SuccessResponse<AuthResponse.DuplicateCheck>> checkUsername(@RequestBody AuthRequest.CheckUsername request) {
         return ResponseEntity.ok(authService.checkUsername(request));
     }
-
+    @PostMapping("/v2/auth/allergies")
+    public ResponseEntity<SuccessResponse<Void>> updateUserAllergies(@AuthenticationPrincipal AuthUser user, @Valid @RequestBody Set<Long> allergyIds) {
+        authService.updateUserAllergies(user.getUserId(), allergyIds);
+        return ResponseEntity.ok(SuccessResponse.of(null));
+    }
 }

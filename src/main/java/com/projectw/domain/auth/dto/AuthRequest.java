@@ -10,6 +10,8 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+import java.util.List;
+
 public sealed interface AuthRequest permits Signup, Login, CheckNickname, CheckEmail,
     CheckUsername {
     record Login(
@@ -23,7 +25,8 @@ public sealed interface AuthRequest permits Signup, Login, CheckNickname, CheckE
         @Email String email,
         @NotBlank String nickname,
         String adminToken,
-        @NotNull UserRole userRole
+        @NotNull UserRole userRole,
+        List<Long> allergyIds
     ) implements AuthRequest {
     }
 

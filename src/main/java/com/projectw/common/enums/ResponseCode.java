@@ -17,6 +17,7 @@ public enum ResponseCode {
     // 사용자
     NOT_FOUND_USER("해당 사용자는 존재하지 않습니다."),
     NOT_FOUND_STORE("해당 가게는 존재하지 않습니다."),
+    NOT_FOUND_MENU("해당 메뉴는 존재하지 않습니다."),
     NOT_FOUND_RESERVATION("해당 예약은 존재하지 않습니다."),
     INVALID_USER_AUTHORITY("해당 사용자 권한은 유효하지 않습니다."),
     DUPLICATE_EMAIL("이미 존재하는 이메일입니다."),
@@ -24,6 +25,9 @@ public enum ResponseCode {
     WRONG_PASSWORD("비밀번호가 일치하지 않습니다."),
     DUPLICATE_NICKNAME("이미 존재하는 닉네임입니다."),
     DUPLICATE_USERNAME("이미 존재하는 아이디입니다."),
+
+    // 알레르기
+    NOT_FOUND_ALLERGY("해당 알레르기는 존재하지 않습니다."),
 
     // 매니저
     MANAGER_ALREADY_EXISTS("이미 매니저가 존재합니다."),

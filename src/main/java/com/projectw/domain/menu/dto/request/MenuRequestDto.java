@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.util.List;
+
 @Getter
 @RequiredArgsConstructor
 @AllArgsConstructor
@@ -18,5 +20,5 @@ public class MenuRequestDto {
     @Min(value = 1, message = "가격은 1 이상이어야 합니다.")
     private int price;
 
-    private String allergies;
+    private List<Long> allergyIds;
 }

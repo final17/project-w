@@ -1,10 +1,14 @@
 package com.projectw.domain.menu.entity;
 
 
+import com.projectw.domain.allergy.entity.Allergy;
 import com.projectw.domain.store.entity.Store;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -16,24 +20,31 @@ public class Menu {
 
     private String name; // 메뉴 이름
     private int price; // 메뉴 가격
-    private String allergies; // 알레르기 정보
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "store_id")
     private Store store;
 
+    @ManyToMany
+    @JoinTable(
+            name = "menu_allergies",  // 메뉴-알레르기 중간 테이블
+            joinColumns = @JoinColumn(name = "menu_id"),
+            inverseJoinColumns = @JoinColumn(name = "allergy_id")
+    )
+    private Set<Allergy> allergies = new HashSet<>();
+
     @Column(nullable = false)
     private Boolean isDeleted = false;
 
-    public Menu(String name, int price, String allergies, Store store) {
+    public Menu(String name, int price, Store store, Set<Allergy> allergies) {
         this.name = name;
         this.price = price;
-        this.allergies = allergies;
         this.store = store;
+        this.allergies = allergies;
     }
 
     // 메뉴 업데이트 메서드
-    public void updateMenu(String name, int price, String allergies) {
+    public void updateMenu(String name, int price, Set<Allergy> allergies) {
         this.name = name;
         this.price = price;
         this.allergies = allergies;
