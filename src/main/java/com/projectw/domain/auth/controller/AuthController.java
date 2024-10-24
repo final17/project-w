@@ -1,6 +1,7 @@
 package com.projectw.domain.auth.controller;
 
 import com.projectw.common.dto.SuccessResponse;
+import com.projectw.domain.allergy.dto.request.AllergyUpdateRequestDto;
 import com.projectw.domain.auth.dto.AuthRequest;
 import com.projectw.domain.auth.dto.AuthResponse;
 import com.projectw.domain.auth.dto.AuthResponse.Signup;
@@ -16,45 +17,53 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v2/auth")
 public class AuthController {
 
     private final AuthService authService;
 
-    @PostMapping("/auth/signup")
+    @PostMapping("/signup")
     public ResponseEntity<SuccessResponse<Signup>> signup(@Valid @RequestBody AuthRequest.Signup authRequest) {
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.signup(authRequest));
     }
 
-    @PostMapping("/auth/login")
+    @PostMapping("/login")
     public ResponseEntity<SuccessResponse<AuthResponse.Login>> login(@Valid @RequestBody AuthRequest.Login authRequest) {
         AuthResponse.Login result = authService.login(authRequest);
         return ResponseEntity.ok().header(JwtUtil.AUTHORIZATION_HEADER, result.accessToken()).body(SuccessResponse.of(result));
     }
 
-    @PostMapping("/auth/logout")
+    @PostMapping("/logout")
     public ResponseEntity<SuccessResponse<Void>> logout(@AuthenticationPrincipal AuthUser user) {
         return ResponseEntity.ok(authService.logout(user));
     }
 
-    @PostMapping("/auth/reissue")
+    @PostMapping("/reissue")
     public ResponseEntity<?> reissue(@RequestHeader(JwtUtil.REFRESH_TOKEN_HEADER) String refreshToken) {
         AuthResponse.Reissue result = authService.reissue(refreshToken);
         return ResponseEntity.ok().header(JwtUtil.AUTHORIZATION_HEADER, result.accessToken()).body(SuccessResponse.of(result));
     }
 
-    @DeleteMapping("/auth/account")
+    @DeleteMapping("/account")
     public ResponseEntity<SuccessResponse<SuccessResponse<Void>>> account(@AuthenticationPrincipal AuthUser user) {
         authService.deleteAccount(user);
         return ResponseEntity.ok(SuccessResponse.of(null));
     }
 
-    @GetMapping("/auth/nickname/check")
+    @GetMapping("/nickname/check")
     public ResponseEntity<SuccessResponse<AuthResponse.DuplicateCheck>> checkNickname(@RequestBody AuthRequest.CheckNickname request) {
         return ResponseEntity.ok(authService.checkNickname(request));
     }
-    @GetMapping("/auth/email/check")
+
+    @GetMapping("/email/check")
     public ResponseEntity<SuccessResponse<AuthResponse.DuplicateCheck>> checkEmail(@RequestBody AuthRequest.CheckEmail request) {
         return ResponseEntity.ok(authService.checkEmail(request));
+    }
+
+    @PostMapping("/allergies")
+    public ResponseEntity<SuccessResponse<Void>> updateUserAllergies(@AuthenticationPrincipal AuthUser authUser, @RequestBody AllergyUpdateRequestDto allergyUpdateRequest) {
+        Long userId = authUser.getUserId();
+        authService.updateUserAllergies(userId, allergyUpdateRequest.getAllergyIds());
+        return ResponseEntity.ok(SuccessResponse.empty());
     }
 }

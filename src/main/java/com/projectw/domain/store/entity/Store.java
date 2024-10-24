@@ -68,10 +68,6 @@ public class Store extends Timestamped {
     @OneToMany(mappedBy = "store")
     private List<Reservation> reservations = new ArrayList<>();
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "menu_id")
-    private Menu menu;
-
     @Builder
     public Store(String image, String title, String description, LocalTime openTime, LocalTime closeTime, Boolean isNextDay, Long reservationTableCount, Long tableCount, String phoneNumber, String address, LocalTime lastOrder, LocalTime turnover, User user, List<Reservation> reservations) {
         this.image = image;

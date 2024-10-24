@@ -8,6 +8,8 @@ spring:
       max-file-size: 10MB
       max-request-size: 10MB
 
+DEFAULT_SLACK_WEBHOOK_URL: "https://hooks.slack.com/services/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"
+
 cloud:
   aws:
     credentials:

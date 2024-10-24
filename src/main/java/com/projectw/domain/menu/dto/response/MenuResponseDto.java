@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Set;
+
 @Getter
 @RequiredArgsConstructor
 @AllArgsConstructor
@@ -11,5 +13,5 @@ public class MenuResponseDto {
     private Long id;
     private String name;
     private int price;
-    private String allergies;
+    private Set<String> allergies;
 }
