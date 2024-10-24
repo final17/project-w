@@ -70,7 +70,6 @@ public class AuthService {
         String email = request.email();
         String nickname = request.nickname();
 
-
         // email 중복확인
         if (userRepository.existsByEmail(email)) {
             throw new InvalidRequestException(ResponseCode.DUPLICATE_EMAIL);
@@ -257,6 +256,11 @@ public class AuthService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new InvalidRequestException(ResponseCode.NOT_FOUND_USER));
 
+        // 알레르기 ID가 비어있거나 null인 경우 예외 처리
+        if (allergyIds == null || allergyIds.isEmpty()) {
+            throw new InvalidRequestException(ResponseCode.NOT_FOUND_ALLERGY);
+        }
+
         // 알레르기 정보 조회
         Set<Allergy> allergies = allergyRepository.findAllById(allergyIds)
                 .stream().collect(Collectors.toSet());
@@ -265,6 +269,7 @@ public class AuthService {
         if (allergies.size() != allergyIds.size()) {
             throw new InvalidRequestException(ResponseCode.NOT_FOUND_ALLERGY);
         }
+
         // 유저 알레르기 정보 업데이트
         user.updateAllergies(allergies);
 
