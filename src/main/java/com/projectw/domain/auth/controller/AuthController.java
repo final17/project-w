@@ -28,7 +28,11 @@ public class AuthController {
 
     @PostMapping("/auth/login")
     public ResponseEntity<SuccessResponse<AuthResponse.Login>> login(@Valid @RequestBody AuthRequest.Login authRequest) {
-        return ResponseEntity.ok().body(authService.login(authRequest));
+        AuthResponse.Login result = authService.login(authRequest);
+        String accessToken = result.accessToken();
+        String refreshToken = result.refreshToken();
+
+        return ResponseEntity.ok().header(JwtUtil.AUTHORIZATION_HEADER, accessToken, JwtUtil.REFRESH_TOKEN_HEADER, refreshToken).body(SuccessResponse.of(result));
     }
 
     @PostMapping("/auth/logout")
@@ -38,7 +42,11 @@ public class AuthController {
 
     @PostMapping("/auth/reissue")
     public ResponseEntity<?> reissue(@RequestHeader(JwtUtil.REFRESH_TOKEN_HEADER) String refreshToken) {
-        return ResponseEntity.ok(authService.reissue(refreshToken));
+        AuthResponse.Reissue result = authService.reissue(refreshToken);
+        String newAccessToken = result.accessToken();
+        String newRefreshToken = result.refreshToken();
+
+        return ResponseEntity.ok().header(JwtUtil.AUTHORIZATION_HEADER, newAccessToken, JwtUtil.REFRESH_TOKEN_HEADER, newRefreshToken).body(SuccessResponse.of(result));
     }
 
     @DeleteMapping("/auth/account")

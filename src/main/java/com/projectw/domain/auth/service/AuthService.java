@@ -87,7 +87,7 @@ public class AuthService {
      * @param request
      * @return
      */
-    public SuccessResponse<AuthResponse.Login> login(Login request) {
+    public AuthResponse.Login login(Login request) {
         User user = userRepository.findByEmail(request.email())
             .orElseThrow(()-> new InvalidRequestException(ResponseCode.WRONG_EMAIL_OR_PASSWORD));
 
@@ -114,7 +114,7 @@ public class AuthService {
         String refreshToken = jwtUtil.createRefreshToken(user.getId(), user.getEmail(), user.getRole());
 
         redissonClient.getBucket(JwtUtil.REDIS_REFRESH_TOKEN_PREFIX + user.getId()).set(refreshToken, Duration.ofMillis(TokenType.REFRESH.getLifeTime()));
-        return SuccessResponse.of(new AuthResponse.Login(user, accessToken, refreshToken));
+        return new AuthResponse.Login(user, accessToken, refreshToken);
     }
 
     /**
@@ -132,7 +132,7 @@ public class AuthService {
      * @param refreshToken
      * @return
      */
-    public SuccessResponse<?> reissue(String refreshToken) {
+    public Reissue reissue(String refreshToken) {
 
         if(refreshToken == null) {
             throw new InvalidTokenException();
@@ -191,9 +191,7 @@ public class AuthService {
 
         refreshBucket.set(newRefreshToken, Duration.ofMillis(ttl));
 
-        Reissue reissue = new Reissue(newAccessToken, newRefreshToken);
-
-        return SuccessResponse.of(reissue);
+        return new Reissue(newAccessToken, newRefreshToken);
     }
 
     /**
