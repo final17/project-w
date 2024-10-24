@@ -55,7 +55,6 @@ public class CommentService {
     }
 
     private User findUser(String email) {
-        User user = userRepository.findByEmail(email).orElseThrow(()-> new IllegalArgumentException("권한이 없습니다."));
-        return user;
+        return userRepository.findByEmail(email).orElseThrow(()-> new IllegalArgumentException("권한이 없습니다."));
     }
 }

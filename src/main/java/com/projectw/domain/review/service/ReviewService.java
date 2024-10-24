@@ -27,6 +27,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -183,30 +186,29 @@ public class ReviewService {
     }
 
     private String uploadFile(MultipartFile file, String email) throws IOException {
-        // 파일 검증
         FileUtil.validateFile(file);
 
-        // 안전한 파일 생성
-        File dest = FileUtil.createSecureFile(fileDir, email, file.getOriginalFilename());
+        var emailDirectory = Paths.get(fileDir, email);
+        FileUtil.createDirectoryIfNotExists(emailDirectory);
+
+        String newFileName = FileUtil.generateUniqueFileName(file.getOriginalFilename());
+        Path destPath = emailDirectory.resolve(newFileName);
 
         try {
-            // 파일 저장
-            file.transferTo(dest);
+            Files.copy(file.getInputStream(), destPath);
 
-            // 파일 저장 확인
-            if (!dest.exists()) {
+            if (!Files.exists(destPath)) {
                 throw new FileUploadException("파일 저장에 실패했습니다.");
             }
 
-            // 이메일/UUID.확장자 형태로 반환
-            return email + "/" + dest.getName();
+            return email + "/" + newFileName;
 
         } catch (IOException e) {
-            // 실패한 파일 정리
-            if (dest.exists()) {
-                dest.delete();
+            try {
+                FileUtil.deleteIfExists(destPath);
+            } catch (IOException deleteError) {
+                log.error("실패한 파일 삭제 중 오류 발생", deleteError);
             }
-            log.error("파일 업로드 실패: {}", e.getMessage(), e);
             throw new FileUploadException("파일 저장 중 오류가 발생했습니다.", e);
         }
     }
@@ -231,58 +233,24 @@ public class ReviewService {
         }
     }
 
-//    public String uploadFile(MultipartFile file, String email) throws IOException {
-//        if (file == null || file.isEmpty()) {
-//            return null;
-//        }
-//
-//        // 원본 파일명 추출
-//        String originalFilename = file.getOriginalFilename();
-//        if (originalFilename == null || originalFilename.isBlank()) {
-//            throw new IllegalArgumentException("파일명이 유효하지 않습니다.");
-//        }
-//
-//        // 이메일로 된 디렉토리 경로 생성
-//        File emailDirectory = new File(fileDir, email);
-//        if (!emailDirectory.exists()) {
-//            boolean created = emailDirectory.mkdirs();
-//            if (!created) {
-//                throw new IOException("사용자 디렉토리 생성에 실패했습니다: " + emailDirectory.getPath());
-//            }
-//        }
-//
-//        // 파일 확장자 추출
-//        String ext = originalFilename.substring(originalFilename.lastIndexOf("."));
-//
-//        // 새로운 파일명 생성 (UUID + 확장자)
-//        String newFileName = UUID.randomUUID().toString() + ext;
-//
-//        // 전체 경로 (디렉토리 + 이메일 + 파일명)
-//        File dest = new File(emailDirectory, newFileName);
-//
-//        try {
-//            // 파일 저장
-//            file.transferTo(dest);
-//
-//            // 파일이 실제로 저장되었는지 확인
-//            if (!dest.exists()) {
-//                throw new IOException("파일 저장에 실패했습니다.");
-//            }
-//
-//            log.info("파일 저장 완료: {}", dest.getAbsolutePath());
-//            // 이메일 폴더명/파일명 형태로 저장
-//            return email + "/" + newFileName;
-//
-//        } catch (IOException e) {
-//            log.error("파일 저장 중 에러 발생: {}", e.getMessage());
-//            if (dest.exists()) {
-//                boolean deleted = dest.delete();
-//                if (!deleted) {
-//                    log.error("실패한 파일 삭제 실패: {}", dest.getAbsolutePath());
-//                }
-//            }
-//            throw e;
-//        }
-//    }
+    @Transactional
+    public void deleteImage(ReviewImage image) {
+        try {
+            var imagePath = Paths.get(fileDir, image.getImageUrl());
+            FileUtil.deleteIfExists(imagePath);
+
+            var parentDir = imagePath.getParent();
+            if (Files.exists(parentDir) && Files.isDirectory(parentDir)) {
+                try (var files = Files.list(parentDir)) {
+                    if (files.count() == 0) {
+                        FileUtil.deleteIfExists(parentDir);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            log.error("이미지 파일 삭제 중 오류 발생", e);
+            throw new FileUploadException("이미지 삭제 중 오류가 발생했습니다.", e);
+        }
+    }
 }
 

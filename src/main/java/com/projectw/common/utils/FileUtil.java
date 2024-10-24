@@ -6,6 +6,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.*;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -88,4 +89,36 @@ public class FileUtil {
 
         return dest;
     }
+
+
+    public static Path createDirectoryIfNotExists(Path directory) throws IOException {
+        return Files.exists(directory) ? directory : Files.createDirectories(directory);
+    }
+
+    public static String generateUniqueFileName(String originalFilename) {
+        String ext = getExtension(originalFilename);
+        return UUID.randomUUID() + ext;
+    }
+
+    public static void deleteIfExists(Path path) throws IOException {
+        try {
+            if (Files.exists(path)) {
+                Files.delete(path);
+            }
+        } catch (IOException e) {
+            String errorMessage;
+            if (e instanceof DirectoryNotEmptyException) {
+                errorMessage = "디렉토리가 비어있지 않습니다: " + path;
+            } else if (e instanceof NoSuchFileException) {
+                errorMessage = "파일이 존재하지 않습니다: " + path;
+            } else if (e instanceof AccessDeniedException) {
+                errorMessage = "파일 삭제 권한이 없습니다: " + path;
+            } else {
+                errorMessage = "파일 삭제 중 오류가 발생했습니다: " + e.getMessage();
+            }
+            log.error(errorMessage, e);
+            throw new FileUploadException(errorMessage, e);
+        }
+    }
+
 }
