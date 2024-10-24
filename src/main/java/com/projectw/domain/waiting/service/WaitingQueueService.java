@@ -5,20 +5,18 @@ import com.projectw.common.enums.ResponseCode;
 import com.projectw.common.exceptions.ForbiddenException;
 import com.projectw.common.exceptions.NotFoundException;
 import com.projectw.common.exceptions.UserAlreadyInQueueException;
+import com.projectw.common.utils.RedisProducer;
 import com.projectw.domain.notification.service.SseNotificationService;
 import com.projectw.domain.store.entity.Store;
 import com.projectw.domain.store.repository.StoreRepository;
 import com.projectw.domain.waiting.dto.WaitingPoll;
-import com.projectw.domain.waiting.dto.WaitingPollEvent;
 import com.projectw.domain.waiting.dto.WaitingQueueResponse;
 import com.projectw.security.AuthUser;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RScoredSortedSet;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.protocol.ScoredEntry;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.time.LocalDateTime;
@@ -28,12 +26,11 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class WaitingQueueService {
     private final RedissonClient redissonClient;
     private final SseNotificationService notificationService;
     private final StoreRepository storeRepository;
-    private final ApplicationEventPublisher eventPublisher;
+    private final RedisProducer redisProducer;
 
 
     public SseEmitter connect(AuthUser authUser, long storeId) {
@@ -87,7 +84,7 @@ public class WaitingQueueService {
         Double score = sortedSet.firstScore();
         String popUserId = sortedSet.pollFirst();
         notificationService.delete(getSseKey(storeId, popUserId));
-        eventPublisher.publishEvent(new WaitingPollEvent(new WaitingPoll(score.longValue(), storeId, Long.parseLong(popUserId), LocalDateTime.now())));
+        redisProducer.send("waiting-poll", new WaitingPoll(score.longValue(), storeId, Long.parseLong(popUserId), LocalDateTime.now()));
         updateAllUsers(storeId);
     }
 
