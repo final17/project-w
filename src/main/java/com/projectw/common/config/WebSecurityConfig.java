@@ -39,7 +39,7 @@ public class WebSecurityConfig {
             .httpBasic(AbstractHttpConfigurer::disable) // BasicAuthenticationFilter 비활성화
             .logout(AbstractHttpConfigurer::disable) // LogoutFilter 비활성화
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/auth/**").permitAll()
+                .requestMatchers("/api/*/auth/**").permitAll()
                 .requestMatchers("/api/v2/user/stores/*/waitings/connection").permitAll() // sse 연결끊으면 에러 때문에 permitAll 처리
                 .requestMatchers("/auth/logout").authenticated()
                 .requestMatchers("/api/v1/user/**", "/api/v2/user/**").hasAnyAuthority(UserRole.Authority.USER, UserRole.Authority.ADMIN)
