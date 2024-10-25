@@ -21,11 +21,13 @@ public class AuthController {
 
     private final AuthService authService;
 
+    @CrossOrigin("http://localhost:3000")
     @PostMapping("/signup")
     public ResponseEntity<SuccessResponse<Signup>> signup(@Valid @RequestBody AuthRequest.Signup authRequest) {
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.signup(authRequest));
     }
 
+    @CrossOrigin("http://localhost:3000")
     @PostMapping("/login")
     public ResponseEntity<SuccessResponse<AuthResponse.Login>> login(@Valid @RequestBody AuthRequest.Login authRequest) {
         AuthResponse.Login result = authService.login(authRequest);

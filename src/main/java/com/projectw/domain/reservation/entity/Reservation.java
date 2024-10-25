@@ -1,6 +1,7 @@
 package com.projectw.domain.reservation.entity;
 
 import com.projectw.common.entity.Timestamped;
+import com.projectw.domain.reservation.enums.PaymentStatus;
 import com.projectw.domain.reservation.enums.ReservationStatus;
 import com.projectw.domain.reservation.enums.ReservationType;
 import com.projectw.domain.store.entity.Store;
@@ -47,6 +48,12 @@ public class Reservation extends Timestamped {
     @Column(nullable = false)
     private Long numberPeople;   // 예약인원 , 입장인원
 
+    @Column(nullable = false)
+    private PaymentStatus paymentStatus;
+
+    @Column(nullable = false)
+    private int paymentAmt;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -56,7 +63,7 @@ public class Reservation extends Timestamped {
     private Store store;
 
     @Builder
-    public Reservation(ReservationStatus status , ReservationType type , boolean menuYN , LocalDate reservationDate , LocalTime reservationTime , Long reservationNo , Long numberPeople , User user , Store store) {
+    public Reservation(ReservationStatus status , ReservationType type , boolean menuYN , LocalDate reservationDate , LocalTime reservationTime , Long reservationNo , Long numberPeople , PaymentStatus paymentStatus , int paymentAmt , User user , Store store) {
         this.status = status;
         this.type = type;
         this.menuYN = menuYN;
@@ -64,6 +71,8 @@ public class Reservation extends Timestamped {
         this.reservationTime = reservationTime;
         this.reservationNo = reservationNo;
         this.numberPeople = numberPeople;
+        this.paymentStatus = paymentStatus;
+        this.paymentAmt = paymentAmt;
         this.user = user;
         this.store = store;
     }

@@ -9,6 +9,7 @@ import com.projectw.common.exceptions.UnauthorizedException;
 import com.projectw.domain.reservation.dto.ReserveRequest;
 import com.projectw.domain.reservation.dto.ReserveResponse;
 import com.projectw.domain.reservation.entity.Reservation;
+import com.projectw.domain.reservation.enums.PaymentStatus;
 import com.projectw.domain.reservation.enums.ReservationStatus;
 import com.projectw.domain.reservation.enums.ReservationType;
 import com.projectw.domain.reservation.exception.DuplicateReservationException;
@@ -86,7 +87,7 @@ public class ReservationService {
         }
 
         // 3. 예약테이블에 개수 조회
-        List<ReservationStatus> statusList = Arrays.asList(ReservationStatus.CANCEL, ReservationStatus.AUTOMATIC_CANCEL);
+        List<ReservationStatus> statusList = Arrays.asList(ReservationStatus.CANCEL);
         long remainder = reservationRepository.countReservationByDate(ReservationType.RESERVATION , statusList , reserv.reservationDate() , reserv.reservationTime());
 
         // 4. 예약개수 비교 작업 - 예외처리!!
@@ -99,6 +100,8 @@ public class ReservationService {
         LocalDate now = LocalDate.now();
         Long reservationNo = reservationRepository.findMaxReservationDate(ReservationType.RESERVATION , now);
 
+        PaymentStatus paymentStatus = PaymentStatus.WAIT;
+
         // 예약 Entity 만들기
         Reservation reservation = Reservation.builder()
                 .status(ReservationStatus.RESERVATION)
@@ -108,12 +111,19 @@ public class ReservationService {
                 .reservationNo(reservationNo)
                 .reservationDate(reserv.reservationDate())
                 .reservationTime(reserv.reservationTime())
+                .paymentStatus(paymentStatus)
+                .paymentAmt(0)
                 .user(user)
                 .store(store)
                 .build();
 
         reservationRepository.save(reservation);
     }
+
+
+    // 결제 완료
+
+
 
     @Transactional
     public void reservationCancelReservation(Long userId , Long storeId , Long reservationId) {

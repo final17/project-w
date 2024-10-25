@@ -34,6 +34,7 @@ public class StoreUserController {
         return ResponseEntity.ok(SuccessResponse.of(StoreResponseDtoList));
     }
 
+    @CrossOrigin("http://localhost:3000")
     @GetMapping("/{storeId}")
     public ResponseEntity<SuccessResponse<StoreResponseDto>> getOneStore(
             @AuthenticationPrincipal AuthUser authUser,
@@ -43,6 +44,7 @@ public class StoreUserController {
         return ResponseEntity.ok(SuccessResponse.of(storeResponseDto));
     }
 
+    @CrossOrigin("http://localhost:3000")
     @GetMapping("/search")
     public ResponseEntity<SuccessResponse<Page<StoreResponseDto>>> serchStoreName(
             @AuthenticationPrincipal AuthUser authUser,

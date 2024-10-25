@@ -22,6 +22,7 @@ public class ReservationController {
 
     private final ReservationService reservationService;
 
+    @CrossOrigin("http://localhost:3000")
     @Secured({UserRole.Authority.USER})
     @PostMapping("/store/{storeId}/reservation")
     public ResponseEntity<SuccessResponse<Void>> saveReservation(
