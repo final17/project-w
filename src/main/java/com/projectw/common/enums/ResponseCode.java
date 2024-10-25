@@ -28,6 +28,9 @@ public enum ResponseCode {
     // 알레르기
     NOT_FOUND_ALLERGY("해당 알레르기는 존재하지 않습니다."),
 
+    // 팔로우
+    CANNOT_FOLLOW_SELF("자신을 팔로우할 수 없습니다."),
+
     // 매니저
     MANAGER_ALREADY_EXISTS("이미 매니저가 존재합니다."),
 

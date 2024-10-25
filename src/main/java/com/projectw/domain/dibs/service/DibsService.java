@@ -8,6 +8,8 @@ import com.projectw.domain.dibs.dto.response.DibsActionResponseDto;
 import com.projectw.domain.dibs.dto.response.DibsResponseDto;
 import com.projectw.domain.dibs.entity.Dibs;
 import com.projectw.domain.dibs.repository.DibsRepository;
+import com.projectw.domain.follow.dto.FollowUserDto;
+import com.projectw.domain.follow.service.FollowService;
 import com.projectw.domain.store.entity.Store;
 import com.projectw.domain.store.repository.StoreRepository;
 import com.projectw.domain.user.entity.User;
@@ -26,6 +28,8 @@ public class DibsService {
     private final DibsRepository dibsRepository;
     private final StoreRepository storeRepository;
     private final UserRepository userRepository;
+    private final FollowService followService;
+
 
     @Transactional
     public DibsActionResponseDto addOrRemoveDibs(AuthUser authUser, DibsRequestDto requestDto) {
@@ -70,6 +74,19 @@ public class DibsService {
 
         // Dibs 리스트를 DibsResponseDto로 변환하여 반환
         return dibsList.stream()
+                .map(DibsResponseDto::new)
+                .collect(Collectors.toList());
+    }
+
+    // 사용자가 팔로우한 다른 사용자의 찜한 가게 목록 조회
+    @Transactional(readOnly = true)
+    public List<DibsResponseDto> getFollowingDibsList(AuthUser authUser) {
+        // 사용자가 팔로우한 사용자 목록 조회 (List<FollowUserDto>로 반환됨)
+        List<FollowUserDto> followingList = followService.getFollowingList(authUser);
+
+        // 팔로우한 각 사용자의 Dibs 목록을 조회하고, DibsResponseDto로 변환
+        return followingList.stream()
+                .flatMap(followUserDto -> dibsRepository.findByUserId(followUserDto.getUserId()).stream())
                 .map(DibsResponseDto::new)
                 .collect(Collectors.toList());
     }
