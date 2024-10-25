@@ -35,4 +35,11 @@ public class DibsController {
         List<DibsResponseDto> dibsList = dibsService.getDibsList(authUser);
         return ResponseEntity.ok(dibsList);
     }
+
+    // 팔로우한 사용자의 찜 목록 조회
+    @GetMapping("/following")
+    public ResponseEntity<List<DibsResponseDto>> getFollowingDibsList(@AuthenticationPrincipal AuthUser authUser) {
+        List<DibsResponseDto> followingDibsList = dibsService.getFollowingDibsList(authUser);
+        return ResponseEntity.ok(followingDibsList);
+    }
 }
