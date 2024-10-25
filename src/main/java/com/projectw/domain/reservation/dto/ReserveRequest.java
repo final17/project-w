@@ -10,7 +10,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Objects;
 
-public sealed interface ReserveRequest permits ReserveRequest.Wait , ReserveRequest.Reservation , ReserveRequest.Parameter {
+public sealed interface ReserveRequest permits ReserveRequest.Wait , ReserveRequest.Reservation , ReserveRequest.Parameter , ReserveRequest.PaymentInfo {
 
     record Reservation(
             boolean menuYN,
@@ -19,7 +19,9 @@ public sealed interface ReserveRequest permits ReserveRequest.Wait , ReserveRequ
             @NotBlank(message = "예약날짜는 필수입니다.")
             LocalDate reservationDate,
             @NotBlank(message = "예약시간은 필수입니다.")
-            LocalTime reservationTime
+            LocalTime reservationTime,
+            @NotNull(message = "예약금은 필수입니다.")
+            Long paymentAmt
     ) implements ReserveRequest {}
 
     record Wait(
@@ -40,5 +42,14 @@ public sealed interface ReserveRequest permits ReserveRequest.Wait , ReserveRequ
             if (Objects.isNull(page)) page = 1;
             if (Objects.isNull(size)) size = 10;
         }
+    }
+
+    record PaymentInfo(
+            Long revervationId,
+            String paymentKey,
+            String orderId,
+            String amount
+    ) implements ReserveRequest {
+
     }
 }

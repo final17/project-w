@@ -48,7 +48,8 @@ public enum ResponseCode {
     COMPLETE_FORBIDDEN("해당 예약건은 완료가 불가능합니다."),
     INVALID_RESERVATION_TIME("예약 불가능한 시간대입니다."),
     ALREADY_WAITING("이미 웨이팅 중 입니다."),
-    ALREADY_DELETED_USER("회원탈퇴한 유저입니다.");
+    ALREADY_DELETED_USER("회원탈퇴한 유저입니다."),
+    INVALID_AMOUNT("설정한 결제 금액과 다릅니다.");
 
 
     private final String message;

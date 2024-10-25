@@ -6,7 +6,7 @@ import com.projectw.domain.reservation.enums.ReservationType;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
-public sealed interface ReserveResponse permits ReserveResponse.Infos, ReserveResponse.Info {
+public sealed interface ReserveResponse permits ReserveResponse.Infos, ReserveResponse.Info, ReserveResponse.ReservationInfo {
     record Infos (
             Long userId,
             Long storeId,
@@ -33,5 +33,11 @@ public sealed interface ReserveResponse permits ReserveResponse.Infos, ReserveRe
             ReservationStatus status
     ) implements ReserveResponse {
 
+    }
+
+    record ReservationInfo (
+            Long storeId,
+            Long reservationId
+    ) implements ReserveResponse {
     }
 }

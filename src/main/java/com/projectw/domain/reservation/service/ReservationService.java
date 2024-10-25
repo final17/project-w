@@ -4,6 +4,7 @@ import com.projectw.common.annotations.RedisListener;
 import com.projectw.common.annotations.RedisLock;
 import com.projectw.common.enums.ResponseCode;
 import com.projectw.common.exceptions.ForbiddenException;
+import com.projectw.common.exceptions.InvalidRequestException;
 import com.projectw.common.exceptions.NotFoundException;
 import com.projectw.common.exceptions.UnauthorizedException;
 import com.projectw.domain.reservation.dto.ReserveRequest;
@@ -47,7 +48,7 @@ public class ReservationService {
 
     @Transactional
     @RedisLock("#reservation")
-    public void saveReservation(Long userId , Long storeId , ReserveRequest.Reservation reserv) {
+    public ReserveResponse.ReservationInfo preparePayments(Long userId , Long storeId , ReserveRequest.Reservation reserv) {
         // 현재시간대를 기준으로 예약 가능한 시간 값이 들어왔는지 검증
         LocalDate nowDate = LocalDate.now();
         LocalTime nowTime = LocalTime.now();
@@ -64,14 +65,14 @@ public class ReservationService {
         // 식당이 있는지?
         Store store = storeRepository.findById(storeId).orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_STORE));
 
+        // 들어온 금액과 내부의 설정된 금액이 다를때!
+        if (!reserv.paymentAmt().equals(store.getDeposit())) {
+            throw new InvalidRequestException(ResponseCode.INVALID_AMOUNT);
+        }
+
         // 본인 식당에 예약 가능한지?
         if (store.getUser().equals(user)) {
             throw new UnauthorizedException(ResponseCode.UNAUTHORIZED_STORE_RESERVATION);
-        }
-
-        // 두번 예약 불가
-        if (reservationRepository.existsByUserIdAndStoreIdAndTypeAndStatus(userId , storeId , ReservationType.RESERVATION , ReservationStatus.RESERVATION)) {
-            throw new DuplicateReservationException(ResponseCode.DUPLICATE_RESERVATION);
         }
 
         // 예약 가능한 시간대인지? 어떻게 처리할지 고민할 것
@@ -100,7 +101,8 @@ public class ReservationService {
         LocalDate now = LocalDate.now();
         Long reservationNo = reservationRepository.findMaxReservationDate(ReservationType.RESERVATION , now);
 
-        PaymentStatus paymentStatus = PaymentStatus.WAIT;
+        // 예약금이 있다는 건 결제를 해야한다는 의미!
+        PaymentStatus paymentStatus = reserv.paymentAmt() > 0 ? PaymentStatus.WAIT : PaymentStatus.COMP;
 
         // 예약 Entity 만들기
         Reservation reservation = Reservation.builder()
@@ -112,18 +114,25 @@ public class ReservationService {
                 .reservationDate(reserv.reservationDate())
                 .reservationTime(reserv.reservationTime())
                 .paymentStatus(paymentStatus)
-                .paymentAmt(0)
+                .paymentAmt(reserv.paymentAmt())
                 .user(user)
                 .store(store)
                 .build();
 
-        reservationRepository.save(reservation);
+        Reservation saveReservation = reservationRepository.save(reservation);
+
+        return new ReserveResponse.ReservationInfo(store.getId() , saveReservation.getId());
     }
 
-
     // 결제 완료
+    @Transactional
+    public void checkoutPayments(Long userId , Long storeId , ReserveRequest.PaymentInfo paymentInfo) {
+        Reservation reservation = reservationRepository.findByUserIdAndStoreId(userId , storeId).orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_RESERVATION));
+        reservation.updatePaymentStatus(PaymentStatus.COMP);
 
-
+        // TransactionalEventLister 사용할 것
+        // 결제 완료
+    }
 
     @Transactional
     public void reservationCancelReservation(Long userId , Long storeId , Long reservationId) {
@@ -148,6 +157,10 @@ public class ReservationService {
                 throw new ForbiddenException(ResponseCode.CANCEL_FORBIDDEN);
         }
 
+        if (reservation.getPaymentStatus().equals(PaymentStatus.COMP)) {
+            // TransactionalEventLister 사용할 것
+            // 결제 취소된거
+        }
     }
 
     public Page<ReserveResponse.Infos> getUserReservations(Long userId , ReserveRequest.Parameter parameter) {

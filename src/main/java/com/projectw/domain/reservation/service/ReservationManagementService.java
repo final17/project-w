@@ -6,6 +6,7 @@ import com.projectw.common.exceptions.NotFoundException;
 import com.projectw.domain.reservation.dto.ReserveRequest;
 import com.projectw.domain.reservation.dto.ReserveResponse;
 import com.projectw.domain.reservation.entity.Reservation;
+import com.projectw.domain.reservation.enums.PaymentStatus;
 import com.projectw.domain.reservation.enums.ReservationStatus;
 import com.projectw.domain.reservation.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +40,11 @@ public class ReservationManagementService {
         }
 
         reservation.updateStatus(ReservationStatus.CANCEL);
+
+        if (reservation.getPaymentStatus().equals(PaymentStatus.COMP)) {
+            // TransactionalEventLister 사용할 것
+            // 결제 취소된거
+        }
     }
 
     @Transactional
@@ -52,7 +58,7 @@ public class ReservationManagementService {
         }
 
         // 승인 가능한지? (예약 상태만 승인 가능)
-        if (reservation.getStatus() != ReservationStatus.RESERVATION) {
+        if (reservation.getStatus() != ReservationStatus.RESERVATION || reservation.getPaymentStatus() != PaymentStatus.COMP) {
             throw new ForbiddenException(ResponseCode.APPLY_FORBIDDEN);
         }
 

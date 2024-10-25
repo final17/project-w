@@ -49,10 +49,11 @@ public class Reservation extends Timestamped {
     private Long numberPeople;   // 예약인원 , 입장인원
 
     @Column(nullable = false)
+    @Enumerated(value = EnumType.STRING)
     private PaymentStatus paymentStatus;
 
     @Column(nullable = false)
-    private int paymentAmt;
+    private Long paymentAmt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -63,7 +64,7 @@ public class Reservation extends Timestamped {
     private Store store;
 
     @Builder
-    public Reservation(ReservationStatus status , ReservationType type , boolean menuYN , LocalDate reservationDate , LocalTime reservationTime , Long reservationNo , Long numberPeople , PaymentStatus paymentStatus , int paymentAmt , User user , Store store) {
+    public Reservation(ReservationStatus status , ReservationType type , boolean menuYN , LocalDate reservationDate , LocalTime reservationTime , Long reservationNo , Long numberPeople , PaymentStatus paymentStatus , Long paymentAmt , User user , Store store) {
         this.status = status;
         this.type = type;
         this.menuYN = menuYN;
@@ -79,5 +80,9 @@ public class Reservation extends Timestamped {
 
     public void updateStatus(ReservationStatus status) {
         this.status = status;
+    }
+
+    public void updatePaymentStatus(PaymentStatus paymentStatus) {
+        this.paymentStatus = paymentStatus;
     }
 }
