@@ -46,6 +46,7 @@ public class StoreOwnerServiceImpl implements StoreOwnerService{
                 .tableCount(storeRequestDto.getTableCount())
                 .phoneNumber(storeRequestDto.getPhoneNumber())
                 .address(storeRequestDto.getAddress())
+                .deposit(storeRequestDto.getDeposit())
                 .user(user)
                 .reservations(null)
                 .build();

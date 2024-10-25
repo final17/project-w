@@ -20,6 +20,7 @@ public class StoreResponseDto {
     private Long tableCount;
     private String phoneNumber;
     private String address;
+    private Long deposit;
     private UserOneResponseDto userOneResponseDto;
 
     public StoreResponseDto(Store saveStore) {
@@ -34,6 +35,7 @@ public class StoreResponseDto {
         tableCount = saveStore.getTableCount();
         phoneNumber = saveStore.getPhoneNumber();
         address = saveStore.getAddress();
+        deposit = saveStore.getDeposit();
         userOneResponseDto = new UserOneResponseDto(saveStore.getUser());
     }
 }

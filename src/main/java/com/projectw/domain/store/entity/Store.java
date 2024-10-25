@@ -59,6 +59,9 @@ public class Store extends Timestamped {
     private LocalTime turnover;
 
     @Column(nullable = false)
+    private Long deposit;
+
+    @Column(nullable = false)
     private Boolean isDeleted = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -69,7 +72,7 @@ public class Store extends Timestamped {
     private List<Reservation> reservations = new ArrayList<>();
 
     @Builder
-    public Store(String image, String title, String description, LocalTime openTime, LocalTime closeTime, Boolean isNextDay, Long reservationTableCount, Long tableCount, String phoneNumber, String address, LocalTime lastOrder, LocalTime turnover, User user, List<Reservation> reservations) {
+    public Store(String image, String title, String description, LocalTime openTime, LocalTime closeTime, Boolean isNextDay, Long reservationTableCount, Long tableCount, String phoneNumber, String address, LocalTime lastOrder, LocalTime turnover, User user, List<Reservation> reservations, Long deposit) {
         this.image = image;
         this.title = title;
         this.description = description;
@@ -84,6 +87,7 @@ public class Store extends Timestamped {
         this.turnover = turnover;
         this.user = user;
         this.reservations = reservations;
+        this.deposit = deposit;
     }
 
     public Store putStore(StoreRequestDto storeRequestDto) {
@@ -98,6 +102,7 @@ public class Store extends Timestamped {
         this.tableCount = storeRequestDto.getTableCount();
         this.address = storeRequestDto.getAddress();
         this.isNextDay = openTime.isAfter(lastOrder);
+        this.deposit = storeRequestDto.getDeposit();
         return this;
     }
 
