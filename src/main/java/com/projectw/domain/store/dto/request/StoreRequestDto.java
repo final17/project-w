@@ -16,4 +16,5 @@ public class StoreRequestDto {
     private Long tableCount;
     private String phoneNumber;
     private String address;
+    private Long deposit;
 }
