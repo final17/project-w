@@ -1,9 +1,30 @@
-package com.projectw.domain.payment;
-
+//package com.projectw.domain.payment;
+//
+//import com.fasterxml.jackson.databind.JsonNode;
+//import lombok.RequiredArgsConstructor;
+//import org.springframework.http.HttpEntity;
+//import org.springframework.stereotype.Service;
+//
+//
+//import com.fasterxml.jackson.databind.ObjectMapper;
+//import com.projectw.domain.payment.entity.TossPaymentResponse;
+//import org.slf4j.Logger;
+//import org.slf4j.LoggerFactory;
+//import org.springframework.http.HttpStatus;
+//import org.springframework.http.ResponseEntity;
+//import org.springframework.web.client.RestTemplate;
+//
+//import javax.smartcardio.Card;
+//import java.nio.charset.StandardCharsets;
+//import java.time.OffsetDateTime;
+//import java.time.format.DateTimeFormatter;
+//import java.util.Base64;
+//import java.util.UUID;
+//
 //@Service
 //@RequiredArgsConstructor
 //public class PaymentService {
-
+//
 //    private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
 //    private final TempOrderRepository tempOrderRepository;
 //

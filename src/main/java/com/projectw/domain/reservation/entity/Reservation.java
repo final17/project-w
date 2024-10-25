@@ -1,7 +1,7 @@
 package com.projectw.domain.reservation.entity;
 
 import com.projectw.common.entity.Timestamped;
-import com.projectw.domain.reservation.enums.PaymentStatus;
+import com.projectw.domain.payment.enums.PaymentStatus;
 import com.projectw.domain.reservation.enums.ReservationStatus;
 import com.projectw.domain.reservation.enums.ReservationType;
 import com.projectw.domain.store.entity.Store;

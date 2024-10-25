@@ -7,13 +7,12 @@ import com.projectw.common.exceptions.ForbiddenException;
 import com.projectw.common.exceptions.InvalidRequestException;
 import com.projectw.common.exceptions.NotFoundException;
 import com.projectw.common.exceptions.UnauthorizedException;
+import com.projectw.domain.payment.event.PaymentEvent;
 import com.projectw.domain.reservation.dto.ReserveRequest;
 import com.projectw.domain.reservation.dto.ReserveResponse;
 import com.projectw.domain.reservation.entity.Reservation;
-import com.projectw.domain.reservation.enums.PaymentStatus;
 import com.projectw.domain.reservation.enums.ReservationStatus;
 import com.projectw.domain.reservation.enums.ReservationType;
-import com.projectw.domain.reservation.exception.DuplicateReservationException;
 import com.projectw.domain.reservation.exception.InvalidReservationTimeException;
 import com.projectw.domain.reservation.repository.ReservationRepository;
 import com.projectw.domain.store.entity.Store;
@@ -23,6 +22,7 @@ import com.projectw.domain.user.repository.UserRepository;
 import com.projectw.domain.waiting.dto.WaitingPoll;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -45,6 +45,7 @@ public class ReservationService {
     private final ReservationRepository reservationRepository;
     private final UserRepository userRepository;
     private final StoreRepository storeRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     @RedisLock("#reservation")
@@ -102,7 +103,7 @@ public class ReservationService {
         Long reservationNo = reservationRepository.findMaxReservationDate(ReservationType.RESERVATION , now);
 
         // 예약금이 있다는 건 결제를 해야한다는 의미!
-        PaymentStatus paymentStatus = reserv.paymentAmt() > 0 ? PaymentStatus.WAIT : PaymentStatus.COMP;
+//        PaymentStatus paymentStatus = reserv.paymentAmt() > 0 ? PaymentStatus.WAIT : PaymentStatus.COMP;
 
         // 예약 Entity 만들기
         Reservation reservation = Reservation.builder()
@@ -113,7 +114,7 @@ public class ReservationService {
                 .reservationNo(reservationNo)
                 .reservationDate(reserv.reservationDate())
                 .reservationTime(reserv.reservationTime())
-                .paymentStatus(paymentStatus)
+                .paymentStatus(null)
                 .paymentAmt(reserv.paymentAmt())
                 .user(user)
                 .store(store)
@@ -128,10 +129,10 @@ public class ReservationService {
     @Transactional
     public void checkoutPayments(Long userId , Long storeId , ReserveRequest.PaymentInfo paymentInfo) {
         Reservation reservation = reservationRepository.findByUserIdAndStoreId(userId , storeId).orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_RESERVATION));
-        reservation.updatePaymentStatus(PaymentStatus.COMP);
+//        reservation.updatePaymentStatus(PaymentStatus.COMP);
 
         // TransactionalEventLister 사용할 것
-        // 결제 완료
+        eventPublisher.publishEvent(new PaymentEvent(userId, storeId , reservation.getId() , paymentInfo.paymentKey() , paymentInfo.orderId() , paymentInfo.amount()));
     }
 
     @Transactional
@@ -157,10 +158,10 @@ public class ReservationService {
                 throw new ForbiddenException(ResponseCode.CANCEL_FORBIDDEN);
         }
 
-        if (reservation.getPaymentStatus().equals(PaymentStatus.COMP)) {
-            // TransactionalEventLister 사용할 것
-            // 결제 취소된거
-        }
+//        if (reservation.getPaymentStatus().equals(PaymentStatus.COMP)) {
+//            // TransactionalEventLister 사용할 것
+//            // 결제 취소된거
+//        }
     }
 
     public Page<ReserveResponse.Infos> getUserReservations(Long userId , ReserveRequest.Parameter parameter) {

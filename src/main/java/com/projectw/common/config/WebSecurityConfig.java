@@ -57,9 +57,8 @@ public class WebSecurityConfig {
                 .requestMatchers("/api/*/user/**").hasAnyAuthority(UserRole.Authority.USER, UserRole.Authority.ADMIN)
                 .requestMatchers("/api/*/owner/**").hasAnyAuthority(UserRole.Authority.OWNER, UserRole.Authority.ADMIN)
                 .requestMatchers("/api/*/owner/**").hasAuthority(UserRole.Authority.ADMIN)
-                .requestMatchers("/payments/**").permitAll()
-                .requestMatchers("/payments").permitAll()
                 .requestMatchers("/api/*/allergies").permitAll()
+                .requestMatchers("/api/*/payment/success" , "/api/*/payment/fail").permitAll()
                 .anyRequest().authenticated()
             );
         http.cors(c -> {
