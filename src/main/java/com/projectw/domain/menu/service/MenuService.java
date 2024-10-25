@@ -37,7 +37,7 @@ public class MenuService {
 
         // 스토어 조회
         Store store = storeRepository.findById(storeId)
-                .orElseThrow(() -> new IllegalArgumentException("스토어를 찾을 수 없습니다."));
+                .orElseThrow(() -> new IllegalArgumentException(ResponseCode.NOT_FOUND_STORE.getMessage()));
 
         // 알레르기 정보 가져오기
         Set<Allergy> allergies = allergyRepository.findAllById(requestDto.getAllergyIds())
