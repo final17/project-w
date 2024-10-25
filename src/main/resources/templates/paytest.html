@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Restaurant Reservation Payment Demo</title>
+    <script src="https://js.tosspayments.com/v1/payment"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f7f7f7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: #fff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            width: 400px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #007aff;
+            border: none;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: #005bb5;
+        }
+
+        .toss-logo {
+            margin-top: 20px;
+        }
+
+        .toss-logo img {
+            width: 150px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="title">식당 예약 결제 테스트</div>
+
+    <div class="input-group">
+        <label for="restaurant-name">식당 이름</label>
+        <input type="text" id="restaurant-name" placeholder="식당 이름을 입력하세요" value="테스트 식당">
+    </div>
+
+    <div class="input-group">
+        <label for="people">예약 인원</label>
+        <input type="number" id="people" placeholder="예약 인원을 입력하세요" value="2">
+    </div>
+
+    <div class="input-group">
+        <label for="deposit">예약금 (원)</label>
+        <input type="number" id="deposit" placeholder="예약금을 입력하세요" value="50000">
+    </div>
+
+    <button class="btn" onclick="createTempOrderAndRequestPayment()">결제하기</button>
+
+    <div class="toss-logo">
+        <img src="../static/logo.png" alt="Toss 로고">
+    </div>
+</div>
+
+<script>
+    var clientKey = "test_ck_ALnQvDd2VJln5R4gqw2O8Mj7X41m"; // 테스트용 클라이언트 키
+    var tossPayments = TossPayments(clientKey);
+
+    // 가주문을 생성한 후, Toss Payments 결제 요청을 실행하는 함수
+    function createTempOrderAndRequestPayment() {
+        const restaurantName = document.getElementById('restaurant-name').value;
+        const people = document.getElementById('people').value;
+        const deposit = document.getElementById('deposit').value;
+
+        // 가주문 생성 API 요청
+        fetch('/api/temp-order', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                orderName: `${restaurantName} 예약 (${people}명)`,
+                totalAmount: deposit
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 가주문 생성에 성공하면 결제 요청
+                    const orderId = data.data.orderId;
+                    const orderName = data.data.orderName;
+                    const amount = data.data.totalAmount;
+
+                    requestPayment(orderId, amount, orderName);
+                } else {
+                    alert('가주문 생성에 실패했습니다.');
+                }
+            })
+            .catch(error => {
+                console.error('가주문 생성 오류:', error);
+            });
+    }
+
+    // Toss Payments 결제 요청 함수
+    function requestPayment(orderId, amount, orderName) {
+        tossPayments.requestPayment('카드', {
+            amount: amount,
+            orderId: orderId,
+            orderName: orderName,
+            successUrl: 'http://localhost:8080/payments/success',
+            failUrl: 'http://localhost:8080/payments/fail'
+        });
+    }
+</script>
+
+</body>
+</html>

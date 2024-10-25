@@ -6,12 +6,13 @@ import com.projectw.domain.store.service.StoreUserService;
 import com.projectw.security.AuthUser;
 import com.sun.net.httpserver.Authenticator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -23,10 +24,13 @@ public class StoreUserController {
     private final StoreUserService storeUserService;
 
     @GetMapping()
-    public ResponseEntity<SuccessResponse<List<StoreResponseDto>>> getAllStore(
-            @AuthenticationPrincipal AuthUser authUser
+    public ResponseEntity<SuccessResponse<Page<StoreResponseDto>>> getAllStore(
+            @AuthenticationPrincipal AuthUser authUser,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
     ) {
-        List<StoreResponseDto> StoreResponseDtoList = storeUserService.getAllStore(authUser);
+        Pageable pageable = PageRequest.of(page, size);
+        Page<StoreResponseDto> StoreResponseDtoList = storeUserService.getAllStore(authUser, pageable);
         return ResponseEntity.ok(SuccessResponse.of(StoreResponseDtoList));
     }
 
@@ -36,6 +40,19 @@ public class StoreUserController {
             @PathVariable("storeId") Long storeId
     ) {
         StoreResponseDto storeResponseDto = storeUserService.getOneStore(authUser, storeId);
+        return ResponseEntity.ok(SuccessResponse.of(storeResponseDto));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<SuccessResponse<Page<StoreResponseDto>>> serchStoreName(
+            @AuthenticationPrincipal AuthUser authUser,
+            @RequestParam String storeName,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<StoreResponseDto> storeResponseDto = storeUserService.serchStoreName(authUser, storeName, pageable);
+
         return ResponseEntity.ok(SuccessResponse.of(storeResponseDto));
     }
 }
