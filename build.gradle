@@ -29,7 +29,6 @@ dependencies {
 
     //slack api
     implementation 'com.slack.api:slack-api-client:1.27.2'
-
     //jwt
     implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
