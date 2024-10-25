@@ -40,11 +40,14 @@ public class WebSecurityConfig {
             .logout(AbstractHttpConfigurer::disable) // LogoutFilter 비활성화
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/*/auth/**").permitAll()
-                .requestMatchers("/api/v2/user/stores/*/waitings/connection").permitAll() // sse 연결끊으면 에러 때문에 permitAll 처리
-                .requestMatchers("/auth/logout").authenticated()
-                .requestMatchers("/api/v1/user/**", "/api/v2/user/**").hasAnyAuthority(UserRole.Authority.USER, UserRole.Authority.ADMIN)
-                .requestMatchers("/api/v1/owner/**", "/api/v2/owner/**").hasAnyAuthority(UserRole.Authority.OWNER, UserRole.Authority.ADMIN)
-                .requestMatchers("/api/v1/owner/**", "/api/v2/owner/**").hasAuthority(UserRole.Authority.ADMIN)
+                .requestMatchers("/api/*/user/stores/*/waitings/connection").permitAll() // sse 연결끊으면 에러 때문에 permitAll 처리
+                .requestMatchers("/auth/*/logout").authenticated()
+                .requestMatchers("/api/*/user/**").hasAnyAuthority(UserRole.Authority.USER, UserRole.Authority.ADMIN)
+                .requestMatchers("/api/*/owner/**").hasAnyAuthority(UserRole.Authority.OWNER, UserRole.Authority.ADMIN)
+                .requestMatchers("/api/*/owner/**").hasAuthority(UserRole.Authority.ADMIN)
+                .requestMatchers("/payments/**").permitAll()
+                .requestMatchers("/payments").permitAll()
+                .requestMatchers("/api/*/allergies").permitAll()
                 .anyRequest().authenticated()
             );
         http.cors(c -> {

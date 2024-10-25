@@ -1,7 +1,6 @@
 package com.projectw.domain.auth.controller;
 
 import com.projectw.common.dto.SuccessResponse;
-import com.projectw.domain.allergy.dto.request.AllergyUpdateRequestDto;
 import com.projectw.domain.auth.dto.AuthRequest;
 import com.projectw.domain.auth.dto.AuthResponse;
 import com.projectw.domain.auth.dto.AuthResponse.Signup;
@@ -58,12 +57,5 @@ public class AuthController {
     @GetMapping("/email/check")
     public ResponseEntity<SuccessResponse<AuthResponse.DuplicateCheck>> checkEmail(@RequestBody AuthRequest.CheckEmail request) {
         return ResponseEntity.ok(authService.checkEmail(request));
-    }
-
-    @PostMapping("/allergies")
-    public ResponseEntity<SuccessResponse<Void>> updateUserAllergies(@AuthenticationPrincipal AuthUser authUser, @RequestBody AllergyUpdateRequestDto allergyUpdateRequest) {
-        Long userId = authUser.getUserId();
-        authService.updateUserAllergies(userId, allergyUpdateRequest.getAllergyIds());
-        return ResponseEntity.ok(SuccessResponse.empty());
     }
 }
