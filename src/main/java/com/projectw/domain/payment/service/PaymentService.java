@@ -42,9 +42,12 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import static com.projectw.common.constants.Const.FRONTEND_URL;
+import static com.projectw.common.constants.Const.PREFIX_ORDER_ID;
 
 @Slf4j
 @Service
@@ -92,7 +95,7 @@ public class PaymentService {
 
         if (reservationYN) {
             // 예약 성공
-            String orderId = "ORDER-" + UUID.randomUUID().toString().substring(0, 8);
+            String orderId = PREFIX_ORDER_ID + UUID.randomUUID().toString().substring(0, 8);
 
             Payment payment = Payment.builder()
                     .orderId(orderId)
@@ -333,13 +336,12 @@ public class PaymentService {
         }
 
         Cancels cancels = null;
-        if (jsonNode.has("cancels")) {
-            if (!jsonNode.get("cancels").isNull()) {
-                JsonNode cancelsNode = jsonNode.get("cancels");
+        if (jsonNode.has("cancels") && jsonNode.get("cancels").isArray()) {
+            for (JsonNode cancelsNode : jsonNode.get("cancels")) {
                 cancels = Cancels.builder()
                         .transactionKey(cancelsNode.get("transactionKey").textValue())
                         .cancelReason(cancelsNode.get("cancelReason").textValue())
-                        .canceledAt(OffsetDateTime.parse(jsonNode.get("canceledAt").textValue(), formatter))
+                        .canceledAt(OffsetDateTime.parse(cancelsNode.get("canceledAt").textValue(), formatter))
                         .cancelEasyPayDiscountAmount(cancelsNode.get("easyPayDiscountAmount").intValue())
                         .cancelAmount(cancelsNode.get("cancelAmount").longValue())
                         .taxFreeAmount(cancelsNode.get("taxFreeAmount").longValue())
@@ -348,6 +350,7 @@ public class PaymentService {
                         .receiptKey(cancelsNode.get("receiptKey").isNull() ? null : cancelsNode.get("receiptKey").textValue())
                         .cancelRequestId(cancelsNode.get("cancelRequestId").isNull() ? null : cancelsNode.get("cancelRequestId").textValue())
                         .build();
+                break;
             }
         }
 
