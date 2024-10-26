@@ -21,7 +21,7 @@ import static com.projectw.common.constants.Const.FRONTEND_URL;
 @RequiredArgsConstructor
 @RestController
 @CrossOrigin(FRONTEND_URL)
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v2")
 public class ReservationController {
 
     private final ReservationService reservationService;

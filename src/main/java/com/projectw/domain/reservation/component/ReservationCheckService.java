@@ -76,7 +76,8 @@ public class ReservationCheckService {
     /**
      * 예약가능수 비교 검증
      * */
-    public boolean checkReservationCapacity(Store store , LocalDate date , LocalTime time) {List<ReservationStatus> statusList = Arrays.asList(ReservationStatus.CANCEL);
+    public boolean checkReservationCapacity(Store store , LocalDate date , LocalTime time) {
+        List<ReservationStatus> statusList = Arrays.asList(ReservationStatus.CANCEL , ReservationStatus.COMPLETE);
         long remainder = reservationRepository.countReservationByDate(ReservationType.RESERVATION , statusList , date , time);
         return !(store.getReservationTableCount() <= remainder);
     }

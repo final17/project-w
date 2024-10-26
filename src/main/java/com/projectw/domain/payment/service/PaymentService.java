@@ -237,7 +237,6 @@ public class PaymentService {
             card = Card.builder()
                     .amount(cardNode.get("amount").intValue())
                     .issuerCode(cardNode.get("issuerCode").textValue())
-                    .acquirerCode(cardNode.get("acquirerCode").textValue())
                     .number(cardNode.get("number").textValue())
                     .installmentPlanMonths(cardNode.get("installmentPlanMonths").intValue())
                     .approveNo(cardNode.get("approveNo").textValue())
@@ -246,6 +245,7 @@ public class PaymentService {
                     .ownerType(cardNode.get("ownerType").textValue())
                     .acquireStatus(cardNode.get("acquireStatus").textValue())
                     .isInterestFree(cardNode.get("isInterestFree").booleanValue())
+                    .acquirerCode(cardNode.get("acquirerCode").isNull() ? null : cardNode.get("acquirerCode").textValue())
                     .interestPayer(cardNode.get("interestPayer").isNull() ? null : cardNode.get("interestPayer").textValue())
                     .build();
         }
@@ -306,7 +306,6 @@ public class PaymentService {
             card = Card.builder()
                     .amount(cardNode.get("amount").intValue())
                     .issuerCode(cardNode.get("issuerCode").textValue())
-                    .acquirerCode(cardNode.get("acquirerCode").textValue())
                     .number(cardNode.get("number").textValue())
                     .installmentPlanMonths(cardNode.get("installmentPlanMonths").intValue())
                     .approveNo(cardNode.get("approveNo").textValue())
@@ -315,6 +314,7 @@ public class PaymentService {
                     .ownerType(cardNode.get("ownerType").textValue())
                     .acquireStatus(cardNode.get("acquireStatus").textValue())
                     .isInterestFree(cardNode.get("isInterestFree").booleanValue())
+                    .acquirerCode(cardNode.get("acquirerCode").isNull() ? null : cardNode.get("acquirerCode").textValue())
                     .interestPayer(cardNode.get("interestPayer").isNull() ? null : cardNode.get("interestPayer").textValue())
                     .build();
         }
@@ -341,12 +341,12 @@ public class PaymentService {
                         .cancelReason(cancelsNode.get("cancelReason").textValue())
                         .canceledAt(OffsetDateTime.parse(jsonNode.get("canceledAt").textValue(), formatter))
                         .cancelEasyPayDiscountAmount(cancelsNode.get("easyPayDiscountAmount").intValue())
-                        .receiptKey(cancelsNode.get("receiptKey").textValue())
                         .cancelAmount(cancelsNode.get("cancelAmount").longValue())
                         .taxFreeAmount(cancelsNode.get("taxFreeAmount").longValue())
                         .refundableAmount(cancelsNode.get("refundableAmount").longValue())
                         .cancelStatus(PaymentStatus.of(cancelsNode.get("cancelStatus").textValue()))
-                        .cancelRequestId(cancelsNode.get("cancelRequestId").textValue())
+                        .receiptKey(cancelsNode.get("receiptKey").isNull() ? null : cancelsNode.get("receiptKey").textValue())
+                        .cancelRequestId(cancelsNode.get("cancelRequestId").isNull() ? null : cancelsNode.get("cancelRequestId").textValue())
                         .build();
             }
         }
