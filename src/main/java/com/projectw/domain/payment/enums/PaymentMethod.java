@@ -19,9 +19,9 @@ public enum PaymentMethod {
 
     private final String displayName;
 
-    public static PaymentMethod of(String status) {
+    public static PaymentMethod of(String displayName) {
         return Arrays.stream(PaymentMethod.values())
-                .filter(r -> r.name().equalsIgnoreCase(status))
+                .filter(r -> r.displayName.equalsIgnoreCase(displayName))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 PaymentMethod"));
     }

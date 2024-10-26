@@ -14,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import static com.projectw.common.constants.Const.FRONTEND_URL;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v2/auth")
@@ -21,13 +23,13 @@ public class AuthController {
 
     private final AuthService authService;
 
-    @CrossOrigin("http://localhost:3000")
+    @CrossOrigin(FRONTEND_URL)
     @PostMapping("/signup")
     public ResponseEntity<SuccessResponse<Signup>> signup(@Valid @RequestBody AuthRequest.Signup authRequest) {
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.signup(authRequest));
     }
 
-    @CrossOrigin("http://localhost:3000")
+    @CrossOrigin(FRONTEND_URL)
     @PostMapping("/login")
     public ResponseEntity<SuccessResponse<AuthResponse.Login>> login(@Valid @RequestBody AuthRequest.Login authRequest) {
         AuthResponse.Login result = authService.login(authRequest);

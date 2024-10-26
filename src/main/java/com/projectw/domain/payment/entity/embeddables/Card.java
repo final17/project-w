@@ -1,4 +1,4 @@
-package com.projectw.domain.payment.entity;
+package com.projectw.domain.payment.entity.embeddables;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;

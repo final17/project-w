@@ -1,12 +1,10 @@
 package com.projectw.domain.payment.dto;
 
-public sealed interface PaymentResponse permits PaymentResponse.Prepare , PaymentResponse.Susscess , PaymentResponse.Fail {
+public sealed interface PaymentResponse permits PaymentResponse.Prepare , PaymentResponse.Fail {
     record Prepare(
             String orderId,
-            Long totalAmount
-    ) implements PaymentResponse {}
-
-    record Susscess (
+            String orderName,
+            Long amount
     ) implements PaymentResponse {}
 
     record Fail (

@@ -6,6 +6,7 @@ import com.projectw.domain.reservation.dto.ReserveRequest;
 import com.projectw.domain.reservation.dto.ReserveResponse;
 import com.projectw.domain.reservation.service.ReservationManagementService;
 import com.projectw.security.AuthUser;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -22,14 +23,13 @@ public class ReservationManagementController {
 
     private final ReservationManagementService reservationManagementService;
 
-
-
     @Secured({UserRole.Authority.OWNER})
     @PatchMapping("/{reservationId}/refusal")
     public ResponseEntity<SuccessResponse<Void>> refusalReservation(
             @AuthenticationPrincipal AuthUser authUser ,
-            @PathVariable Long reservationId) {
-        reservationManagementService.refusalReservation(authUser.getUserId() , reservationId);
+            @PathVariable Long reservationId ,
+            @Valid @RequestBody ReserveRequest.Cancel cancel) {
+        reservationManagementService.refusalReservation(authUser.getUserId() , reservationId , cancel);
         return ResponseEntity.ok(SuccessResponse.of(null));
     }
 

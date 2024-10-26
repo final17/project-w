@@ -2,6 +2,7 @@ package com.projectw.domain.reservation.entity;
 
 import com.projectw.common.entity.Timestamped;
 import com.projectw.domain.payment.enums.PaymentStatus;
+import com.projectw.domain.payment.enums.Status;
 import com.projectw.domain.reservation.enums.ReservationStatus;
 import com.projectw.domain.reservation.enums.ReservationType;
 import com.projectw.domain.store.entity.Store;
@@ -25,6 +26,8 @@ public class Reservation extends Timestamped {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false , unique = true)
+    private String orderId;
 
     @Column(nullable = false)
     @Enumerated(value = EnumType.STRING)
@@ -33,8 +36,6 @@ public class Reservation extends Timestamped {
     @Column(nullable = false)
     @Enumerated(value = EnumType.STRING)
     private ReservationType type; // 예약 , 웨이팅
-
-    private boolean menuYN; // 메뉴 선택 여부
 
     @Column(nullable = false)
     private LocalDate reservationDate;
@@ -48,9 +49,10 @@ public class Reservation extends Timestamped {
     @Column(nullable = false)
     private Long numberPeople;   // 예약인원 , 입장인원
 
+    private boolean menuYN; // 메뉴 선택 여부
+
     @Column(nullable = false)
-    @Enumerated(value = EnumType.STRING)
-    private PaymentStatus paymentStatus;
+    private boolean paymentYN;
 
     @Column(nullable = false)
     private Long paymentAmt;
@@ -64,7 +66,8 @@ public class Reservation extends Timestamped {
     private Store store;
 
     @Builder
-    public Reservation(ReservationStatus status , ReservationType type , boolean menuYN , LocalDate reservationDate , LocalTime reservationTime , Long reservationNo , Long numberPeople , PaymentStatus paymentStatus , Long paymentAmt , User user , Store store) {
+    public Reservation(String orderId , ReservationStatus status , ReservationType type , boolean menuYN , LocalDate reservationDate , LocalTime reservationTime , Long reservationNo , Long numberPeople , boolean paymentYN , Long paymentAmt , User user , Store store) {
+        this.orderId = orderId;
         this.status = status;
         this.type = type;
         this.menuYN = menuYN;
@@ -72,7 +75,7 @@ public class Reservation extends Timestamped {
         this.reservationTime = reservationTime;
         this.reservationNo = reservationNo;
         this.numberPeople = numberPeople;
-        this.paymentStatus = paymentStatus;
+        this.paymentYN = paymentYN;
         this.paymentAmt = paymentAmt;
         this.user = user;
         this.store = store;
@@ -82,7 +85,7 @@ public class Reservation extends Timestamped {
         this.status = status;
     }
 
-    public void updatePaymentStatus(PaymentStatus paymentStatus) {
-        this.paymentStatus = paymentStatus;
+    public void updatePaymentYN(boolean paymentYN) {
+        this.paymentYN = paymentYN;
     }
 }

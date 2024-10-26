@@ -33,6 +33,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long>,
                                 @Param("date") LocalDate date,
                                 @Param("time") LocalTime time);
 
+    @Query("SELECT r FROM Reservation r INNER JOIN FETCH r.user u WHERE r.id = :id AND r.store.id = :storeId")
     Optional<Reservation> findByIdAndStoreId(Long id, Long storeId);
 
     @Query("SELECT r FROM Reservation r " +
@@ -48,6 +49,5 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long>,
             @Param("store") Store store
     );
 
-    @Query("SELECT r FROM Reservation r WHERE r.user.id = :userId AND r.store.id = :storeId AND r.paymentStatus = 'WAIT' ORDER BY r.id DESC LIMIT 1")
-    Optional<Reservation> findByUserIdAndStoreId(Long userId, Long storeId);
+    Optional<Reservation> findByOrderId(String orderId);
 }

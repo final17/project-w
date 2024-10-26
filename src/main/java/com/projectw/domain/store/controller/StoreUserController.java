@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import static com.projectw.common.constants.Const.FRONTEND_URL;
+
 @RestController
 @RequestMapping("/api/v1/user/stores")
 @RequiredArgsConstructor
@@ -34,7 +36,7 @@ public class StoreUserController {
         return ResponseEntity.ok(SuccessResponse.of(StoreResponseDtoList));
     }
 
-    @CrossOrigin("http://localhost:3000")
+    @CrossOrigin(FRONTEND_URL)
     @GetMapping("/{storeId}")
     public ResponseEntity<SuccessResponse<StoreResponseDto>> getOneStore(
             @AuthenticationPrincipal AuthUser authUser,
@@ -44,7 +46,7 @@ public class StoreUserController {
         return ResponseEntity.ok(SuccessResponse.of(storeResponseDto));
     }
 
-    @CrossOrigin("http://localhost:3000")
+    @CrossOrigin(FRONTEND_URL)
     @GetMapping("/search")
     public ResponseEntity<SuccessResponse<Page<StoreResponseDto>>> serchStoreName(
             @AuthenticationPrincipal AuthUser authUser,

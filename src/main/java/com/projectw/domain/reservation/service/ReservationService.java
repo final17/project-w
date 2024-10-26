@@ -4,16 +4,15 @@ import com.projectw.common.annotations.RedisListener;
 import com.projectw.common.annotations.RedisLock;
 import com.projectw.common.enums.ResponseCode;
 import com.projectw.common.exceptions.ForbiddenException;
-import com.projectw.common.exceptions.InvalidRequestException;
 import com.projectw.common.exceptions.NotFoundException;
 import com.projectw.common.exceptions.UnauthorizedException;
-import com.projectw.domain.payment.event.PaymentEvent;
+import com.projectw.domain.payment.event.PaymentCancelEvent;
+import com.projectw.domain.reservation.component.ReservationCheckService;
 import com.projectw.domain.reservation.dto.ReserveRequest;
 import com.projectw.domain.reservation.dto.ReserveResponse;
 import com.projectw.domain.reservation.entity.Reservation;
 import com.projectw.domain.reservation.enums.ReservationStatus;
 import com.projectw.domain.reservation.enums.ReservationType;
-import com.projectw.domain.reservation.exception.InvalidReservationTimeException;
 import com.projectw.domain.reservation.repository.ReservationRepository;
 import com.projectw.domain.store.entity.Store;
 import com.projectw.domain.store.repository.StoreRepository;
@@ -31,9 +30,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @RequiredArgsConstructor
@@ -45,123 +41,68 @@ public class ReservationService {
     private final ReservationRepository reservationRepository;
     private final UserRepository userRepository;
     private final StoreRepository storeRepository;
+
+    private final ReservationCheckService reservationCheckService;
+
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
-    @RedisLock("#reservation")
-    public ReserveResponse.ReservationInfo preparePayments(Long userId , Long storeId , ReserveRequest.Reservation reserv) {
-        // 현재시간대를 기준으로 예약 가능한 시간 값이 들어왔는지 검증
-        LocalDate nowDate = LocalDate.now();
-        LocalTime nowTime = LocalTime.now();
-        if (reserv.reservationDate().isBefore(nowDate)) {
-            throw new InvalidReservationTimeException(ResponseCode.INVALID_RESERVATION_TIME);
-        } else if(reserv.reservationDate().equals(nowDate)) {
-            if(reserv.reservationTime().isBefore(nowTime)) {
-                throw new InvalidReservationTimeException(ResponseCode.INVALID_RESERVATION_TIME);
-            }
-        }
-
-        // 유저 있는지?
-        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_USER));
-        // 식당이 있는지?
-        Store store = storeRepository.findById(storeId).orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_STORE));
-
-        // 들어온 금액과 내부의 설정된 금액이 다를때!
-        if (!reserv.paymentAmt().equals(store.getDeposit())) {
-            throw new InvalidRequestException(ResponseCode.INVALID_AMOUNT);
-        }
-
-        // 본인 식당에 예약 가능한지?
-        if (store.getUser().equals(user)) {
-            throw new UnauthorizedException(ResponseCode.UNAUTHORIZED_STORE_RESERVATION);
-        }
-
-        // 예약 가능한 시간대인지? 어떻게 처리할지 고민할 것
-        // 1. 들고 온 값을 분으로 변환
-        int minutes = reserv.reservationTime().getHour() * 60 + reserv.reservationTime().getMinute();
-
-        int baseMinutes = store.getTurnover().getHour() * 60 + store.getTurnover().getMinute();
-
-        // 2. turnover 값을 나누기 - 예외처리!!
-        if (minutes % baseMinutes != 0) {
-            log.error("예약 불가능한 시간대로 값이 들어왔음!!");
-            throw new InvalidReservationTimeException(ResponseCode.INVALID_RESERVATION_TIME);
-        }
-
-        // 3. 예약테이블에 개수 조회
-        List<ReservationStatus> statusList = Arrays.asList(ReservationStatus.CANCEL);
-        long remainder = reservationRepository.countReservationByDate(ReservationType.RESERVATION , statusList , reserv.reservationDate() , reserv.reservationTime());
-
-        // 4. 예약개수 비교 작업 - 예외처리!!
-        if (store.getReservationTableCount() <= remainder) {
-            log.error("해당 시간대에 예약수가 꽉 참!!");
-            throw new InvalidReservationTimeException(ResponseCode.INVALID_RESERVATION_TIME);
-        }
-
+    public void prepareReservation(ReserveRequest.InsertReservation insertReservation) {
         // 예약번호 채번하기
         LocalDate now = LocalDate.now();
         Long reservationNo = reservationRepository.findMaxReservationDate(ReservationType.RESERVATION , now);
 
-        // 예약금이 있다는 건 결제를 해야한다는 의미!
-//        PaymentStatus paymentStatus = reserv.paymentAmt() > 0 ? PaymentStatus.WAIT : PaymentStatus.COMP;
-
         // 예약 Entity 만들기
         Reservation reservation = Reservation.builder()
-                .status(ReservationStatus.RESERVATION)
-                .type(ReservationType.RESERVATION)
-                .menuYN(reserv.menuYN())
-                .numberPeople(reserv.numberPeople())
+                .orderId(insertReservation.orderId())
+                .status(ReservationStatus.RESERVATION)      // 예약 단계!!(승인 안된 상태!)
+                .type(ReservationType.RESERVATION)          // 웨이팅 , 예약 중 예약이라는 의미
+                .reservationDate(insertReservation.reservationDate())
+                .reservationTime(insertReservation.reservationTime())
+                .numberPeople(insertReservation.numberPeople())
                 .reservationNo(reservationNo)
-                .reservationDate(reserv.reservationDate())
-                .reservationTime(reserv.reservationTime())
-                .paymentStatus(null)
-                .paymentAmt(reserv.paymentAmt())
-                .user(user)
-                .store(store)
+                .menuYN(insertReservation.menuYN())
+                .paymentYN(false)
+                .paymentAmt(insertReservation.paymentAmt())
+                .user(insertReservation.user())
+                .store(insertReservation.store())
                 .build();
 
-        Reservation saveReservation = reservationRepository.save(reservation);
-
-        return new ReserveResponse.ReservationInfo(store.getId() , saveReservation.getId());
+        reservationRepository.save(reservation);
     }
 
     // 결제 완료
     @Transactional
-    public void checkoutPayments(Long userId , Long storeId , ReserveRequest.PaymentInfo paymentInfo) {
-        Reservation reservation = reservationRepository.findByUserIdAndStoreId(userId , storeId).orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_RESERVATION));
-//        reservation.updatePaymentStatus(PaymentStatus.COMP);
-
-        // TransactionalEventLister 사용할 것
-        eventPublisher.publishEvent(new PaymentEvent(userId, storeId , reservation.getId() , paymentInfo.paymentKey() , paymentInfo.orderId() , paymentInfo.amount()));
+    public void successReservation(String orderId) {
+        Reservation reservation = reservationRepository.findByOrderId(orderId).orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_RESERVATION));
+        reservation.updatePaymentYN(true);
     }
 
     @Transactional
-    public void reservationCancelReservation(Long userId , Long storeId , Long reservationId) {
+    public void cancelReservation(Long userId , Long storeId , Long reservationId , ReserveRequest.Cancel cancel) {
         // 예약 어떤지?
         Reservation reservation = reservationRepository.findByIdAndStoreId(reservationId , storeId).orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_RESERVATION));
 
         // 본인 예약건인지?
-        if (!reservation.getUser().getId().equals(userId)) {
-            throw new UnauthorizedException(ResponseCode.UNAUTHORIZED_RESERVATION);
-        }
+        reservationCheckService.isUserReservation(userId , reservation);
 
-        if (reservation.getType() != ReservationType.RESERVATION) {
-            throw new ForbiddenException(ResponseCode.CANCEL_FORBIDDEN);
-        }
+        // 예약을 취소할수 있는 타입인지 검증
+        reservationCheckService.canChangeReservationType(reservation , ReservationType.RESERVATION);
 
         switch (reservation.getStatus()) {
             case RESERVATION:
             case APPLY:
                 reservation.updateStatus(ReservationStatus.CANCEL);
+
+                if (reservation.isPaymentYN()) {
+                    // PaymentEventListener 결제취소
+                    PaymentCancelEvent paymentCancelEvent = new PaymentCancelEvent(reservation.getOrderId() , cancel.cancelReason());
+                    eventPublisher.publishEvent(paymentCancelEvent);
+                }
                 break;
             default:
                 throw new ForbiddenException(ResponseCode.CANCEL_FORBIDDEN);
         }
-
-//        if (reservation.getPaymentStatus().equals(PaymentStatus.COMP)) {
-//            // TransactionalEventLister 사용할 것
-//            // 결제 취소된거
-//        }
     }
 
     public Page<ReserveResponse.Infos> getUserReservations(Long userId , ReserveRequest.Parameter parameter) {

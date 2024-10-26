@@ -35,7 +35,7 @@ public enum ResponseCode {
     CONNECTION_ERROR("연결 오류가 발생했습니다."),
 
     // token
-    INVALID_TOKEN("잘못된 "),
+    INVALID_TOKEN("잘못된 토큰입니다."),
 
     // 웨이팅예약 , 예약
     DUPLICATE_RESERVATION("이미 예약되어 있습니다."),
@@ -50,8 +50,8 @@ public enum ResponseCode {
     ALREADY_WAITING("이미 웨이팅 중 입니다."),
     ALREADY_DELETED_USER("회원탈퇴한 유저입니다."),
     INVALID_AMOUNT("설정한 결제 금액과 다릅니다."),
-    PAYMENT_NOT_FOUND("결제정보가 없습니다.");
-
+    PAYMENT_NOT_FOUND("결제정보가 없습니다."),
+    INSUFFICIENT_SEAT("좌석이 부족합니다.");
 
     private final String message;
 }

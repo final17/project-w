@@ -1,4 +1,4 @@
-package com.projectw.domain.payment.entity;
+package com.projectw.domain.payment.entity.embeddables;
 
 import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;

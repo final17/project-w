@@ -4,7 +4,6 @@ import com.projectw.common.dto.SuccessResponse;
 import com.projectw.domain.payment.dto.PaymentRequest;
 import com.projectw.domain.payment.dto.PaymentResponse;
 import com.projectw.domain.payment.service.PaymentService;
-import com.projectw.domain.reservation.dto.ReserveRequest;
 import com.projectw.security.AuthUser;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +11,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.view.RedirectView;
+
+import static com.projectw.common.constants.Const.FRONTEND_URL;
 
 @Slf4j
 @RequestMapping("/api/v2/payment")
@@ -21,7 +23,7 @@ public class PaymentController {
 
     private final PaymentService paymentService;
 
-    @CrossOrigin("http://localhost:3000")
+    @CrossOrigin(FRONTEND_URL)
     @GetMapping("/prepare")
     public ResponseEntity<SuccessResponse<PaymentResponse.Prepare>> prepare(
             @AuthenticationPrincipal AuthUser authUser,
@@ -30,16 +32,15 @@ public class PaymentController {
     }
 
     @GetMapping("/success")
-    public ResponseEntity<SuccessResponse<PaymentResponse.Susscess>> success(
-            @Valid @ModelAttribute PaymentRequest.Susscess success) throws Exception {
-        paymentService.success(success);
-        return null;
+    public RedirectView success(
+            @Valid @ModelAttribute PaymentRequest.Susscess success) throws Exception {;
+        return paymentService.success(success);
     }
 
     @GetMapping("/fail")
-    public ResponseEntity<SuccessResponse<PaymentResponse.Fail>> fail(
+    public RedirectView fail(
             @Valid @ModelAttribute PaymentRequest.Fail fail) {
-        return null;
+        return paymentService.fail(fail);
     }
 
 

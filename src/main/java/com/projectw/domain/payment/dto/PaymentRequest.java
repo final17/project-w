@@ -1,5 +1,6 @@
 package com.projectw.domain.payment.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
@@ -16,7 +17,9 @@ public sealed interface PaymentRequest permits PaymentRequest.Prepare , PaymentR
             @NotNull(message = "예약금은 필수입니다.")
             Long amount,
             @NotNull(message = "입장인원값은 필수입니다.")
-            Long numberPeople
+            Long numberPeople,
+            @NotBlank(message = "주문명값은 필수입니다.")
+            String orderName
     ) implements PaymentRequest {}
 
     record Susscess (
@@ -27,6 +30,6 @@ public sealed interface PaymentRequest permits PaymentRequest.Prepare , PaymentR
 
     record Fail (
             String message,
-            int code
+            String code
     ) implements PaymentRequest {}
 }

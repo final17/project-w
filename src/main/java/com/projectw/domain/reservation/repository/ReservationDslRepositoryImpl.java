@@ -36,6 +36,7 @@ public class ReservationDslRepositoryImpl implements ReservationDslRepository{
 
         List<ReserveResponse.Infos> results = queryFactory
                 .select(Projections.constructor(ReserveResponse.Infos.class ,
+                        reservation.orderId ,
                         user.id.as("userId") ,
                         store.id.as("storeId") ,
                         reservation.id.as("reservationId") ,
@@ -79,6 +80,7 @@ public class ReservationDslRepositoryImpl implements ReservationDslRepository{
 
         List<ReserveResponse.Infos> results = queryFactory
                 .select(Projections.constructor(ReserveResponse.Infos.class ,
+                        reservation.orderId ,
                         user.id.as("userId") ,
                         store.id.as("storeId") ,
                         reservation.id.as("reservationId") ,

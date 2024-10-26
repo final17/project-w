@@ -6,6 +6,7 @@ import com.projectw.domain.reservation.dto.ReserveRequest;
 import com.projectw.domain.reservation.dto.ReserveResponse;
 import com.projectw.domain.reservation.service.ReservationService;
 import com.projectw.security.AuthUser;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -14,42 +15,16 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import static com.projectw.common.constants.Const.FRONTEND_URL;
+
 @Slf4j
 @RequiredArgsConstructor
 @RestController
-@CrossOrigin("http://localhost:3000")
+@CrossOrigin(FRONTEND_URL)
 @RequestMapping("/api/v1")
 public class ReservationController {
 
     private final ReservationService reservationService;
-
-    /**
-     * method : preparePayments
-     * memo   : 결제전 예약테이블에 값 넣기
-     * */
-    @Secured({UserRole.Authority.USER})
-    @PostMapping("/store/{storeId}/payments/prepare")
-    public ResponseEntity<SuccessResponse<ReserveResponse.ReservationInfo>> preparePayments(
-            @AuthenticationPrincipal AuthUser authUser,
-            @PathVariable Long storeId ,
-            @RequestBody ReserveRequest.Reservation reservation) {
-        return ResponseEntity.ok(SuccessResponse.of(reservationService.preparePayments(authUser.getUserId() , storeId , reservation)));
-    }
-
-    /**
-     * method : checkoutPayments
-     * memo   : 결제완료
-     * */
-    @Secured({UserRole.Authority.USER})
-    @PostMapping("/store/{storeId}/payments/checkout")
-    public ResponseEntity<SuccessResponse<Void>> checkoutPayments(
-            @AuthenticationPrincipal AuthUser authUser,
-            @PathVariable Long storeId,
-            @RequestBody ReserveRequest.PaymentInfo paymentInfo) {
-        // 추가적으로 값을 더 받아와야함!
-        reservationService.checkoutPayments(authUser.getUserId() , storeId , paymentInfo);
-        return ResponseEntity.ok(SuccessResponse.of(null));
-    }
 
     /**
      * method : reservationCancelReservation
@@ -60,8 +35,9 @@ public class ReservationController {
     public ResponseEntity<SuccessResponse<Void>> reservationCancelReservation(
             @AuthenticationPrincipal AuthUser authUser ,
             @PathVariable Long storeId,
-            @PathVariable Long reservationId) {
-        reservationService.reservationCancelReservation(authUser.getUserId() , storeId , reservationId);
+            @PathVariable Long reservationId,
+            @Valid @RequestBody ReserveRequest.Cancel cancel) {
+        reservationService.cancelReservation(authUser.getUserId() , storeId , reservationId , cancel);
         return ResponseEntity.ok(SuccessResponse.of(null));
     }
 

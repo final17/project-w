@@ -13,6 +13,7 @@ public enum PaymentStatus {
     WAITING_FOR_DEPOSIT(Status.WAITING_FOR_DEPOSIT),
     DONE(Status.DONE),
     CANCELED(Status.CANCELED),
+    PARTIAL_CANCELED(Status.PARTIAL_CANCELED),
     ABORTED(Status.ABORTED),
     EXPIRED(Status.EXPIRED);
 
@@ -31,6 +32,7 @@ public enum PaymentStatus {
         public static final String WAITING_FOR_DEPOSIT = "WAITING_FOR_DEPOSIT";
         public static final String DONE = "DONE";
         public static final String CANCELED = "CANCELED";
+        public static final String PARTIAL_CANCELED = "PARTIAL_CANCELED";
         public static final String ABORTED = "ABORTED";
         public static final String EXPIRED = "EXPIRED";
     }
