@@ -6,7 +6,9 @@ import com.projectw.common.enums.ResponseCode;
 import com.projectw.common.exceptions.ForbiddenException;
 import com.projectw.common.exceptions.NotFoundException;
 import com.projectw.common.exceptions.UnauthorizedException;
+import com.projectw.common.utils.Scheduler;
 import com.projectw.domain.payment.event.PaymentCancelEvent;
+import com.projectw.domain.payment.event.PaymentTimeoutCancelEvent;
 import com.projectw.domain.reservation.component.ReservationCheckService;
 import com.projectw.domain.reservation.dto.ReserveRequest;
 import com.projectw.domain.reservation.dto.ReserveResponse;
@@ -26,6 +28,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
@@ -45,6 +48,7 @@ public class ReservationService {
     private final ReservationCheckService reservationCheckService;
 
     private final ApplicationEventPublisher eventPublisher;
+    private final Scheduler scheduler;
 
     @Transactional
     public void prepareReservation(ReserveRequest.InsertReservation insertReservation) {
@@ -68,7 +72,10 @@ public class ReservationService {
                 .store(insertReservation.store())
                 .build();
 
-        reservationRepository.save(reservation);
+        Reservation saveReservation = reservationRepository.save(reservation);
+
+        // 지정한 시간 후에 자동 실행!!
+        scheduler.scheduleOnceAfterDelay(10 , "m" , this::autoCancelMethod, saveReservation.getId());
     }
 
     // 결제 완료
@@ -108,6 +115,19 @@ public class ReservationService {
     public Page<ReserveResponse.Infos> getUserReservations(Long userId , ReserveRequest.Parameter parameter) {
         Pageable pageable = PageRequest.of(parameter.page() - 1, parameter.size());
         return reservationRepository.getUserReservations(userId , parameter , pageable);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    protected void autoCancelMethod(Long reservationId) {
+        log.info("autoCancelMethod 접근!!");
+        Reservation reservation = reservationRepository.findById(reservationId).orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_RESERVATION));
+
+        if (!reservation.isPaymentYN()) {
+            // 결제건 취소
+            eventPublisher.publishEvent(new PaymentTimeoutCancelEvent(reservation.getOrderId()));
+            // 예약건 취소
+            reservation.updateStatus(ReservationStatus.CANCEL);
+        }
     }
 
     @Transactional

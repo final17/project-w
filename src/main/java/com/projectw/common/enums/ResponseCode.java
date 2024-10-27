@@ -10,6 +10,7 @@ public enum ResponseCode {
     SUCCESS("정상 처리되었습니다."),
     INVALID_TIMEOUT("다시 시도해주세요."),
     FORBIDDEN("접근 권한이 없습니다."),
+    INVALID_TIME_UNIT("TimeUnit 값을 제대로 입력해주세요."),
 
     // 비밀번호 형식 에러
     INVALID_PASSWORD("비밀번호는 대소문자 포함 영문 + 숫자 + 특수문자를 최소 1글자씩 포함해야하며 최소 8글자 이상이어야 합니다."),

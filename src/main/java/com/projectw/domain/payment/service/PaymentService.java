@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.projectw.common.enums.ResponseCode;
 import com.projectw.common.exceptions.NotFoundException;
+import com.projectw.common.exceptions.PaymentNotFoundException;
 import com.projectw.common.resttemplate.TossPaymentsService;
 import com.projectw.domain.payment.dto.PaymentRequest;
 import com.projectw.domain.payment.dto.PaymentResponse;
@@ -128,7 +129,7 @@ public class PaymentService {
     @Transactional
     public RedirectView success(PaymentRequest.Susscess susscess) throws Exception {
         // 예약 가능한지 검증!
-        Payment payment = paymentRepository.findByOrderId(susscess.orderId()).orElseThrow();
+        Payment payment = paymentRepository.findByOrderIdAndStatus(susscess.orderId() , Status.PENDING).orElseThrow(() -> new PaymentNotFoundException(ResponseCode.PAYMENT_NOT_FOUND));
 
         ResponseEntity<String> responseEntity;
         String responseBody;
@@ -194,7 +195,7 @@ public class PaymentService {
             cancelPayment(jsonNode);
 
             // 취소로 변경
-            Payment payment = paymentRepository.findByOrderId(orderId).orElseThrow();
+            Payment payment = paymentRepository.findByOrderIdAndStatus(orderId , Status.COMPLETED).orElseThrow(() -> new PaymentNotFoundException(ResponseCode.PAYMENT_NOT_FOUND));
             payment.updateStatus(Status.CANCELLED);
         } else {
             // 실패시 에러 저장
@@ -202,6 +203,12 @@ public class PaymentService {
             String errMessage = jsonNode.get("message").textValue();
             failPayment(orderId , errCode , errMessage);
         }
+    }
+
+    @Transactional
+    public void timeoutCancel(String orderId) {
+        Payment payment = paymentRepository.findByOrderIdAndStatus(orderId , Status.PENDING).orElseThrow(() -> new PaymentNotFoundException(ResponseCode.PAYMENT_NOT_FOUND));
+        payment.updateStatus(Status.CANCELLED);
     }
 
     /**
