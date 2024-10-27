@@ -75,7 +75,7 @@ public class ReservationService {
         Reservation saveReservation = reservationRepository.save(reservation);
 
         // 지정한 시간 후에 자동 실행!!
-        scheduler.scheduleOnceAfterDelay(10 , "m" , this::autoCancelMethod, saveReservation.getId());
+        scheduler.scheduleOnceAfterDelay(10 , "s" , this::autoCancelMethod, saveReservation.getId());
     }
 
     // 결제 완료
@@ -118,15 +118,16 @@ public class ReservationService {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    protected void autoCancelMethod(Long reservationId) {
+    public void autoCancelMethod(Long reservationId) {
         log.info("autoCancelMethod 접근!!");
         Reservation reservation = reservationRepository.findById(reservationId).orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_RESERVATION));
 
         if (!reservation.isPaymentYN()) {
-            // 결제건 취소
-            eventPublisher.publishEvent(new PaymentTimeoutCancelEvent(reservation.getOrderId()));
             // 예약건 취소
             reservation.updateStatus(ReservationStatus.CANCEL);
+            reservationRepository.save(reservation);
+            // 결제건 취소
+            eventPublisher.publishEvent(new PaymentTimeoutCancelEvent(reservation.getOrderId()));
         }
     }
 

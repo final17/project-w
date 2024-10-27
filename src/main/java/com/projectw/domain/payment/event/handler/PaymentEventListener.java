@@ -5,6 +5,7 @@ import com.projectw.domain.payment.event.PaymentTimeoutCancelEvent;
 import com.projectw.domain.payment.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -22,7 +23,7 @@ public class PaymentEventListener {
         paymentService.cancel(event.getOrderId() , event.getCancelReason());
     }
 
-    @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
+    @EventListener
     public void handlePaymentTimeoutCancelEvent(PaymentTimeoutCancelEvent event) {
         log.info("handlePaymentTimeoutCancelEvent");
         paymentService.timeoutCancel(event.getOrderId());
