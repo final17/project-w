@@ -75,7 +75,7 @@ public class ReservationService {
         Reservation saveReservation = reservationRepository.save(reservation);
 
         // 지정한 시간 후에 자동 실행!!
-        scheduler.scheduleOnceAfterDelay(10 , "s" , this::autoCancelMethod, saveReservation.getId());
+        scheduler.scheduleOnceAfterDelay(10 , "m" , this::autoCancelMethod, saveReservation.getId());
     }
 
     // 결제 완료

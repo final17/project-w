@@ -1,8 +1,6 @@
 package com.projectw.domain.reservation.entity;
 
 import com.projectw.common.entity.Timestamped;
-import com.projectw.domain.payment.enums.PaymentStatus;
-import com.projectw.domain.payment.enums.Status;
 import com.projectw.domain.reservation.enums.ReservationStatus;
 import com.projectw.domain.reservation.enums.ReservationType;
 import com.projectw.domain.store.entity.Store;
@@ -14,7 +12,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Entity
