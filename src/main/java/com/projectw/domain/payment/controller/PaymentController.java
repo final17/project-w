@@ -10,10 +10,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.view.RedirectView;
-
-import static com.projectw.common.constants.Const.FRONTEND_URL;
 
 @Slf4j
 @RequestMapping("/api/v2/payment")
@@ -23,7 +24,6 @@ public class PaymentController {
 
     private final PaymentService paymentService;
 
-    @CrossOrigin(FRONTEND_URL)
     @GetMapping("/prepare")
     public ResponseEntity<SuccessResponse<PaymentResponse.Prepare>> prepare(
             @AuthenticationPrincipal AuthUser authUser,

@@ -25,7 +25,7 @@ public class StoreUserController {
 
     private final StoreUserService storeUserService;
 
-    @GetMapping()
+    @GetMapping
     public ResponseEntity<SuccessResponse<Page<StoreResponseDto>>> getAllStore(
             @AuthenticationPrincipal AuthUser authUser,
             @RequestParam(defaultValue = "0") int page,
@@ -36,7 +36,6 @@ public class StoreUserController {
         return ResponseEntity.ok(SuccessResponse.of(StoreResponseDtoList));
     }
 
-    @CrossOrigin(FRONTEND_URL)
     @GetMapping("/{storeId}")
     public ResponseEntity<SuccessResponse<StoreResponseDto>> getOneStore(
             @AuthenticationPrincipal AuthUser authUser,
@@ -46,7 +45,6 @@ public class StoreUserController {
         return ResponseEntity.ok(SuccessResponse.of(storeResponseDto));
     }
 
-    @CrossOrigin(FRONTEND_URL)
     @GetMapping("/search")
     public ResponseEntity<SuccessResponse<Page<StoreResponseDto>>> serchStoreName(
             @AuthenticationPrincipal AuthUser authUser,
