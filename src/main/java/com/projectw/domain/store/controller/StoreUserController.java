@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import static com.projectw.common.constants.Const.FRONTEND_URL;
+
 @RestController
 @RequestMapping("/api/v1/user/stores")
 @RequiredArgsConstructor
@@ -23,7 +25,7 @@ public class StoreUserController {
 
     private final StoreUserService storeUserService;
 
-    @GetMapping()
+    @GetMapping
     public ResponseEntity<SuccessResponse<Page<StoreResponseDto>>> getAllStore(
             @AuthenticationPrincipal AuthUser authUser,
             @RequestParam(defaultValue = "0") int page,

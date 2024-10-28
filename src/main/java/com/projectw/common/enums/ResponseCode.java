@@ -10,6 +10,7 @@ public enum ResponseCode {
     SUCCESS("정상 처리되었습니다."),
     INVALID_TIMEOUT("다시 시도해주세요."),
     FORBIDDEN("접근 권한이 없습니다."),
+    INVALID_TIME_UNIT("TimeUnit 값을 제대로 입력해주세요."),
 
     // 비밀번호 형식 에러
     INVALID_PASSWORD("비밀번호는 대소문자 포함 영문 + 숫자 + 특수문자를 최소 1글자씩 포함해야하며 최소 8글자 이상이어야 합니다."),
@@ -38,7 +39,7 @@ public enum ResponseCode {
     CONNECTION_ERROR("연결 오류가 발생했습니다."),
 
     // token
-    INVALID_TOKEN("잘못된 "),
+    INVALID_TOKEN("잘못된 토큰입니다."),
 
     // 웨이팅예약 , 예약
     DUPLICATE_RESERVATION("이미 예약되어 있습니다."),
@@ -51,8 +52,10 @@ public enum ResponseCode {
     COMPLETE_FORBIDDEN("해당 예약건은 완료가 불가능합니다."),
     INVALID_RESERVATION_TIME("예약 불가능한 시간대입니다."),
     ALREADY_WAITING("이미 웨이팅 중 입니다."),
-    ALREADY_DELETED_USER("회원탈퇴한 유저입니다.");
-
+    ALREADY_DELETED_USER("회원탈퇴한 유저입니다."),
+    INVALID_AMOUNT("설정한 결제 금액과 다릅니다."),
+    PAYMENT_NOT_FOUND("결제정보가 없습니다."),
+    INSUFFICIENT_SEAT("좌석이 부족합니다.");
 
     private final String message;
 }

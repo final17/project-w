@@ -3,6 +3,8 @@ package com.projectw.domain.reservation.dto;
 
 import com.projectw.domain.reservation.enums.ReservationStatus;
 import com.projectw.domain.reservation.enums.ReservationType;
+import com.projectw.domain.store.entity.Store;
+import com.projectw.domain.user.entity.User;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -10,22 +12,27 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Objects;
 
-public sealed interface ReserveRequest permits ReserveRequest.Wait , ReserveRequest.Reservation , ReserveRequest.Parameter {
+public sealed interface ReserveRequest permits ReserveRequest.InsertReservation , ReserveRequest.Cancel , ReserveRequest.Parameter {
 
-    record Reservation(
-            boolean menuYN,
-            @NotNull(message = "입장인원값은 필수입니다.")
-            Long numberPeople,
+    record InsertReservation(
+            @NotBlank(message = "주문번호는 필수입니다.")
+            String orderId,
             @NotBlank(message = "예약날짜는 필수입니다.")
             LocalDate reservationDate,
             @NotBlank(message = "예약시간은 필수입니다.")
-            LocalTime reservationTime
+            LocalTime reservationTime,
+            @NotNull(message = "입장인원값은 필수입니다.")
+            Long numberPeople,
+            boolean menuYN,
+            @NotNull(message = "예약금은 필수입니다.")
+            Long paymentAmt,
+            User user,
+            Store store
     ) implements ReserveRequest {}
 
-    record Wait(
-            boolean menuYN,
-            @NotNull(message = "입장인원값은 필수입니다.")
-            Long numberPeople
+    record Cancel(
+            @NotBlank(message = "취소사유는 필수입니다.")
+            String cancelReason
     ) implements ReserveRequest {}
 
     record Parameter(
