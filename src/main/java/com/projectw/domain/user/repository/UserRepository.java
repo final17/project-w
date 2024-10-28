@@ -1,15 +1,13 @@
 package com.projectw.domain.user.repository;
 
-import com.projectw.domain.user.entitiy.User;
-import java.util.Optional;
+import com.projectw.domain.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface UserRepository extends JpaRepository<User, Long> {
+import java.util.Optional;
 
-    @Query("SELECT u FROM User u WHERE u.username=:username")
-    Optional<User> findByUsername(@Param("username") String username);
+public interface UserRepository extends JpaRepository<User, Long> , UserDslRepository {
 
     @Query("SELECT u FROM User u WHERE u.email=:email")
     Optional<User> findByEmail(@Param("email") String email);
@@ -21,5 +19,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     boolean existsByEmail(String email);
 
-    boolean existsByUsername(String username);
+    @Query("SELECT COUNT(u) > 0 FROM User u WHERE u.id = :id AND u.isDeleted = true")
+    boolean isDeletedUser(@Param("id") String userId);
 }

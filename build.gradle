@@ -27,8 +27,11 @@ repositories {
 
 dependencies {
 
+    //slack api
+    implementation 'com.slack.api:slack-api-client:1.27.2'
     //jwt
     implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
@@ -39,8 +42,14 @@ dependencies {
     annotationProcessor "jakarta.annotation:jakarta.annotation-api"
     annotationProcessor "jakarta.persistence:jakarta.persistence-api"
 
-    // redison
+    // redisson
     implementation group: 'org.redisson', name: 'redisson', version: '3.37.0'
+
+    // AWS S3 SDK
+    implementation 'software.amazon.awssdk:s3:2.20.0'
+
+    // S3
+    implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
 
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
@@ -60,9 +69,9 @@ dependencies {
 
 
 /*----------- sonar, jacoco -----------*/
-def QDomains = []
-for (qPattern in '*.QA'..'*.QZ') { // qPattern = '*.QA', '*.QB', ... '*.QZ'
-    QDomains.add(qPattern + '*')
+def Qdomains = []
+for (qPattern in '**/QA'..'**/QZ') {
+    Qdomains.add(qPattern + '*')
 }
 def jacocoExcludePatterns = [
         // 측정 안하고 싶은 패턴
@@ -72,13 +81,16 @@ def jacocoExcludePatterns = [
         "**/*Exception*",
         "**/*Request*",
         "**/*Response*",
-        "**/*Dto*",
         "**/*Interceptor*",
         "**/*Filter*",
         "**/*Resolver*",
-        "**/*Entity*",
         "**/test/**",
-        "**/resources/**"
+        "**/resources/**",
+        "**/entity/**",
+        "**/dto/**",
+        "**/security/**",
+        "**/common/**",
+        "**/controller/**"
 ]
 
 sonar {
@@ -87,10 +99,11 @@ sonar {
         property "sonar.organization", "final17"
         property "sonar.host.url", "https://sonarcloud.io"
         property "sonar.sources", "src/main/java"
+        property 'sonar.exclusions', jacocoExcludePatterns.join(",") // 제외
         property "sonar.tests", "src/test/java"
         property 'sonar.language', 'java'
         property 'sonar.sourceEncoding', 'UTF-8'
-        property 'sonar.test.exclusions', jacocoExcludePatterns.join(',')
+        property 'sonar.test.exclusions', jacocoExcludePatterns.join(",")
         property 'sonar.test.inclusions', '**/*Test.java'
         property 'sonar.coveragePlugin', 'jacoco'
         property 'sonar.coverage.jacoco.xmlReportPaths', "build/reports/jacoco/test/jacocoTestReport.xml"
@@ -117,7 +130,7 @@ jacocoTestReport {
     afterEvaluate {
         classDirectories.setFrom(
                 files(classDirectories.files.collect {
-                    fileTree(dir: it, excludes: jacocoExcludePatterns + QDomains) // Querydsl 관련 제거
+                    fileTree(dir: it, excludes: jacocoExcludePatterns + Qdomains) // Querydsl 관련 제거
                 })
         )
     }

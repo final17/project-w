@@ -7,19 +7,21 @@ import com.projectw.common.enums.UserRole;
 import com.projectw.common.exceptions.AccessDeniedException;
 import com.projectw.common.exceptions.InvalidRequestException;
 import com.projectw.common.exceptions.InvalidTokenException;
+import com.projectw.common.exceptions.NotFoundException;
+import com.projectw.domain.allergy.entity.Allergy;
+import com.projectw.domain.allergy.repository.AllergyRepository;
 import com.projectw.domain.auth.dto.AuthRequest;
 import com.projectw.domain.auth.dto.AuthRequest.Login;
 import com.projectw.domain.auth.dto.AuthResponse;
 import com.projectw.domain.auth.dto.AuthResponse.DuplicateCheck;
 import com.projectw.domain.auth.dto.AuthResponse.Reissue;
 import com.projectw.domain.auth.dto.AuthResponse.Signup;
-import com.projectw.domain.user.entitiy.User;
+import com.projectw.domain.user.entity.User;
 import com.projectw.domain.user.repository.UserRepository;
 import com.projectw.security.AuthUser;
 import com.projectw.security.JwtUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
-import java.time.Duration;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
@@ -29,12 +31,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.time.Duration;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final AllergyRepository allergyRepository;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private final RedissonClient redissonClient;
@@ -58,15 +66,9 @@ public class AuthService {
             }
         }
 
-        String username = request.username();
         String password = passwordEncoder.encode(request.password());
         String email = request.email();
         String nickname = request.nickname();
-
-        // 회원 중복 확인
-        if (userRepository.existsByUsername(username)) {
-            throw new InvalidRequestException(ResponseCode.DUPLICATE_USERNAME);
-        }
 
         // email 중복확인
         if (userRepository.existsByEmail(email)) {
@@ -78,8 +80,14 @@ public class AuthService {
             throw new InvalidRequestException(ResponseCode.DUPLICATE_NICKNAME);
         }
 
+        // 알레르기 정보 처리
+        Set<Allergy> allergies = (request.allergyIds() != null)
+                ? allergyRepository.findAllById(request.allergyIds()).stream().collect(Collectors.toSet())
+                : new HashSet<>();
+
         // 사용자 등록
-        User user = new User(username, password, email, nickname, request.userRole());
+        User user = new User(password, email, nickname, request.userRole());
+        user.updateAllergies(allergies);
         user = userRepository.save(user);
 
         return SuccessResponse.of(new AuthResponse.Signup(user.getId()));
@@ -90,9 +98,13 @@ public class AuthService {
      * @param request
      * @return
      */
-    public SuccessResponse<AuthResponse.Login> login(Login request) {
-        User user = userRepository.findByUsername(request.username())
-            .orElseThrow(()-> new InvalidRequestException(ResponseCode.WRONG_USERNAME_OR_PASSWORD));
+    public AuthResponse.Login login(Login request) {
+        User user = userRepository.findByEmail(request.email())
+            .orElseThrow(()-> new InvalidRequestException(ResponseCode.WRONG_EMAIL_OR_PASSWORD));
+
+        if(user.isDeleted()) {
+            throw new InvalidRequestException(ResponseCode.ALREADY_DELETED_USER);
+        }
 
         if(!passwordEncoder.matches(request.password(), user.getPassword())) {
             throw new InvalidRequestException(ResponseCode.WRONG_PASSWORD);
@@ -113,7 +125,7 @@ public class AuthService {
         String refreshToken = jwtUtil.createRefreshToken(user.getId(), user.getEmail(), user.getRole());
 
         redissonClient.getBucket(JwtUtil.REDIS_REFRESH_TOKEN_PREFIX + user.getId()).set(refreshToken, Duration.ofMillis(TokenType.REFRESH.getLifeTime()));
-        return SuccessResponse.of(new AuthResponse.Login(user, accessToken, refreshToken));
+        return new AuthResponse.Login(user, accessToken, refreshToken);
     }
 
     /**
@@ -131,7 +143,7 @@ public class AuthService {
      * @param refreshToken
      * @return
      */
-    public SuccessResponse<?> reissue(String refreshToken) {
+    public Reissue reissue(String refreshToken) {
 
         if(refreshToken == null) {
             throw new InvalidTokenException();
@@ -190,9 +202,7 @@ public class AuthService {
 
         refreshBucket.set(newRefreshToken, Duration.ofMillis(ttl));
 
-        Reissue reissue = new Reissue(newAccessToken, newRefreshToken);
-
-        return SuccessResponse.of(reissue);
+        return new Reissue(newAccessToken, newRefreshToken);
     }
 
     /**
@@ -220,14 +230,48 @@ public class AuthService {
     }
 
     /**
-     * 유저 아이디 중복 체크
-     * @param request
-     * @return
+     * 회원탈퇴
      */
-    public SuccessResponse<AuthResponse.DuplicateCheck> checkUsername(AuthRequest.CheckUsername request) {
-        DuplicateCheck duplicateCheck = new DuplicateCheck(
-            userRepository.existsByUsername(request.username()));
+    public void deleteAccount(AuthUser authUser) {
+        User user = userRepository.findById(authUser.getUserId())
+                .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_USER));
 
-        return SuccessResponse.of(duplicateCheck);
+        if(user.isDeleted()){
+            throw new InvalidRequestException(ResponseCode.ALREADY_DELETED_USER);
+        }
+
+        user.delete();
+    }
+
+    /**
+     * 유저의 알레르기 정보 업데이트
+     * @param userId 유저 ID
+     * @param allergyIds 선택된 알레르기 ID 목록
+     */
+    @Transactional
+    public void updateUserAllergies(Long userId, Set<Long> allergyIds) {
+        // 유저 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new InvalidRequestException(ResponseCode.NOT_FOUND_USER));
+
+        // 알레르기 ID가 비어있거나 null인 경우 예외 처리
+        if (allergyIds == null || allergyIds.isEmpty()) {
+            throw new InvalidRequestException(ResponseCode.NOT_FOUND_ALLERGY);
+        }
+
+        // 알레르기 정보 조회
+        Set<Allergy> allergies = allergyRepository.findAllById(allergyIds)
+                .stream().collect(Collectors.toSet());
+
+        // 존재하지 않는 알레르기 ID 확인
+        if (allergies.size() != allergyIds.size()) {
+            throw new InvalidRequestException(ResponseCode.NOT_FOUND_ALLERGY);
+        }
+
+        // 유저 알레르기 정보 업데이트
+        user.updateAllergies(allergies);
+
+        // 변경된 유저 정보 저장
+        userRepository.save(user);
     }
 }
