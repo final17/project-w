@@ -1,6 +1,8 @@
 package com.projectw.domain.store.repository;
 
 import com.projectw.domain.store.entity.Store;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,4 +18,7 @@ public interface StoreRepository extends JpaRepository<Store, Long>, StoreDslRep
 
     @Query("SELECT s FROM Store s JOIN FETCH s.user WHERE s.id=:storeId")
     Optional<Store> findWithUserById(@Param("storeId") long storeId);
+
+    @Query("SELECT s FROM Store s WHERE s.title LIKE %:title% ")
+    Page<Store> findAllByTitle(Pageable pageable, String title);
 }

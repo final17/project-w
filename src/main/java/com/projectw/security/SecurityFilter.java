@@ -30,7 +30,8 @@ public class SecurityFilter extends OncePerRequestFilter {
         FilterChain filterChain) throws ServletException, IOException {
         String requestURI = request.getRequestURI();
         log.info("Request URI: {}", requestURI);
-        if(!requestURI.startsWith("/api/v2/auth/logout") && requestURI.startsWith("/api/v2/auth/")) {
+
+        if(!requestURI.startsWith("/api/v\\d+/auth/logout") && requestURI.matches("/api/v\\d+/auth/.*")) {
             filterChain.doFilter(request, response);
             return;
         }
