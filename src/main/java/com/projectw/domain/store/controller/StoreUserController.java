@@ -4,19 +4,13 @@ import com.projectw.common.dto.SuccessResponse;
 import com.projectw.domain.store.dto.response.StoreResponseDto;
 import com.projectw.domain.store.service.StoreUserService;
 import com.projectw.security.AuthUser;
-import com.sun.net.httpserver.Authenticator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.repository.query.Param;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-
-import static com.projectw.common.constants.Const.FRONTEND_URL;
 
 @RestController
 @RequestMapping("/api/v1/user/stores")
