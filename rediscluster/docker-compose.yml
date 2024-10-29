@@ -11,6 +11,7 @@ services:
             echo "cluster-announce-port 7001" >> /etc/redis.conf &&
             echo "cluster-announce-ip ${HOST_IP}" >> /etc/redis.conf &&
             echo "cluster-announce-bus-port 17001" >> /etc/redis.conf &&
+            echo "protected-mode no" >> /etc/redis.conf &&
             redis-server /etc/redis.conf'
     ports:
       - "7001:7001"
@@ -30,6 +31,7 @@ services:
             echo "cluster-announce-port 7002" >> /etc/redis.conf &&
             echo "cluster-announce-ip ${HOST_IP}" >> /etc/redis.conf &&
             echo "cluster-announce-bus-port 17002" >> /etc/redis.conf &&
+            echo "protected-mode no" >> /etc/redis.conf &&
             redis-server /etc/redis.conf'
     ports:
       - "7002:7002"
@@ -49,6 +51,7 @@ services:
             echo "cluster-announce-port 7003" >> /etc/redis.conf &&
             echo "cluster-announce-ip ${HOST_IP}" >> /etc/redis.conf &&
             echo "cluster-announce-bus-port 17003" >> /etc/redis.conf &&
+            echo "protected-mode no" >> /etc/redis.conf &&
             redis-server /etc/redis.conf'
     ports:
       - "7003:7003"
@@ -68,6 +71,7 @@ services:
             echo "cluster-announce-port 7004" >> /etc/redis.conf &&
             echo "cluster-announce-ip ${HOST_IP}" >> /etc/redis.conf &&
             echo "cluster-announce-bus-port 17004" >> /etc/redis.conf &&
+            echo "protected-mode no" >> /etc/redis.conf &&
             redis-server /etc/redis.conf'
     ports:
       - "7004:7004"
@@ -87,6 +91,7 @@ services:
             echo "cluster-announce-port 7005" >> /etc/redis.conf &&
             echo "cluster-announce-ip ${HOST_IP}" >> /etc/redis.conf &&
             echo "cluster-announce-bus-port 17005" >> /etc/redis.conf &&
+            echo "protected-mode no" >> /etc/redis.conf &&
             redis-server /etc/redis.conf'
     ports:
       - "7005:7005"
@@ -106,6 +111,7 @@ services:
             echo "cluster-announce-port 7006" >> /etc/redis.conf &&
             echo "cluster-announce-ip ${HOST_IP}" >> /etc/redis.conf &&
             echo "cluster-announce-bus-port 17006" >> /etc/redis.conf &&
+            echo "protected-mode no" >> /etc/redis.conf &&
             redis-server /etc/redis.conf'
     ports:
       - "7006:7006"
