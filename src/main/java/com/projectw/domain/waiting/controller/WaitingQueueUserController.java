@@ -52,7 +52,7 @@ public class WaitingQueueUserController {
     /**
      * 웨이팅 대기열에 등록되어 있는지 확인
      */
-    @GetMapping("/api/v2/user/stores/{storeId}/waiting")
+    @GetMapping("/api/v2/user/stores/{storeId}/waitings")
     public ResponseEntity<SuccessResponse<WaitingQueueResponse.WaitingInfo>> checkWaitingStatus(
         @AuthenticationPrincipal AuthUser authUser,
         @PathVariable long storeId
