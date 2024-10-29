@@ -39,6 +39,9 @@ public class Store extends Timestamped {
 
     private String description;
 
+    private Double latitude;
+    private Double longitude;
+
     @Column(nullable = false)
     private LocalTime openTime;
 
@@ -79,7 +82,7 @@ public class Store extends Timestamped {
     private List<Reservation> reservations = new ArrayList<>();
 
     @Builder
-    public Store(String image, String title, String description, LocalTime openTime, LocalTime closeTime, Boolean isNextDay, Long reservationTableCount, Long tableCount, String phoneNumber, String address, LocalTime lastOrder, LocalTime turnover, User user, List<Reservation> reservations, Long deposit) {
+    public Store(String image, String title, String description, LocalTime openTime, LocalTime closeTime, Boolean isNextDay, Long reservationTableCount, Long tableCount, String phoneNumber, String address, LocalTime lastOrder, LocalTime turnover, User user, List<Reservation> reservations, Long deposit, Double latitude, Double longitude) {
         this.image = image;
         this.title = title;
         this.description = description;
@@ -95,6 +98,8 @@ public class Store extends Timestamped {
         this.user = user;
         this.reservations = reservations;
         this.deposit = deposit;
+        this.latitude = latitude;
+        this.longitude = longitude;
     }
 
     public Store putStore(StoreRequestDto storeRequestDto) {
@@ -110,6 +115,8 @@ public class Store extends Timestamped {
         this.address = storeRequestDto.getAddress();
         this.isNextDay = openTime.isAfter(lastOrder);
         this.deposit = storeRequestDto.getDeposit();
+        this.latitude = storeRequestDto.getLatitude();
+        this.longitude = storeRequestDto.getLongitude();
         return this;
     }
 
