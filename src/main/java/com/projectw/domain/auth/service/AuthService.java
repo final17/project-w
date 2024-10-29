@@ -80,14 +80,8 @@ public class AuthService {
             throw new InvalidRequestException(ResponseCode.DUPLICATE_NICKNAME);
         }
 
-        // 알레르기 정보 처리
-        Set<Allergy> allergies = (request.allergyIds() != null)
-                ? allergyRepository.findAllById(request.allergyIds()).stream().collect(Collectors.toSet())
-                : new HashSet<>();
-
         // 사용자 등록
         User user = new User(password, email, nickname, request.userRole());
-        user.updateAllergies(allergies);
         user = userRepository.save(user);
 
         return SuccessResponse.of(new AuthResponse.Signup(user.getId()));
@@ -258,18 +252,6 @@ public class AuthService {
         if (allergyIds == null || allergyIds.isEmpty()) {
             throw new InvalidRequestException(ResponseCode.NOT_FOUND_ALLERGY);
         }
-
-        // 알레르기 정보 조회
-        Set<Allergy> allergies = allergyRepository.findAllById(allergyIds)
-                .stream().collect(Collectors.toSet());
-
-        // 존재하지 않는 알레르기 ID 확인
-        if (allergies.size() != allergyIds.size()) {
-            throw new InvalidRequestException(ResponseCode.NOT_FOUND_ALLERGY);
-        }
-
-        // 유저 알레르기 정보 업데이트
-        user.updateAllergies(allergies);
 
         // 변경된 유저 정보 저장
         userRepository.save(user);
