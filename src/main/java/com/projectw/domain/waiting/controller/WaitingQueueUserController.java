@@ -49,5 +49,16 @@ public class WaitingQueueUserController {
         return ResponseEntity.ok().body(SuccessResponse.of(null));
     }
 
+    /**
+     * 웨이팅 대기열에 등록되어 있는지 확인
+     */
+    @GetMapping("/api/v2/user/stores/{storeId}/waiting")
+    public ResponseEntity<SuccessResponse<WaitingQueueResponse.WaitingInfo>> checkWaitingStatus(
+        @AuthenticationPrincipal AuthUser authUser,
+        @PathVariable long storeId
+    ) {
+        return ResponseEntity.ok(SuccessResponse.of(waitingQueueService.checkWaitingStatus(authUser, storeId)));
+    }
+
 
 }
