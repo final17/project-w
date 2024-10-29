@@ -54,7 +54,7 @@ public class WebSecurityConfig {
                 .requestMatchers("/api/*/auth/**").permitAll()
                 .requestMatchers("/api/*/user/stores/*/waitings/connection").permitAll() // sse 연결끊으면 에러 때문에 permitAll 처리
                 .requestMatchers("/auth/*/logout").authenticated()
-                .requestMatchers("/api/*/user/**").hasAnyAuthority(UserRole.Authority.USER, UserRole.Authority.ADMIN)
+                .requestMatchers("/api/*/user/**").hasAnyAuthority(UserRole.Authority.USER, UserRole.Authority.OWNER, UserRole.Authority.ADMIN)
                 .requestMatchers("/api/*/owner/**").hasAnyAuthority(UserRole.Authority.OWNER, UserRole.Authority.ADMIN)
                 .requestMatchers("/api/*/owner/**").hasAuthority(UserRole.Authority.ADMIN)
                 .requestMatchers("/api/*/allergies").permitAll()
