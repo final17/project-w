@@ -2,7 +2,6 @@ package com.projectw.domain.allergy.controller;
 
 import com.projectw.domain.allergy.dto.response.AllergyResponseDto;
 import com.projectw.domain.allergy.service.AllergyService;
-import com.projectw.domain.auth.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,7 +16,6 @@ import java.util.List;
 public class AllergyController {
 
     private final AllergyService allergyService;
-    private final AuthService authService;
 
     @GetMapping("/allergies")
     public ResponseEntity<List<AllergyResponseDto>> getAllAllergies() {
