@@ -8,7 +8,6 @@ import com.projectw.common.exceptions.AccessDeniedException;
 import com.projectw.common.exceptions.InvalidRequestException;
 import com.projectw.common.exceptions.InvalidTokenException;
 import com.projectw.common.exceptions.NotFoundException;
-import com.projectw.domain.allergy.entity.Allergy;
 import com.projectw.domain.allergy.repository.AllergyRepository;
 import com.projectw.domain.auth.dto.AuthRequest;
 import com.projectw.domain.auth.dto.AuthRequest.Login;
@@ -32,9 +31,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.Duration;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -83,7 +79,6 @@ public class AuthService {
         // 사용자 등록
         User user = new User(password, email, nickname, request.userRole());
         user = userRepository.save(user);
-
         return SuccessResponse.of(new AuthResponse.Signup(user.getId()));
     }
 
@@ -252,6 +247,18 @@ public class AuthService {
         if (allergyIds == null || allergyIds.isEmpty()) {
             throw new InvalidRequestException(ResponseCode.NOT_FOUND_ALLERGY);
         }
+
+        // 알레르기 정보 조회
+        Set<Allergy> allergies = allergyRepository.findAllById(allergyIds)
+                .stream().collect(Collectors.toSet());
+
+        // 존재하지 않는 알레르기 ID 확인
+        if (allergies.size() != allergyIds.size()) {
+            throw new InvalidRequestException(ResponseCode.NOT_FOUND_ALLERGY);
+        }
+
+        // 유저 알레르기 정보 업데이트
+        user.updateAllergies(allergies);
 
         // 변경된 유저 정보 저장
         userRepository.save(user);
