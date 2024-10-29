@@ -8,7 +8,6 @@ import com.projectw.common.exceptions.AccessDeniedException;
 import com.projectw.common.exceptions.InvalidRequestException;
 import com.projectw.common.exceptions.InvalidTokenException;
 import com.projectw.common.exceptions.NotFoundException;
-import com.projectw.domain.allergy.entity.Allergy;
 import com.projectw.domain.allergy.repository.AllergyRepository;
 import com.projectw.domain.auth.dto.AuthRequest;
 import com.projectw.domain.auth.dto.AuthRequest.Login;
@@ -32,9 +31,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.Duration;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -83,7 +79,6 @@ public class AuthService {
         // 사용자 등록
         User user = new User(password, email, nickname, request.userRole());
         user = userRepository.save(user);
-
         return SuccessResponse.of(new AuthResponse.Signup(user.getId()));
     }
 
@@ -163,7 +158,6 @@ public class AuthService {
             throw new InvalidTokenException();
         }
 
-
         String key = JwtUtil.REDIS_REFRESH_TOKEN_PREFIX  + jwtUtil.getUserId(refreshToken);
         // 레디스에서 리프레쉬 토큰을 가져온다.
         refreshToken = (String) redissonClient.getBucket(key).get();
@@ -235,25 +229,5 @@ public class AuthService {
         }
 
         user.delete();
-    }
-
-    /**
-     * 유저의 알레르기 정보 업데이트
-     * @param userId 유저 ID
-     * @param allergyIds 선택된 알레르기 ID 목록
-     */
-    @Transactional
-    public void updateUserAllergies(Long userId, Set<Long> allergyIds) {
-        // 유저 조회
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new InvalidRequestException(ResponseCode.NOT_FOUND_USER));
-
-        // 알레르기 ID가 비어있거나 null인 경우 예외 처리
-        if (allergyIds == null || allergyIds.isEmpty()) {
-            throw new InvalidRequestException(ResponseCode.NOT_FOUND_ALLERGY);
-        }
-
-        // 변경된 유저 정보 저장
-        userRepository.save(user);
     }
 }

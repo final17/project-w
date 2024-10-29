@@ -17,10 +17,10 @@ public class WaitingQueueUserController {
     private final WaitingQueueService waitingQueueService;
 
     /**
-     * SSE 연결
+     * 알림을 받기 위해 서버에게 SSE 요청
      */
     @GetMapping("/api/v2/user/stores/{storeId}/waitings/connection")
-    public ResponseEntity<SseEmitter> test1(
+    public ResponseEntity<SseEmitter> connectToServer(
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable long storeId) {
 
@@ -31,7 +31,7 @@ public class WaitingQueueUserController {
      * 대기열에 등록
      */
     @PostMapping("/api/v2/user/stores/{storeId}/waitings")
-    public ResponseEntity<SuccessResponse<WaitingQueueResponse.Info>> test2(
+    public ResponseEntity<SuccessResponse<WaitingQueueResponse.Info>> addToWaitingQueue(
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable long storeId) {
         return ResponseEntity.ok(SuccessResponse.of(waitingQueueService.addUserToQueue(authUser, storeId)));
