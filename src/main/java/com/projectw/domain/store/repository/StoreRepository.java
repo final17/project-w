@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.List;
 import java.util.Optional;
 
 public interface StoreRepository extends JpaRepository<Store, Long>, StoreDslRepository{
@@ -22,8 +21,4 @@ public interface StoreRepository extends JpaRepository<Store, Long>, StoreDslRep
 
     @Query("SELECT s FROM Store s WHERE s.title LIKE %:title% ")
     Page<Store> findAllByTitle(Pageable pageable, String title);
-
-    List<Store> findByDescription(String description); // 특정 카테고리에 속하는 음식점들
-
-    List<Store> findByDescriptionAndAddressStartingWith(String description, String addressStart); // 카테고리와 특정 지역에 맞는 음식점
 }
