@@ -1,7 +1,6 @@
 package com.projectw.domain.store.entity;
 
 import com.projectw.common.entity.Timestamped;
-import com.projectw.domain.menu.entity.Menu;
 import com.projectw.domain.reservation.entity.Reservation;
 import com.projectw.domain.store.dto.request.StoreRequestDto;
 import com.projectw.domain.user.entity.User;
