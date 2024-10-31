@@ -5,7 +5,6 @@ import com.projectw.domain.store.dto.response.CategoryMapperValue;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -37,9 +36,10 @@ class CategoryTest {
 
     @Test
     public void 자식_카테고리_가져오기() {
-        List<Category> childCategories = Category.getChildCategories(Category.FOOD);
+        List<Category> childCategories = Category.getChildCategories(Category.ROOT);
         childCategories.forEach(System.out::println);
-        assertThat(childCategories).contains(Category.KOREAN_FOOD, Category.JAPANEASE_FOOD);
+        List<Category> categoriesByDepth = Category.getCategoriesByDepth(1);
+        assertThat(childCategories).containsAll(categoriesByDepth);
     }
 
     @Test
@@ -50,21 +50,10 @@ class CategoryTest {
         assertThat(rootDepth).isEqualTo(0);
     }
 
-
-    @Test
-    public void 카테고리_이름_찾기() throws Exception {
-        Optional<Category> find = Category.findByName(Category.FOOD, "한식");
-        assertThat(find).isPresent();
-        String path = find.get().getPath();
-        String code = find.get().getCode();
-        System.out.println("code = " + code);
-        System.out.println("path = " + path);
-    }
-
     @Test
     public void 카테고리_매퍼() throws Exception {
         ObjectMapper mapper = new ObjectMapper();
-        String s = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(new CategoryMapperValue(Category.JAPANEASE_FOOD));
+        String s = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(new CategoryMapperValue(Category.REGION));
         System.out.println(s);
     }
 }

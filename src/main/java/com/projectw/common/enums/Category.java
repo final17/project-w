@@ -1,6 +1,7 @@
 package com.projectw.common.enums;
 
 import com.projectw.domain.store.dto.response.CategoryMapper;
+import com.projectw.domain.store.dto.response.CategoryMapperValue;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -15,12 +16,13 @@ public enum Category implements CategoryMapper {
             KOREAN_FOOD("한식","1", FOOD),
             JAPANEASE_FOOD("일식","2", FOOD),
     /*---------------------------------------------------------*/
-        Region("지역", "3", ROOT),
+        REGION("지역", "RE", ROOT),
     ;
     /*---------------------------------------------------------*/
 
     private final String name;
     private final String code;
+    private final String path;
     private final int depth;
     @Getter
     private final Category parent;
@@ -31,25 +33,32 @@ public enum Category implements CategoryMapper {
 
     Category(String name, String code, Category parent){
         this.name = name;
-        this.code = code;
         this.parent = parent;
         children = new ArrayList<>();
 
-        if(parent != null){
-            depth = parent.depth + 1;
-            parent.children.add(this);
-        } else {
+        // root
+        if(parent == null){
             depth = 0;
             rootNode = true;
+            this.code = code;
+            this.path = "";
+        } else {
+            depth = 1 + parent.depth;
+            parent.getChildren().add(this);
+
+            if(depth != 1) {
+                this.code = parent.getCode() + "-" + code;
+                this.path = parent.getPath() + "/" + name;
+            } else {
+                this.code = code;
+                this.path = name;
+            }
         }
     }
 
     @Override
     public String getCode() {
-        if(parent == null) return "";
-        else if(parent == ROOT) return code;
-
-        return parent.getCode() + "-" + code;
+        return code;
     }
 
     @Override
@@ -61,7 +70,7 @@ public enum Category implements CategoryMapper {
     public String getPath() {
         if(parent == null) return name;
 
-        return parent.getName() + "/" + name;
+        return path;
     }
 
     @Override
@@ -131,7 +140,7 @@ public enum Category implements CategoryMapper {
      * @param name
      * @return
      */
-    public static Optional<Category> findByName(Category root, String name) {
+    public static Optional<Category> findByName(Category root, CategoryMapperValue name) {
         List<Category> childCategories = getChildCategories(root);
         for (Category category : childCategories) {
             if(category.getName().equals(name)) {
