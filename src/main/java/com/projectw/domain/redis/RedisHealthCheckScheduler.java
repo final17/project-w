@@ -39,7 +39,7 @@ public class RedisHealthCheckScheduler {
 
     @PostConstruct
     public void init() {
-        nodes.addAll(Arrays.stream(redisClusterNodes.trim().split(",")).collect(Collectors.toList()));
+        nodes.addAll(Arrays.stream(redisClusterNodes.trim().split(",")).toList());
 
         for (int i = 0; i < nodes.size(); i++) {
             nodes.set(i, REDISSON_HOST_PREFIX + nodes.get(i));
