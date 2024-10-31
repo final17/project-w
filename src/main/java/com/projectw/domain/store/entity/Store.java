@@ -1,7 +1,7 @@
 package com.projectw.domain.store.entity;
 
 import com.projectw.common.entity.Timestamped;
-import com.projectw.domain.menu.entity.Menu;
+import com.projectw.common.enums.Category;
 import com.projectw.domain.reservation.entity.Reservation;
 import com.projectw.domain.store.dto.request.StoreRequestDto;
 import com.projectw.domain.user.entity.User;
@@ -24,6 +24,9 @@ public class Store extends Timestamped {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Enumerated(EnumType.STRING)
+    private Category category;
 
     private String image;
 
