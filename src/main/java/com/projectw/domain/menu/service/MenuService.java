@@ -13,11 +13,15 @@ import com.projectw.domain.store.entity.Store;
 import com.projectw.domain.store.repository.StoreRepository;
 import com.projectw.security.AuthUser;
 import lombok.RequiredArgsConstructor;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -27,6 +31,7 @@ public class MenuService {
     private final MenuRepository menuRepository;
     private final StoreRepository storeRepository;
     private final AllergyRepository allergyRepository;
+    private final RedissonClient redissonClient;
 
     // 메뉴 생성 (ROLE_OWNER 권한만 가능)
     public MenuResponseDto createMenu(AuthUser authUser, MenuRequestDto requestDto, Long storeId) throws IOException {
@@ -56,7 +61,10 @@ public class MenuService {
                 savedMenu.getId(),
                 savedMenu.getName(),
                 savedMenu.getPrice(),
-                savedMenu.getAllergies().stream().map(Allergy::getName).collect(Collectors.toSet()));
+                savedMenu.getAllergies().stream().map(Allergy::getName).collect(Collectors.toSet()),
+                savedMenu.getLikesCount(),
+                savedMenu.getViewCount()
+        );
     }
 
     // 메뉴 수정 (ROLE_OWNER 권한만 가능)
@@ -85,7 +93,10 @@ public class MenuService {
                 updatedMenu.getId(),
                 updatedMenu.getName(),
                 updatedMenu.getPrice(),
-                updatedMenu.getAllergies().stream().map(Allergy::getName).collect(Collectors.toSet()));
+                updatedMenu.getAllergies().stream().map(Allergy::getName).collect(Collectors.toSet()),
+                updatedMenu.getLikesCount(),
+                updatedMenu.getViewCount()
+        );
     }
 
     // 모든 유저가 특정 가게의 메뉴 조회
@@ -97,17 +108,14 @@ public class MenuService {
         // 해당 가게의 메뉴 조회 (isDeleted가 false인 메뉴만 조회)
         List<Menu> menus = menuRepository.findAllByStoreAndIsDeletedFalse(store);
 
-        return menus.stream().map(menu -> {
-            Set<String> allergyNames = menu.getAllergies().stream()
-                    .map(Allergy::getName)
-                    .collect(Collectors.toSet());
-            return new MenuResponseDto(
-                    menu.getId(),
-                    menu.getName(),
-                    menu.getPrice(),
-                    allergyNames
-            );
-        }).collect(Collectors.toList());
+        return menus.stream().map(menu -> new MenuResponseDto(
+                menu.getId(),
+                menu.getName(),
+                menu.getPrice(),
+                menu.getAllergies().stream().map(Allergy::getName).collect(Collectors.toSet()),
+                menu.getLikesCount(),
+                menu.getViewCount()
+        )).collect(Collectors.toList());
     }
 
     // 오너가 자신의 가게 메뉴만 조회
@@ -122,17 +130,14 @@ public class MenuService {
         // 해당 스토어의 메뉴만 조회 (isDeleted가 false인 메뉴만)
         List<Menu> menus = menuRepository.findAllByStoreAndIsDeletedFalse(store);
 
-        return menus.stream().map(menu -> {
-            Set<String> allergyNames = menu.getAllergies().stream()
-                    .map(Allergy::getName)
-                    .collect(Collectors.toSet());
-            return new MenuResponseDto(
-                    menu.getId(),
-                    menu.getName(),
-                    menu.getPrice(),
-                    allergyNames
-            );
-        }).collect(Collectors.toList());
+        return menus.stream().map(menu -> new MenuResponseDto(
+                menu.getId(),
+                menu.getName(),
+                menu.getPrice(),
+                menu.getAllergies().stream().map(Allergy::getName).collect(Collectors.toSet()),
+                menu.getLikesCount(),
+                menu.getViewCount()
+        )).collect(Collectors.toList());
     }
 
     // 메뉴 삭제 (ROLE_OWNER 권한만 가능)
@@ -156,5 +161,95 @@ public class MenuService {
         // 메뉴 삭제
         menu.deleteMenu();
         menuRepository.save(menu);
+    }
+
+//    // Redis 분산 락 걸기 전
+//    // 메뉴 좋아요 수 증가
+//    @Transactional
+//    public MenuResponseDto likeMenu(Long menuId) {
+//        Menu menu = menuRepository.findById(menuId)
+//                .orElseThrow(() -> new IllegalArgumentException("메뉴를 찾을 수 없습니다."));
+//        menu.incrementLikes();
+//        menuRepository.save(menu);
+//
+//        return new MenuResponseDto(menu.getId(), menu.getName(), menu.getPrice(),
+//                menu.getAllergies().stream().map(Allergy::getName).collect(Collectors.toSet()),
+//                menu.getLikesCount(), menu.getViewCount());
+//    }
+//
+//    // 메뉴 조회수 증가
+//    @Transactional
+//    public MenuResponseDto viewMenu(Long menuId) {
+//        Menu menu = menuRepository.findById(menuId)
+//                .orElseThrow(() -> new IllegalArgumentException("메뉴를 찾을 수 없습니다."));
+//        menu.incrementViews();
+//        menuRepository.save(menu);
+//
+//        return new MenuResponseDto(menu.getId(), menu.getName(), menu.getPrice(),
+//                menu.getAllergies().stream().map(Allergy::getName).collect(Collectors.toSet()),
+//                menu.getLikesCount(), menu.getViewCount());
+//    }
+
+    // 메뉴 좋아요 수 증가
+    @Transactional
+    public MenuResponseDto likeMenu(Long menuId) {
+        String lockKey = "lock:menu:like:" + menuId;
+        RLock lock = redissonClient.getLock(lockKey);
+
+        try {
+            // 락을 시도 (5초 이내에 락을 획득할 수 있어야 하며, 획득 후 2초 동안 유지)
+            if (lock.tryLock(5, 2, TimeUnit.SECONDS)) {
+                Menu menu = menuRepository.findById(menuId)
+                        .orElseThrow(() -> new IllegalArgumentException("메뉴를 찾을 수 없습니다."));
+
+                // 좋아요 증가 및 저장
+                menu.incrementLikes();
+                menuRepository.save(menu);
+
+                return new MenuResponseDto(menu.getId(), menu.getName(), menu.getPrice(),
+                        menu.getAllergies().stream().map(Allergy::getName).collect(Collectors.toSet()),
+                        menu.getLikesCount(), menu.getViewCount());
+            } else {
+                throw new RuntimeException("락을 획득할 수 없습니다. 잠시 후 다시 시도해 주세요.");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("락 획득 중 인터럽트가 발생했습니다.", e);
+        } finally {
+            // 락 해제 예외 처리
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
+    }
+
+    // 메뉴 조회수 증가
+    @Transactional
+    public MenuResponseDto viewMenu(Long menuId) {
+        String lockKey = "lock:menu:view:" + menuId; // 메뉴 ID 기반으로 고유 락 키 생성
+        RLock lock = redissonClient.getLock(lockKey);
+
+        try {
+            // 락을 시도 (5초 이내에 락을 획득할 수 있어야 함, 획득 후 2초 동안 유지)
+            if (lock.tryLock(5, 2, TimeUnit.SECONDS)) {
+                Menu menu = menuRepository.findById(menuId)
+                        .orElseThrow(() -> new IllegalArgumentException("메뉴를 찾을 수 없습니다."));
+                menu.incrementViews();
+                menuRepository.save(menu);
+
+                return new MenuResponseDto(menu.getId(), menu.getName(), menu.getPrice(),
+                        menu.getAllergies().stream().map(Allergy::getName).collect(Collectors.toSet()),
+                        menu.getLikesCount(), menu.getViewCount());
+            } else {
+                throw new RuntimeException("락을 획득할 수 없습니다. 잠시 후 다시 시도해 주세요.");
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException("락 획득 중 인터럽트가 발생했습니다.", e);
+        } finally {
+            // 락 해제
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
     }
 }

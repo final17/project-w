@@ -4,15 +4,12 @@ import com.projectw.common.dto.SuccessResponse;
 import com.projectw.domain.menu.dto.response.MenuResponseDto;
 import com.projectw.domain.menu.service.MenuService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/user/stores/{storeId}/menus")
+@RequestMapping("/api/v2/stores/{storeId}/menus")
 public class MenuUserController {
 
     private MenuService menuService;
@@ -25,5 +22,19 @@ public class MenuUserController {
     public ResponseEntity<SuccessResponse<List<MenuResponseDto>>> getMenusByStore(@PathVariable Long storeId) {
         List<MenuResponseDto> menus = menuService.getMenusByStore(storeId);
         return ResponseEntity.ok(SuccessResponse.of(menus));
+    }
+
+    // 좋아요 증가 API
+    @PostMapping("/{menuId}/like")
+    public ResponseEntity<SuccessResponse<MenuResponseDto>> likeMenu(@PathVariable Long menuId) {
+        MenuResponseDto response = menuService.likeMenu(menuId);
+        return ResponseEntity.ok(SuccessResponse.of(response));
+    }
+
+    // 조회수 증가 API
+    @GetMapping("/{menuId}/view")
+    public ResponseEntity<SuccessResponse<MenuResponseDto>> viewMenu(@PathVariable Long menuId) {
+        MenuResponseDto response = menuService.viewMenu(menuId);
+        return ResponseEntity.ok(SuccessResponse.of(response));
     }
 }
