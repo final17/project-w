@@ -27,7 +27,8 @@ public class RedisHealthCheckScheduler {
     private final RedissonClient redissonClient;
     private final MessageClient slackClient;
 
-    private String redisHealthCheckHookUrl = "https://hooks.slack.com/services/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";
+    @Value("${REDIS_HEALTH_SLACK_WEBHOOK_URL}")
+    private String redisHealthCheckHookUrl;
 
     @Value("${redis.cluster.nodes}")
     private String redisClusterNodes;
