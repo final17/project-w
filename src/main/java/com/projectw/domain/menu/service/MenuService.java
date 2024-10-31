@@ -8,9 +8,12 @@ import com.projectw.domain.allergy.repository.AllergyRepository;
 import com.projectw.domain.menu.dto.request.MenuRequestDto;
 import com.projectw.domain.menu.dto.response.MenuResponseDto;
 import com.projectw.domain.menu.entity.Menu;
+import com.projectw.domain.menu.entity.MenuLike;
+import com.projectw.domain.menu.repository.MenuLikeRepository;
 import com.projectw.domain.menu.repository.MenuRepository;
 import com.projectw.domain.store.entity.Store;
 import com.projectw.domain.store.repository.StoreRepository;
+import com.projectw.domain.user.entity.User;
 import com.projectw.security.AuthUser;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RLock;
@@ -20,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -32,6 +36,7 @@ public class MenuService {
     private final StoreRepository storeRepository;
     private final AllergyRepository allergyRepository;
     private final RedissonClient redissonClient;
+    private final MenuLikeRepository menuLikeRepository;
 
     // 메뉴 생성 (ROLE_OWNER 권한만 가능)
     public MenuResponseDto createMenu(AuthUser authUser, MenuRequestDto requestDto, Long storeId) throws IOException {
@@ -190,39 +195,44 @@ public class MenuService {
 //                menu.getLikesCount(), menu.getViewCount());
 //    }
 
-    // 메뉴 좋아요 수 증가
+    // 메뉴 좋아요 기능 구현
     @Transactional
-    public MenuResponseDto likeMenu(Long menuId) {
-        String lockKey = "lock:menu:like:" + menuId;
+    public MenuResponseDto likeMenu(Long menuId, User user) {
+        String lockKey = "lock:menu:like:" + menuId; // 메뉴 ID 기반으로 고유 락 키 생성
         RLock lock = redissonClient.getLock(lockKey);
 
         try {
-            // 락을 시도 (5초 이내에 락을 획득할 수 있어야 하며, 획득 후 2초 동안 유지)
-            if (lock.tryLock(5, 2, TimeUnit.SECONDS)) {
+            if (lock.tryLock(10, 2, TimeUnit.SECONDS)) {
                 Menu menu = menuRepository.findById(menuId)
-                        .orElseThrow(() -> new IllegalArgumentException("메뉴를 찾을 수 없습니다."));
+                        .orElseThrow(() -> new IllegalArgumentException("해당 메뉴를 찾을 수 없습니다."));
 
-                // 좋아요 증가 및 저장
-                menu.incrementLikes();
-                menuRepository.save(menu);
+                // 좋아요 존재 확인
+                Optional<MenuLike> existingLike = menuLikeRepository.findByMenuAndUser(menu, user);
 
+                if (existingLike.isPresent()) {
+                    // 좋아요가 이미 존재하면 취소
+                    menuLikeRepository.delete(existingLike.get());
+                } else {
+                    // 좋아요가 존재하지 않으면 추가
+                    menuLikeRepository.save(new MenuLike(menu, user));
+                }
+
+                int updatedLikesCount = menuLikeRepository.countByMenu(menu);  // 현재 좋아요 수 조회
                 return new MenuResponseDto(menu.getId(), menu.getName(), menu.getPrice(),
                         menu.getAllergies().stream().map(Allergy::getName).collect(Collectors.toSet()),
-                        menu.getLikesCount(), menu.getViewCount());
+                        updatedLikesCount, menu.getViewCount());
             } else {
-                throw new RuntimeException("락을 획득할 수 없습니다. 잠시 후 다시 시도해 주세요.");
+                throw new RuntimeException("잠금 획득에 실패했습니다. 잠시 후 다시 시도해주세요.");
             }
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("락 획득 중 인터럽트가 발생했습니다.", e);
+            throw new RuntimeException("잠금 획득 중 인터럽트가 발생했습니다.", e);
         } finally {
-            // 락 해제 예외 처리
+            // 락 해제 여부 확인 후 해제
             if (lock.isHeldByCurrentThread()) {
                 lock.unlock();
             }
         }
     }
-
     // 메뉴 조회수 증가
     @Transactional
     public MenuResponseDto viewMenu(Long menuId) {

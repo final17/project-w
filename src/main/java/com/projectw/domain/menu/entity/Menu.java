@@ -64,6 +64,13 @@ public class Menu {
         this.likesCount++;
     }
 
+    // 좋아요 감소 메서드
+    public void decrementLikes() {
+        if (this.likesCount > 0) {
+            this.likesCount--;
+        }
+    }
+
     // 조회수 증가 메서드
     public void incrementViews() {
         this.viewCount++;

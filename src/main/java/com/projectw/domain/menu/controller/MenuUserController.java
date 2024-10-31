@@ -1,9 +1,14 @@
 package com.projectw.domain.menu.controller;
 
 import com.projectw.common.dto.SuccessResponse;
+import com.projectw.common.enums.ResponseCode;
+import com.projectw.common.enums.UserRole;
+import com.projectw.common.exceptions.AccessDeniedException;
 import com.projectw.domain.menu.dto.response.MenuResponseDto;
 import com.projectw.domain.menu.service.MenuService;
+import com.projectw.security.AuthUser;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,7 +17,8 @@ import java.util.List;
 @RequestMapping("/api/v2/stores/{storeId}/menus")
 public class MenuUserController {
 
-    private MenuService menuService;
+    private final MenuService menuService;
+
     public MenuUserController(MenuService menuService) {
         this.menuService = menuService;
     }
@@ -26,9 +32,17 @@ public class MenuUserController {
 
     // 좋아요 증가 API
     @PostMapping("/{menuId}/like")
-    public ResponseEntity<SuccessResponse<MenuResponseDto>> likeMenu(@PathVariable Long menuId) {
-        MenuResponseDto response = menuService.likeMenu(menuId);
-        return ResponseEntity.ok(SuccessResponse.of(response));
+    public ResponseEntity<SuccessResponse<MenuResponseDto>> toggleLikeMenu(
+            @AuthenticationPrincipal AuthUser authUser, @PathVariable Long menuId) {
+
+        // 유저 권한 확인
+        if (authUser == null || authUser.getRole() == UserRole.ROLE_OWNER) {
+            throw new AccessDeniedException(ResponseCode.FORBIDDEN);
+        }
+
+        // 좋아요 토글 서비스 호출
+        MenuResponseDto menuResponseDto = menuService.likeMenu(menuId, authUser.toUserEntity());
+        return ResponseEntity.ok(SuccessResponse.of(menuResponseDto));
     }
 
     // 조회수 증가 API
