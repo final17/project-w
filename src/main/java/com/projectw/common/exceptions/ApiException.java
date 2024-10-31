@@ -13,6 +13,5 @@ public class ApiException extends RuntimeException {
     public ApiException(HttpStatus httpStatus, String message) {
         this.httpStatus = httpStatus;
         this.message = message;
-        log.error("[{}] {}", httpStatus, message);
     }
 }

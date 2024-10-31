@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="30 seconds">
+    <springProperty scope="context" name="LOGSTASH_HOST" source="LOGSTASH_HOST"/>
+    <springProperty scope="context" name="LOGSTASH_PORT" source="LOGSTASH_PORT"/>
+
+    <!-- Logstash로 로그 전송 -->
+    <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+        <destination>${LOGSTASH_HOST}:${LOGSTASH_PORT}</destination>
+
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp />
+                <level />
+                <threadName />
+                <mdc />
+                <logger /> <!-- 로그를 생성한 로거 이름 추가 -->
+<!--                <message />-->
+                <customFields>{"app_name": "MyApp"}</customFields>
+            </providers>
+        </encoder>
+
+        <!-- 네트워크 문제 발생 시 재시도 설정 -->
+        <retryPolicy class="net.logstash.logback.appender.RetryPolicy">
+            <maxRetries>3</maxRetries>
+            <retryInterval>1000</retryInterval> <!-- 1초 간격으로 재시도 -->
+        </retryPolicy>
+    </appender>
+
+    <!-- IntelliJ 콘솔에 로그 출력 -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- 로그 레벨 설정 및 Appender 참조 -->
+    <root level="INFO">
+        <appender-ref ref="LOGSTASH"/>  <!-- 모든 로그를 Logstash로 전송 -->
+        <appender-ref ref="CONSOLE"/>   <!-- 로그를 IntelliJ 콘솔에 출력 -->
+    </root>
+</configuration>

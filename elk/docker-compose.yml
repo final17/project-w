@@ -1,0 +1,82 @@
+networks:
+  elk:
+    driver: bridge
+#  monitoring:
+#    driver: bridge
+
+services:
+  # Elastic search 설정
+  elasticsearch:
+    container_name: elasticsearch
+    image: elasticsearch:7.17.16
+    ports:
+      - 9200:9200
+      - 9300:9300
+    volumes:
+      - ./elasticsearch:/usr/share/elasticsearch/data
+    # Elastic search 계정정보
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: false
+      xpack.security.transport.ssl.enabled: false
+      ELASTIC_USERNAME: "elastic"
+      ELASTIC_PASSWORD: "changeme"
+    networks:
+      - elk
+
+  # Logstash 설정
+  logstash:
+    container_name: logstash
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    ports:
+      - 5000:5000
+      - 9600:9600
+    volumes:
+      - ./logstash/pipeline/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    depends_on:
+      - elasticsearch
+    networks:
+      - elk
+    environment:
+      # Slack 관련 환경 변수 설정
+      - SLACK_URL=https://hooks.slack.com/services/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
+      - SLACK_CHANNEL=#스프링-앱
+
+  # Kibana 설정
+  kibana:
+    container_name: kibana
+    image: kibana:7.17.16
+    ports:
+      - 5601:5601
+    depends_on:
+      - elasticsearch
+    volumes:
+      - ./kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml
+    networks:
+      - elk
+
+#  # Prometheus 설정
+#  prometheus:
+#    image: prom/prometheus
+#    container_name: prometheus
+#    volumes:
+#      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+#    ports:
+#      - "9090:9090"
+#    networks:
+#      - monitoring
+#
+#  # Grafana 설정
+#  grafana:
+#    image: grafana/grafana
+#    container_name: grafana
+#    ports:
+#      - "3000:3000"
+#    environment:
+#      - GF_SECURITY_ADMIN_PASSWORD=admin
+#    volumes:
+#      - ./monitoring/grafana_data:/var/lib/grafana
+#    networks:
+#      - monitoring

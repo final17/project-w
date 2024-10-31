@@ -150,3 +150,6 @@ gradle-app.setting
 
 ### application-private.yml ###
 application-private.yml
+
+### elk -> elasticsearch ###
+/elk/elasticsearch
