@@ -15,4 +15,5 @@ public interface StoreUserService {
     StoreResponseDto getOneStore(AuthUser authUser, Long storeId);
 
     Page<StoreResponseDto> serchStoreName(AuthUser authUser, String storeName, Pageable pageable);
+
 }

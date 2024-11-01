@@ -10,7 +10,6 @@ import java.util.Arrays;
 public enum ReservationStatus {
     RESERVATION(Status.RESERVATION),
     CANCEL(Status.CANCEL),
-    AUTOMATIC_CANCEL(Status.AUTOMATIC_CANCEL),
     APPLY(Status.APPLY),
     COMPLETE(Status.COMPLETE);
 
@@ -26,7 +25,6 @@ public enum ReservationStatus {
     public static class Status {
         public static final String RESERVATION = "RESERVATION";             //예약 - 예약시스템에서만
         public static final String CANCEL = "CANCEL";                       //취소 - 사용자가 취소
-        public static final String AUTOMATIC_CANCEL = "AUTOMATIC_CANCEL";   //자동취소(스케줄러) - wait에서 20분내로
         public static final String APPLY = "APPLY";                         //승인 - 가게에서 승인한것
         public static final String COMPLETE = "COMPLETE";                   //완료 - 방문완료
     }

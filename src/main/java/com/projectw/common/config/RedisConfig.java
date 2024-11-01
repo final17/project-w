@@ -1,15 +1,15 @@
 package com.projectw.common.config;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Configuration
 public class RedisConfig {
@@ -29,8 +29,11 @@ public class RedisConfig {
 
         Config config = new Config();
         config.useClusterServers()
-            .setSslEnableEndpointIdentification(true)
-            .setScanInterval(2000)
+            .setScanInterval(2000)            // 클러스터 스캔 간격 (밀리초 단위)
+            .setRetryAttempts(3)              // 연결 재시도 횟수
+            .setRetryInterval(1500)           // 재시도 간격 (밀리초 단위)
+            .setConnectTimeout(10000)         // 연결 타임아웃 (밀리초 단위)
+            .setTimeout(3000)                 // 응답 타임아웃 (밀리초 단위)
             .setNodeAddresses(nodes);
         return Redisson.create(config);
     }

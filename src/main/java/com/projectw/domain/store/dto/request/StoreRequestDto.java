@@ -17,4 +17,6 @@ public class StoreRequestDto {
     private String phoneNumber;
     private String address;
     private Long deposit;
+    private Double latitude;
+    private Double longitude;
 }
