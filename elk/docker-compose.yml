@@ -57,6 +57,20 @@ services:
     networks:
       - elk
 
+  # Metricbeat 설정
+  metricbeat:
+    container_name: metricbeat
+    image: docker.elastic.co/beats/metricbeat:7.17.16
+    user: root
+    depends_on:
+      - elasticsearch
+    volumes:
+      - ./metricbeat/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml
+      - /var/run/docker.sock:/var/run/docker.sock  # Docker 메트릭 수집을 위한 소켓
+    networks:
+      - elk
+    command: ["metricbeat", "-e", "-strict.perms=false"]
+
 #  # Prometheus 설정
 #  prometheus:
 #    image: prom/prometheus
