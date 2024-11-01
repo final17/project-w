@@ -23,7 +23,7 @@ class CategoryTest {
     @Test
     public void 카테고리_코드() {
         String code = FoodCategory.JAPANESE_FOOD.getCode();
-        assertThat(code).isEqualTo("FT2");
+        assertThat(code).isEqualTo("FT-2");
     }
 
     @Test
