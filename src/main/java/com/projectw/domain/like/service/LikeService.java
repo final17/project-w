@@ -64,12 +64,14 @@ public class LikeService {
                     return true; // 좋아요 추가
                 }
             } else {
-                throw new RuntimeException("잠금 획득에 실패했습니다. 잠시 후 다시 시도해주세요.");
+                throw new RuntimeException("Rock 획득에 실패했습니다. 잠시 후 다시 시도해주세요.");
             }
         } catch (InterruptedException e) {
-            throw new RuntimeException("잠금 획득 중 인터럽트가 발생했습니다.", e);
+            throw new RuntimeException("Rock 획득 중 인터럽트가 발생했습니다.", e);
         } finally {
-            lock.unlock();
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+                }
         }
     }
 
@@ -79,12 +81,6 @@ public class LikeService {
         return likeRepository.countByReview(review);
     }
 
-    // 메뉴에 대한 좋아요 수 조회
-    public long getLikeCountForMenu(Long storeId, Long menuId) {
-        Menu menu = findMenu(storeId, menuId);
-        return likeRepository.countByMenu(menu);
-    }
-
     // 좋아요 상태 확인
     public boolean hasLikedReview(Long reviewId, String email) {
         Review review = findReview(reviewId);
@@ -92,16 +88,12 @@ public class LikeService {
         return likeRepository.existsByReviewAndUser(review, user);
     }
 
-    public boolean hasLikedMenu(Long storeId, Long menuId, Long userId) {
+    public LikeResponseDto getMenuLikeStatus(Long storeId, Long menuId, Long userId) {
         Menu menu = findMenu(storeId, menuId);
         User user = findUserById(userId);
-        return likeRepository.existsByMenuAndUser(menu, user);
-    }
-
-    public LikeResponseDto getMenuLikeStatus(Long storeId, Long menuId, Long userId) {
-        boolean liked = hasLikedMenu(storeId, menuId, userId);
-        long likeCount = getLikeCountForMenu(storeId, menuId);
-        return new LikeResponseDto(liked, likeCount);
+        boolean liked = likeRepository.existsByMenuAndUser(menu, user);
+        long likeCount = likeRepository.countByMenu(menu);
+        return new LikeResponseDto(liked, likeCount);  // 좋아요 상태와 갯수 반환
     }
 
     // 보조 메서드
