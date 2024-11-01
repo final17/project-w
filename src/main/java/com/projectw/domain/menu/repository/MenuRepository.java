@@ -6,10 +6,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface MenuRepository extends JpaRepository<Menu, Long> {
-
-    // 특정 Store에 속하고 삭제되지 않은 메뉴 목록 조회
     List<Menu> findAllByStoreAndIsDeletedFalse(Store store);
+    Optional<Menu> findByIdAndStoreId(Long menuId, Long storeId);
 }

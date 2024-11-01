@@ -35,9 +35,6 @@ public class Menu {
     @Column(nullable = false)
     private Boolean isDeleted = false;
 
-    @Column(name = "likes_count", nullable = false)
-    private int likesCount = 0;
-
     @Column(name = "view_count", nullable = false)
     private int viewCount = 0;
 
@@ -57,18 +54,6 @@ public class Menu {
 
     public void deleteMenu() {
         this.isDeleted = true;
-    }
-
-    // 좋아요 증가 메서드
-    public void incrementLikes() {
-        this.likesCount++;
-    }
-
-    // 좋아요 감소 메서드
-    public void decrementLikes() {
-        if (this.likesCount > 0) {
-            this.likesCount--;
-        }
     }
 
     // 조회수 증가 메서드

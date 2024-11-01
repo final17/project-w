@@ -1,6 +1,7 @@
 package com.projectw.domain.like.controller;
 
 import com.projectw.common.dto.SuccessResponse;
+import com.projectw.domain.like.dto.Response.LikeResponseDto;
 import com.projectw.domain.like.service.LikeService;
 import com.projectw.security.AuthUser;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +23,7 @@ public class LikeController {
             @PathVariable Long reviewId,
             @AuthenticationPrincipal AuthUser user
     ) {
-        boolean isLiked = likeService.toggleLike(reviewId, user.getEmail());
+        boolean isLiked = likeService.toggleReviewLike(reviewId, user.getEmail());
         long likeCount = likeService.getLikeCount(reviewId);
 
         Map<String, Object> response = new HashMap<>();
@@ -37,7 +38,7 @@ public class LikeController {
             @PathVariable Long reviewId,
             @AuthenticationPrincipal AuthUser user
     ) {
-        boolean hasLiked = likeService.hasLiked(reviewId, user.getEmail());
+        boolean hasLiked = likeService.hasLikedReview(reviewId, user.getEmail());
         long likeCount = likeService.getLikeCount(reviewId);
 
         Map<String, Object> response = new HashMap<>();
@@ -47,27 +48,43 @@ public class LikeController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/menus/{menuId}/like")
-    public ResponseEntity<SuccessResponse<Boolean>> toggleLikeMenu(
+    // 메뉴에 대한 좋아요 상태 및 좋아요 수 조회
+    @GetMapping("/stores/{storeId}/menus/{menuId}/like-status")
+    public ResponseEntity<SuccessResponse<LikeResponseDto>> getMenuLikeStatus(
+            @PathVariable Long storeId,
             @PathVariable Long menuId,
             @AuthenticationPrincipal AuthUser authUser) {
 
-        boolean isLiked = likeService.toggleLikeForMenu(menuId, authUser.getUserId());
+        LikeResponseDto response = likeService.getMenuLikeStatus(storeId, menuId, authUser.getUserId());
+        return ResponseEntity.ok(SuccessResponse.of(response));
+    }
+
+    @PostMapping("/stores/{storeId}/menus/{menuId}/like")
+    public ResponseEntity<SuccessResponse<Boolean>> toggleLikeMenu(
+            @PathVariable Long storeId,
+            @PathVariable Long menuId,
+            @AuthenticationPrincipal AuthUser authUser) {
+
+        boolean isLiked = likeService.toggleMenuLike(storeId, menuId, authUser.getUserId());
         return ResponseEntity.ok(SuccessResponse.of(isLiked));
     }
 
-    @GetMapping("/menus/{menuId}/likes")
-    public ResponseEntity<SuccessResponse<Long>> getMenuLikeCount(@PathVariable Long menuId) {
-        long likeCount = likeService.getLikeCountForMenu(menuId);
+    @GetMapping("/stores/{storeId}/menus/{menuId}/likes")
+    public ResponseEntity<SuccessResponse<Long>> getMenuLikeCount(
+            @PathVariable Long storeId,
+            @PathVariable Long menuId) {
+
+        long likeCount = likeService.getLikeCountForMenu(storeId, menuId);
         return ResponseEntity.ok(SuccessResponse.of(likeCount));
     }
 
-    @GetMapping("/menus/{menuId}/has-liked")
+    @GetMapping("/stores/{storeId}/menus/{menuId}/has-liked")
     public ResponseEntity<SuccessResponse<Boolean>> hasLikedMenu(
+            @PathVariable Long storeId,
             @PathVariable Long menuId,
             @AuthenticationPrincipal AuthUser authUser) {
 
-        boolean hasLiked = likeService.hasLikedMenu(menuId, authUser.getUserId());
+        boolean hasLiked = likeService.hasLikedMenu(storeId, menuId, authUser.getUserId());
         return ResponseEntity.ok(SuccessResponse.of(hasLiked));
     }
 }

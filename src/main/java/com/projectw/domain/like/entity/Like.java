@@ -32,7 +32,7 @@ public class Like extends Timestamped {
     private Menu menu;
 
     @Builder
-    public Like(Review review, User user) {
+    private Like(Review review, User user) {
         this.review = review;
         this.user = user;
     }
@@ -40,5 +40,13 @@ public class Like extends Timestamped {
     public Like(Menu menu, User user) {
         this.menu = menu;
         this.user = user;
+    }
+
+    public static Like forReview(Review review, User user) {
+        return new Like(review, user);
+    }
+
+    public static Like forMenu(Menu menu, User user) {
+        return new Like(menu, user);
     }
 }

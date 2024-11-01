@@ -8,7 +8,6 @@ import com.projectw.domain.allergy.repository.AllergyRepository;
 import com.projectw.domain.menu.dto.request.MenuRequestDto;
 import com.projectw.domain.menu.dto.response.MenuResponseDto;
 import com.projectw.domain.menu.entity.Menu;
-import com.projectw.domain.menu.repository.MenuLikeRepository;
 import com.projectw.domain.menu.repository.MenuRepository;
 import com.projectw.domain.store.entity.Store;
 import com.projectw.domain.store.repository.StoreRepository;
@@ -33,7 +32,6 @@ public class MenuService {
     private final StoreRepository storeRepository;
     private final AllergyRepository allergyRepository;
     private final RedissonClient redissonClient;
-    private final MenuLikeRepository menuLikeRepository;
 
     // 메뉴 생성 (ROLE_OWNER 권한만 가능)
     public MenuResponseDto createMenu(AuthUser authUser, MenuRequestDto requestDto, Long storeId) throws IOException {
@@ -64,7 +62,6 @@ public class MenuService {
                 savedMenu.getName(),
                 savedMenu.getPrice(),
                 savedMenu.getAllergies().stream().map(Allergy::getName).collect(Collectors.toSet()),
-                savedMenu.getLikesCount(),
                 savedMenu.getViewCount()
         );
     }
@@ -96,7 +93,6 @@ public class MenuService {
                 updatedMenu.getName(),
                 updatedMenu.getPrice(),
                 updatedMenu.getAllergies().stream().map(Allergy::getName).collect(Collectors.toSet()),
-                updatedMenu.getLikesCount(),
                 updatedMenu.getViewCount()
         );
     }
@@ -115,7 +111,6 @@ public class MenuService {
                 menu.getName(),
                 menu.getPrice(),
                 menu.getAllergies().stream().map(Allergy::getName).collect(Collectors.toSet()),
-                menu.getLikesCount(),
                 menu.getViewCount()
         )).collect(Collectors.toList());
     }
@@ -137,7 +132,6 @@ public class MenuService {
                 menu.getName(),
                 menu.getPrice(),
                 menu.getAllergies().stream().map(Allergy::getName).collect(Collectors.toSet()),
-                menu.getLikesCount(),
                 menu.getViewCount()
         )).collect(Collectors.toList());
     }
@@ -181,7 +175,7 @@ public class MenuService {
 
                 return new MenuResponseDto(menu.getId(), menu.getName(), menu.getPrice(),
                         menu.getAllergies().stream().map(Allergy::getName).collect(Collectors.toSet()),
-                        menu.getLikesCount(), menu.getViewCount());
+                        menu.getViewCount());
             } else {
                 throw new RuntimeException("락을 획득할 수 없습니다. 잠시 후 다시 시도해 주세요.");
             }
