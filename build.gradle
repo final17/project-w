@@ -42,6 +42,10 @@ dependencies {
     annotationProcessor "jakarta.annotation:jakarta.annotation-api"
     annotationProcessor "jakarta.persistence:jakarta.persistence-api"
 
+    //jsoup
+    implementation 'org.jsoup:jsoup:1.15.3'
+
+
     // redisson
     implementation group: 'org.redisson', name: 'redisson', version: '3.37.0'
 
