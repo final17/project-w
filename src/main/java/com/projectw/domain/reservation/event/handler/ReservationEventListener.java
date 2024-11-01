@@ -20,7 +20,7 @@ public class ReservationEventListener {
     @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
     public void handleReservationInsertEvent(ReservationInsertEvent event) {
         log.info("handleReservationInsertEvent");
-        ReserveRequest.InsertReservation insertReservation = new ReserveRequest.InsertReservation(event.getOrderId() , event.getDate() , event.getTime(), event.getNumberPeople() , event.isMenuYN() , event.getPaymentAmt() , event.getUser() , event.getStore());
+        ReserveRequest.InsertReservation insertReservation = new ReserveRequest.InsertReservation(event.getOrderId() , event.getDate() , event.getTime(), event.getNumberPeople() , event.getPaymentAmt() , event.getUser() , event.getStore());
         reservationService.prepareReservation(insertReservation);
     }
 
