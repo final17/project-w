@@ -52,6 +52,7 @@ public class Menu {
         this.allergies = allergies;
     }
 
+    // 메뉴 삭제 메서드
     public void deleteMenu() {
         this.isDeleted = true;
     }
