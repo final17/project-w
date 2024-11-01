@@ -41,11 +41,11 @@ public class MenuService {
             if (lock.tryLock(5, 10, TimeUnit.SECONDS)) {
                 return action.get();
             } else {
-                throw new RuntimeException("Rock 획득에 실패했습니다. 잠시 후 다시 시도해주세요.");
+                throw new RuntimeException("Lock 획득에 실패했습니다. 잠시 후 다시 시도해주세요.");
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new RuntimeException("Rock 획득 중 인터럽트가 발생했습니다.", e);
+            throw new RuntimeException("Lock 획득 중 인터럽트가 발생했습니다.", e);
         } finally {
             if (lock.isHeldByCurrentThread()) {
                 lock.unlock();
