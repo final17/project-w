@@ -15,6 +15,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import static com.projectw.common.enums.ResponseCode.INVALID_USER_AUTHORITY;
 import static com.projectw.common.enums.ResponseCode.NOT_FOUND_STORE;
 
@@ -47,6 +50,8 @@ public class StoreOwnerServiceImpl implements StoreOwnerService{
                 .phoneNumber(storeRequestDto.getPhoneNumber())
                 .address(storeRequestDto.getAddress())
                 .deposit(storeRequestDto.getDeposit())
+                .latitude(storeRequestDto.getLatitude())
+                .longitude(storeRequestDto.getLongitude())
                 .user(user)
                 .reservations(null)
                 .build();
@@ -88,4 +93,5 @@ public class StoreOwnerServiceImpl implements StoreOwnerService{
 
         return findStore;
     }
+
 }

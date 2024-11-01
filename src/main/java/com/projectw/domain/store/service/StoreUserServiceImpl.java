@@ -40,4 +40,5 @@ public class StoreUserServiceImpl implements StoreUserService {
         return storeList.map(StoreResponseDto::new);
     }
 
+
 }
