@@ -7,7 +7,6 @@ import com.projectw.domain.menu.entity.Menu;
 import com.projectw.domain.menu.repository.MenuRepository;
 import com.projectw.domain.review.entity.Review;
 import com.projectw.domain.review.repository.ReviewRepository;
-import com.projectw.domain.store.repository.StoreRepository;
 import com.projectw.domain.user.entity.User;
 import com.projectw.domain.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -23,7 +22,6 @@ import java.util.function.BiFunction;
 @Service
 @RequiredArgsConstructor
 public class LikeService {
-    private final StoreRepository storeRepository;
     private final ReviewRepository reviewRepository;
     private final MenuRepository menuRepository;
     private final LikeRepository likeRepository;
