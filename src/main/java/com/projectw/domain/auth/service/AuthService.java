@@ -8,7 +8,6 @@ import com.projectw.common.exceptions.AccessDeniedException;
 import com.projectw.common.exceptions.InvalidRequestException;
 import com.projectw.common.exceptions.InvalidTokenException;
 import com.projectw.common.exceptions.NotFoundException;
-import com.projectw.domain.allergy.repository.AllergyRepository;
 import com.projectw.domain.auth.dto.AuthRequest;
 import com.projectw.domain.auth.dto.AuthRequest.Login;
 import com.projectw.domain.auth.dto.AuthResponse;
@@ -38,7 +37,6 @@ import java.time.Duration;
 public class AuthService {
 
     private final UserRepository userRepository;
-    private final AllergyRepository allergyRepository;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private final RedissonClient redissonClient;
@@ -157,6 +155,7 @@ public class AuthService {
         } catch (ExpiredJwtException e) {
             throw new InvalidTokenException();
         }
+
 
         String key = JwtUtil.REDIS_REFRESH_TOKEN_PREFIX  + jwtUtil.getUserId(refreshToken);
         // 레디스에서 리프레쉬 토큰을 가져온다.

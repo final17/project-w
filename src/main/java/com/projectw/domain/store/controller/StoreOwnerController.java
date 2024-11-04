@@ -11,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/owner/stores")
 @RequiredArgsConstructor
@@ -24,6 +26,7 @@ public class StoreOwnerController {
             @AuthenticationPrincipal AuthUser authUser,
             @Valid @RequestBody StoreRequestDto storeRequestDto
     ) {
+        validateCoordinates(storeRequestDto.getLatitude(), storeRequestDto.getLongitude());
         StoreResponseDto storeResponseDto = storeOwnerService.createStore(authUser, storeRequestDto);
         return ResponseEntity.ok(SuccessResponse.of(storeResponseDto));
     }
@@ -58,6 +61,20 @@ public class StoreOwnerController {
         storeOwnerService.deleteStore(authUser, storeid);
         return ResponseEntity.ok(SuccessResponse.of(""));
     }
+
+    private void validateCoordinates(Double latitude, Double longitude) {
+        if (latitude == null || longitude == null) {
+            throw new IllegalArgumentException("위도와 경도는 필수 입력값입니다.");
+        }
+        if (latitude < -90 || latitude > 90) {
+            throw new IllegalArgumentException("위도는 -90도에서 90도 사이여야 합니다.");
+        }
+        if (longitude < -180 || longitude > 180) {
+            throw new IllegalArgumentException("경도는 -180도에서 180도 사이여야 합니다.");
+        }
+    }
+
+
 
     // 예약 조회
 

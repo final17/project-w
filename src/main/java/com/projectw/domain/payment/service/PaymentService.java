@@ -33,6 +33,7 @@ import com.projectw.domain.user.entity.User;
 import com.projectw.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,9 +44,6 @@ import org.springframework.web.servlet.view.RedirectView;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
-
-import static com.projectw.common.constants.Const.FRONTEND_URL;
-import static com.projectw.common.constants.Const.PREFIX_ORDER_ID;
 
 @Slf4j
 @Service
@@ -66,6 +64,11 @@ public class PaymentService {
     private final ReservationCheckService reservationCheckService;
 
     private final ApplicationEventPublisher eventPublisher;
+
+    private static final String PREFIX_ORDER_ID = "ORDER-";
+
+    @Value("${front-end.url}")
+    private String frontendUrl;
 
     /**
      * 결제창 열기전 검증 단계!
@@ -99,9 +102,6 @@ public class PaymentService {
                     .orderId(orderId)
                     .orderName(prepare.orderName())
                     .amount(prepare.amount())
-                    .date(prepare.date())
-                    .time(prepare.time())
-                    .numberPeople(prepare.numberPeople())
                     .status(Status.PENDING)
                     .user(user)
                     .store(store)
@@ -110,7 +110,7 @@ public class PaymentService {
             paymentRepository.save(payment);
 
             // ReservationEventListener 예약건 저장!
-            ReservationInsertEvent reservationInsertEvent = new ReservationInsertEvent(orderId , prepare.date() , prepare.time() , prepare.numberPeople() , false , prepare.amount() , user , store);
+            ReservationInsertEvent reservationInsertEvent = new ReservationInsertEvent(orderId , prepare.date() , prepare.time() , prepare.numberPeople() , prepare.amount() , user , store);
             eventPublisher.publishEvent(reservationInsertEvent);
 
             return new PaymentResponse.Prepare(orderId , prepare.orderName(), prepare.amount());
@@ -148,7 +148,7 @@ public class PaymentService {
             ReservationPaymentCompEvent reservationPaymentCompEvent = new ReservationPaymentCompEvent(susscess.orderId());
             eventPublisher.publishEvent(reservationPaymentCompEvent);
 
-            redirectView.setUrl(FRONTEND_URL+"/payment/success?paymentKey=" + susscess.paymentKey() + "&orderId=" + susscess.orderId() + "&amount=" + String.valueOf(susscess.amount()));
+            redirectView.setUrl(frontendUrl+"/payment/success?paymentKey=" + susscess.paymentKey() + "&orderId=" + susscess.orderId() + "&amount=" + String.valueOf(susscess.amount()));
         } else {
             String errCode = jsonNode.get("code").textValue();
             String errMessage = jsonNode.get("message").textValue();
@@ -157,7 +157,7 @@ public class PaymentService {
             // 취소로 변경
             payment.updateStatus(Status.CANCELLED);
 
-            redirectView.setUrl(FRONTEND_URL+"/payment/fail?code="+errCode+"&message='"+errMessage+"'");
+            redirectView.setUrl(frontendUrl+"/payment/fail?code="+errCode+"&message='"+errMessage+"'");
         }
 
         return redirectView;
@@ -169,7 +169,7 @@ public class PaymentService {
     public RedirectView fail(PaymentRequest.Fail fail) {
         failPayment(null , fail.code() , fail.message());
         RedirectView redirectView = new RedirectView();
-        redirectView.setUrl(FRONTEND_URL+"/payment/fail?code="+fail.code()+"&message='"+fail.message()+"'");
+        redirectView.setUrl(frontendUrl+"/payment/fail?code="+fail.code()+"&message='"+fail.message()+"'");
         return redirectView;
     }
 

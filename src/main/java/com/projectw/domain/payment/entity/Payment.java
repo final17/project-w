@@ -7,9 +7,6 @@ import com.projectw.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
-
 @Builder
 @Getter
 @Entity
@@ -29,14 +26,6 @@ public class Payment extends Timestamped {
 
     @Column(nullable = false)
     private Long amount;
-
-    @Column(nullable = false)
-    private LocalDate date;
-
-    @Column(nullable = false)
-    private LocalTime time;
-
-    private Long numberPeople;
 
     @Column(nullable = false)
     @Enumerated(value = EnumType.STRING)

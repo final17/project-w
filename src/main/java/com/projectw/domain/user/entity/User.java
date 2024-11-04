@@ -36,14 +36,6 @@ public class User extends Timestamped {
 
     private boolean isDeleted;
 
-    @ManyToMany
-    @JoinTable(
-            name = "user_allergies", // 유저-알레르기 중간 테이블
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "allergy_id")
-    )
-    private Set<Allergy> allergies = new HashSet<>();
-
     @Builder
     public User(String password, String email, String nickname, UserRole role) {
         this.password = password;
@@ -64,10 +56,5 @@ public class User extends Timestamped {
 
     public void delete() {
         isDeleted = true;
-    }
-
-    // 유저 알레르기 업데이트
-    public void updateAllergies(Set<Allergy> allergies) {
-        this.allergies = allergies;
     }
 }

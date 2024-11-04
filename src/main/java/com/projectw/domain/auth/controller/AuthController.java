@@ -14,8 +14,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import static com.projectw.common.constants.Const.FRONTEND_URL;
-
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v2/auth")
