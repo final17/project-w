@@ -10,9 +10,16 @@ import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 import java.util.Objects;
 
-public sealed interface ReserveRequest permits ReserveRequest.InsertReservation , ReserveRequest.Cancel , ReserveRequest.Parameter {
+public sealed interface ReserveRequest permits
+        ReserveRequest.InsertReservation ,
+        ReserveRequest.Cancel ,
+        ReserveRequest.AddCart ,
+        ReserveRequest.UpdateCart ,
+        ReserveRequest.RemoveCart ,
+        ReserveRequest.Parameter {
 
     record InsertReservation(
             @NotBlank(message = "주문번호는 필수입니다.")
@@ -23,7 +30,6 @@ public sealed interface ReserveRequest permits ReserveRequest.InsertReservation 
             LocalTime reservationTime,
             @NotNull(message = "입장인원값은 필수입니다.")
             Long numberPeople,
-            boolean menuYN,
             @NotNull(message = "예약금은 필수입니다.")
             Long paymentAmt,
             User user,
@@ -33,6 +39,25 @@ public sealed interface ReserveRequest permits ReserveRequest.InsertReservation 
     record Cancel(
             @NotBlank(message = "취소사유는 필수입니다.")
             String cancelReason
+    ) implements ReserveRequest {}
+
+    record AddCart(
+            @NotNull(message = "메뉴 식별키는 필수입니다.")
+            List<String> menuIds,
+            @NotNull(message = "메뉴 개수는 필수입니다.")
+            List<Long> menuCnt
+    ) implements ReserveRequest {}
+
+    record UpdateCart(
+            @NotNull(message = "메뉴 식별키는 필수입니다.")
+            String menuId,
+            @NotNull(message = "메뉴 개수는 필수입니다.")
+            Long menuCnt
+    ) implements ReserveRequest {}
+
+    record RemoveCart(
+            @NotNull(message = "메뉴 식별키는 필수입니다.")
+            String menuId
     ) implements ReserveRequest {}
 
     record Parameter(

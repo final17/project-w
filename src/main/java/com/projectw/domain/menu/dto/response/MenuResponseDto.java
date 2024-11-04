@@ -14,4 +14,5 @@ public class MenuResponseDto {
     private String name;
     private int price;
     private Set<String> allergies;
+    private int viewCount;
 }

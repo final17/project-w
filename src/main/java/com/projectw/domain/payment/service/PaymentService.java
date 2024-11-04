@@ -110,7 +110,7 @@ public class PaymentService {
             paymentRepository.save(payment);
 
             // ReservationEventListener 예약건 저장!
-            ReservationInsertEvent reservationInsertEvent = new ReservationInsertEvent(orderId , prepare.date() , prepare.time() , prepare.numberPeople() , false , prepare.amount() , user , store);
+            ReservationInsertEvent reservationInsertEvent = new ReservationInsertEvent(orderId , prepare.date() , prepare.time() , prepare.numberPeople() , prepare.amount() , user , store);
             eventPublisher.publishEvent(reservationInsertEvent);
 
             return new PaymentResponse.Prepare(orderId , prepare.orderName(), prepare.amount());
