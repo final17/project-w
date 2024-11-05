@@ -52,7 +52,7 @@ public class CrawlerService {
 
         // 결과를 캐시에 저장
         try {
-            bucket.set(objectMapper.writeValueAsString(results), CACHE_TTL_HOURS, TimeUnit.HOURS);
+            bucket.trySet(objectMapper.writeValueAsString(results), CACHE_TTL_HOURS, TimeUnit.HOURS);
         } catch (JsonProcessingException e) {
             log.error("Failed to serialize blog results for caching", e);
         }
@@ -82,7 +82,7 @@ public class CrawlerService {
 
         // 결과를 캐시에 저장
         try {
-            bucket.set(objectMapper.writeValueAsString(results), CACHE_TTL_HOURS, TimeUnit.HOURS);
+            bucket.trySet(objectMapper.writeValueAsString(results), CACHE_TTL_HOURS, TimeUnit.HOURS);
         } catch (JsonProcessingException e) {
             log.error("Failed to serialize news results for caching", e);
         }
