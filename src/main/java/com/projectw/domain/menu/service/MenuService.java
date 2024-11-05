@@ -16,7 +16,6 @@ import com.projectw.security.AuthUser;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,7 +34,6 @@ public class MenuService {
     private final StoreRepository storeRepository;
     private final AllergyRepository allergyRepository;
     private final RedissonClient redissonClient;
-    private final RedisTemplate<String, Long> redisTemplate;
 
     // 공통된 락 처리 메서드
     private <T> T executeWithLock(String lockKey, Supplier<T> action) {
@@ -128,27 +126,17 @@ public class MenuService {
         menuRepository.save(menu);
     }
 
-    // 메뉴 단건 조회수
+    // 메뉴 단건 조회수 증가
+    @Transactional
     public MenuResponseDto viewMenu(Long menuId) {
-        String redisKey = "menu:view:" + menuId;
-
-        // Redis 카운터 사용하여 조회수 증가, 초기값 1로 설정
-        Long viewCount = redisTemplate.opsForValue().increment(redisKey, 1);
-        if (viewCount == null) {
-            viewCount = 1L;  // Redis 값이 없는 경우 1로 초기화
-        }
-
-        Menu menu = menuRepository.findById(menuId)
-                .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_MENU));
-
-        // Redis에서 관리되는 조회수 정보 포함하여 반환
-        return new MenuResponseDto(
-                menu.getId(),
-                menu.getName(),
-                menu.getPrice(),
-                menu.getAllergies().stream().map(Allergy::getName).collect(Collectors.toSet()),
-                viewCount  // Redis 조회수
-        );
+        String lockKey = "lock:menu:view:" + menuId;
+        return executeWithLock(lockKey, () -> {
+            Menu menu = menuRepository.findById(menuId)
+                    .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_MENU));
+            menu.incrementViews();
+            menuRepository.save(menu);
+            return createMenuResponseDto(menu);
+        });
     }
 
     // MenuResponseDto 생성 헬퍼 메서드
