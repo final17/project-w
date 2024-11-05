@@ -4,6 +4,7 @@ import com.projectw.domain.allergy.dto.response.AllergyResponseDto;
 import com.projectw.domain.allergy.entity.Allergy;
 import com.projectw.domain.allergy.repository.AllergyRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,7 +16,7 @@ public class AllergyService {
 
     private final AllergyRepository allergyRepository;
 
-    // 모든 알레르기 정보 조회 (DTO로 변환)
+    @Cacheable(value = "allergies")
     public List<AllergyResponseDto> getAllAllergies() {
         List<Allergy> allergies = allergyRepository.findAll();
 
