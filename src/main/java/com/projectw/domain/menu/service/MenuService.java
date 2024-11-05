@@ -37,8 +37,6 @@ public class MenuService {
     private final RedissonClient redissonClient;
     private final RedisTemplate<String, Long> redisTemplate;
 
-    private static final String LOCK_FAILURE_MESSAGE = "Lock 획득에 실패했습니다. 잠시 후 다시 시도해주세요.";
-
     // 공통된 락 처리 메서드
     private <T> T executeWithLock(String lockKey, Supplier<T> action) {
         RLock lock = redissonClient.getLock(lockKey);
@@ -46,7 +44,7 @@ public class MenuService {
             if (lock.tryLock(5, 10, TimeUnit.SECONDS)) {
                 return action.get();
             } else {
-                throw new RuntimeException(LOCK_FAILURE_MESSAGE);
+                throw new RuntimeException("Lock 획득에 실패했습니다. 잠시 후 다시 시도해주세요.");
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
