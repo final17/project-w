@@ -10,6 +10,7 @@ import java.util.List;
 
 @Repository
 public interface DibsRepository extends JpaRepository<Dibs, Long> {
+
     List<Dibs> findByUserId(Long userId);
     int deleteByUserAndStore(User user, Store store);
 }
