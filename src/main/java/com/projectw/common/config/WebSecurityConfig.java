@@ -60,6 +60,9 @@ public class WebSecurityConfig {
                 .requestMatchers("/api/*/allergies").permitAll()
                 .requestMatchers("/api/*/payment/success" , "/api/*/payment/fail").permitAll()
                 .requestMatchers("/health").permitAll()
+                .requestMatchers("/api/search/**").permitAll()
+                .requestMatchers("/search/**").permitAll()
+                .requestMatchers("/api/categories/**").permitAll()
                 .anyRequest().authenticated()
             );
         http.cors(c -> {

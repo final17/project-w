@@ -25,6 +25,15 @@ public class HierarchicalCategoryUtils {
         return categories;
     }
 
+    public static  <T extends Enum<T> & HierarchicalCategory> HierarchicalCategory codeToCategory(Class<T> type, String code) {
+        T[] enumConstants = type.getEnumConstants();
+        for(T e : enumConstants) {
+            if(e.getCode().equals(code)) return e;
+        }
+
+        throw new IllegalArgumentException("존재하지 않는 카테고리 코드입니다. CODE => " + code);
+    }
+
     /**
      * 해당 카테고리 타입의 루트 카테고리 반환
      * @param type
