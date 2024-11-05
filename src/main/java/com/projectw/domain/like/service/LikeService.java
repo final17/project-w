@@ -31,10 +31,9 @@ public class LikeService {
     // 리뷰 좋아요 토글
     @Transactional
     public boolean toggleReviewLike(Long reviewId, String email) {
-        Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new IllegalArgumentException("리뷰를 찾을 수 없습니다."));
+        Review review = findReview(reviewId);
         User user = findUserByEmail(email);
-        return toggleLike(review, user, likeRepository::findByReviewAndUser, lockKeyForReview(reviewId));
+        return toggleLike(review, user, likeRepository::findByReviewAndUser, lockKeyForReview(reviewId), Like::forReview);
     }
 
     // 메뉴 좋아요 토글
@@ -42,22 +41,23 @@ public class LikeService {
     public boolean toggleMenuLike(Long storeId, Long menuId, Long userId) {
         Menu menu = findMenu(storeId, menuId);
         User user = findUserById(userId);
-        return toggleLike(menu, user, likeRepository::findByMenuAndUser, lockKeyForMenu(storeId, menuId));
+        return toggleLike(menu, user, likeRepository::findByMenuAndUser, lockKeyForMenu(storeId, menuId), Like::forMenu);
     }
 
     // 공통 좋아요 토글 메서드
-    private <T> boolean toggleLike(T entity, User user, BiFunction<T, User, Optional<Like>> findLike, String lockKey) {
+    private <T> boolean toggleLike(T entity, User user, BiFunction<T, User, Optional<Like>> findLike,
+                                   String lockKey, BiFunction<T, User, Like> likeFactory) {
         RLock lock = redissonClient.getLock(lockKey);
 
         try {
-            if (lock.tryLock(10, 2, TimeUnit.SECONDS)) {
+            if (lock.tryLock(5, 2, TimeUnit.SECONDS)) { // 타임아웃 시간 조정
                 Optional<Like> existingLike = findLike.apply(entity, user);
 
                 if (existingLike.isPresent()) {
                     likeRepository.delete(existingLike.get());
                     return false; // 좋아요 취소
                 } else {
-                    Like like = entity instanceof Review ? Like.forReview((Review) entity, user) : Like.forMenu((Menu) entity, user);
+                    Like like = likeFactory.apply(entity, user); // 엔티티별 Like 객체 생성
                     likeRepository.save(like);
                     return true; // 좋아요 추가
                 }
@@ -69,7 +69,7 @@ public class LikeService {
         } finally {
             if (lock.isHeldByCurrentThread()) {
                 lock.unlock();
-                }
+            }
         }
     }
 
