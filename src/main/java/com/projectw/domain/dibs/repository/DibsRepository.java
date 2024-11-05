@@ -11,5 +11,5 @@ import java.util.List;
 @Repository
 public interface DibsRepository extends JpaRepository<Dibs, Long> {
     List<Dibs> findByUserId(Long userId);
-    Dibs findByUserAndStore(User user, Store store);
+    int deleteByUserAndStore(User user, Store store);
 }
