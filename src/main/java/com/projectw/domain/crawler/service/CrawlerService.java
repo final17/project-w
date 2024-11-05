@@ -1,14 +1,17 @@
 package com.projectw.domain.crawler.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.projectw.domain.crawler.dto.response.CrawlerResponseDto;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.redisson.api.RBucket;
+import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -16,17 +19,81 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class CrawlerService {
 
+    private final RedissonClient redissonClient;
+    private final ObjectMapper objectMapper;
+    private static final long CACHE_TTL_HOURS = 24; // 캐시 유효 시간
+
     /**
-     * 네이버 블로그 검색
+     * 네이버 블로그 검색 with Redis 캐싱
      */
     public List<CrawlerResponseDto> searchNaverBlog(String keyword, int page) {
+        String cacheKey = generateCacheKey("blog", keyword, page);
+        RBucket<String> bucket = redissonClient.getBucket(cacheKey);
 
+        // 캐시에서 데이터 조회
+        String cachedData = bucket.get();
+        if (cachedData != null) {
+            try {
+                return objectMapper.readValue(cachedData, new TypeReference<List<CrawlerResponseDto>>() {});
+            } catch (JsonProcessingException e) {
+                log.error("Failed to deserialize cached blog data", e);
+            }
+        }
+
+        // 캐시에 없으면 크롤링 수행
+        List<CrawlerResponseDto> results = crawlNaverBlog(keyword, page);
+
+        // 결과를 캐시에 저장
+        try {
+            bucket.set(objectMapper.writeValueAsString(results), CACHE_TTL_HOURS, TimeUnit.HOURS);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to serialize blog results for caching", e);
+        }
+
+        return results;
+    }
+
+    /**
+     * 네이버 뉴스 검색 with Redis 캐싱
+     */
+    public List<CrawlerResponseDto> searchNaverNews(String keyword, int page) {
+        String cacheKey = generateCacheKey("news", keyword, page);
+        RBucket<String> bucket = redissonClient.getBucket(cacheKey);
+
+        // 캐시에서 데이터 조회
+        String cachedData = bucket.get();
+        if (cachedData != null) {
+            try {
+                return objectMapper.readValue(cachedData, new TypeReference<List<CrawlerResponseDto>>() {});
+            } catch (JsonProcessingException e) {
+                log.error("Failed to deserialize cached news data", e);
+            }
+        }
+
+        // 캐시에 없으면 크롤링 수행
+        List<CrawlerResponseDto> results = crawlNaverNews(keyword, page);
+
+        // 결과를 캐시에 저장
+        try {
+            bucket.set(objectMapper.writeValueAsString(results), CACHE_TTL_HOURS, TimeUnit.HOURS);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to serialize news results for caching", e);
+        }
+
+        return results;
+    }
+
+    /**
+     * 실제 블로그 크롤링 수행 메소드
+     */
+    private List<CrawlerResponseDto> crawlNaverBlog(String keyword, int page) {
         List<CrawlerResponseDto> results = new ArrayList<>();
         String url = String.format(
                 "https://search.naver.com/search.naver?ssc=tab.blog.all&sm=tab_jum&query=%s&start=%d",
@@ -55,7 +122,6 @@ public class CrawlerService {
                     .timeout(5000)
                     .get();
 
-            // 여러 CSS 선택자 시도
             Elements posts = doc.select("div.total_area");
             if (posts.isEmpty()) {
                 posts = doc.select("li.bx");
@@ -64,11 +130,8 @@ public class CrawlerService {
                 posts = doc.select("div.view_wrap");
             }
 
-            log.info("Found {} posts", posts.size());
-
             for (Element post : posts) {
                 try {
-                    // 여러 가능한 선택자 시도
                     String title = getFirstNonEmptyText(post,
                             "a.title_link",
                             "div.title_area a",
@@ -102,20 +165,12 @@ public class CrawlerService {
                     );
 
                     if (!title.isEmpty()) {
-                        log.debug("Parsed post - Title: {}, Link: {}", title, link);
                         results.add(new CrawlerResponseDto(title, link, description, thumbnail, date));
                     }
-
                 } catch (Exception e) {
                     log.error("Failed to parse blog post", e);
                 }
             }
-
-            if (results.isEmpty()) {
-                // 디버깅을 위해 HTML 구조 출력
-                log.debug("HTML Structure:\n{}", doc.html());
-            }
-
         } catch (IOException e) {
             log.error("Failed to crawl blog posts for keyword: {}", keyword, e);
             throw new RuntimeException("블로그 검색 중 오류 발생", e);
@@ -124,37 +179,14 @@ public class CrawlerService {
         return results;
     }
 
-    // 여러 선택자 중 첫 번째로 찾아지는 텍스트 반환
-    private String getFirstNonEmptyText(Element element, String... selectors) {
-        for (String selector : selectors) {
-            String text = element.select(selector).text().trim();
-            if (!text.isEmpty()) {
-                return text;
-            }
-        }
-        return "";
-    }
-
-    // 여러 선택자 중 첫 번째로 찾아지는 속성 값 반환
-    private String getFirstNonEmptyAttr(Element element, String... selectors) {
-        String attributeName = selectors[selectors.length - 1];
-        for (int i = 0; i < selectors.length - 1; i++) {
-            String attr = element.select(selectors[i]).attr(attributeName).trim();
-            if (!attr.isEmpty()) {
-                return attr;
-            }
-        }
-        return "";
-    }
-
     /**
-     * 네이버 뉴스 검색
+     * 실제 뉴스 크롤링 수행 메소드
      */
-    public List<CrawlerResponseDto> searchNaverNews(String keyword, int page) {
+    private List<CrawlerResponseDto> crawlNaverNews(String keyword, int page) {
         List<CrawlerResponseDto> results = new ArrayList<>();
         String url = String.format(
                 "https://search.naver.com/search.naver?where=news&query=%s&start=%d",
-                keyword,
+                URLEncoder.encode(keyword, StandardCharsets.UTF_8),
                 (page - 1) * 10 + 1
         );
 
@@ -174,11 +206,37 @@ public class CrawlerService {
 
                 results.add(new CrawlerResponseDto(title, link, description, thumbnail, date));
             }
-
         } catch (IOException e) {
             throw new RuntimeException("뉴스 검색 중 오류 발생", e);
         }
 
         return results;
+    }
+
+    // 캐시 키 생성 메소드
+    private String generateCacheKey(String type, String keyword, int page) {
+        return String.format("crawler:%s:%s:page:%d", type, keyword, page);
+    }
+
+    // 기존의 helper 메소드들...
+    private String getFirstNonEmptyText(Element element, String... selectors) {
+        for (String selector : selectors) {
+            String text = element.select(selector).text().trim();
+            if (!text.isEmpty()) {
+                return text;
+            }
+        }
+        return "";
+    }
+
+    private String getFirstNonEmptyAttr(Element element, String... selectors) {
+        String attributeName = selectors[selectors.length - 1];
+        for (int i = 0; i < selectors.length - 1; i++) {
+            String attr = element.select(selectors[i]).attr(attributeName).trim();
+            if (!attr.isEmpty()) {
+                return attr;
+            }
+        }
+        return "";
     }
 }
