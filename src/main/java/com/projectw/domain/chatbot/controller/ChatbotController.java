@@ -1,7 +1,7 @@
 package com.projectw.domain.chatbot.controller;
 
-import com.projectw.domain.chatbot.dto.ChatbotRequestDto;
-import com.projectw.domain.chatbot.dto.ChatbotResponseDto;
+import com.projectw.domain.chatbot.dto.request.ChatbotRequestDto;
+import com.projectw.domain.chatbot.dto.response.ChatbotResponseDto;
 import com.projectw.domain.chatbot.service.ChatbotService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
