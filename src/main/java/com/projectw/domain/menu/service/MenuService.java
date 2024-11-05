@@ -3,6 +3,7 @@ package com.projectw.domain.menu.service;
 import com.projectw.common.enums.ResponseCode;
 import com.projectw.common.enums.UserRole;
 import com.projectw.common.exceptions.AccessDeniedException;
+import com.projectw.common.exceptions.NotFoundException;
 import com.projectw.domain.allergy.entity.Allergy;
 import com.projectw.domain.allergy.repository.AllergyRepository;
 import com.projectw.domain.menu.dto.request.MenuRequestDto;
@@ -15,6 +16,7 @@ import com.projectw.security.AuthUser;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +35,9 @@ public class MenuService {
     private final StoreRepository storeRepository;
     private final AllergyRepository allergyRepository;
     private final RedissonClient redissonClient;
+    private final RedisTemplate<String, Long> redisTemplate;
+
+    private static final String LOCK_FAILURE_MESSAGE = "Lock 획득에 실패했습니다. 잠시 후 다시 시도해주세요.";
 
     // 공통된 락 처리 메서드
     private <T> T executeWithLock(String lockKey, Supplier<T> action) {
@@ -41,7 +46,7 @@ public class MenuService {
             if (lock.tryLock(5, 10, TimeUnit.SECONDS)) {
                 return action.get();
             } else {
-                throw new RuntimeException("Lock 획득에 실패했습니다. 잠시 후 다시 시도해주세요.");
+                throw new RuntimeException(LOCK_FAILURE_MESSAGE);
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -53,14 +58,20 @@ public class MenuService {
         }
     }
 
-    // 메뉴 생성 (ROLE_OWNER 권한만 가능)
-    @Transactional
-    public MenuResponseDto createMenu(AuthUser authUser, MenuRequestDto requestDto, Long storeId) throws IOException {
+    // 권한 검사 메서드
+    private void checkOwnerRole(AuthUser authUser) {
         if (authUser.getRole() != UserRole.ROLE_OWNER) {
             throw new AccessDeniedException(ResponseCode.FORBIDDEN);
         }
+    }
+
+    // 메뉴 생성 (ROLE_OWNER 권한만 가능)
+    @Transactional
+    public MenuResponseDto createMenu(AuthUser authUser, MenuRequestDto requestDto, Long storeId) throws IOException {
+        checkOwnerRole(authUser);
+
         Store store = storeRepository.findById(storeId)
-                .orElseThrow(() -> new IllegalArgumentException(ResponseCode.NOT_FOUND_STORE.getMessage()));
+                .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_STORE));
         Set<Allergy> allergies = allergyRepository.findAllById(requestDto.getAllergyIds())
                 .stream().collect(Collectors.toSet());
         Menu menu = new Menu(requestDto.getName(), requestDto.getPrice(), store, allergies);
@@ -70,11 +81,10 @@ public class MenuService {
 
     // 메뉴 수정 (ROLE_OWNER 권한만 가능)
     public MenuResponseDto updateMenu(AuthUser authUser, MenuRequestDto requestDto, Long storeId, Long menuId) throws IOException {
-        if (authUser.getRole() != UserRole.ROLE_OWNER) {
-            throw new AccessDeniedException(ResponseCode.FORBIDDEN);
-        }
+        checkOwnerRole(authUser);
+
         Menu menu = menuRepository.findById(menuId)
-                .orElseThrow(() -> new IllegalArgumentException(ResponseCode.NOT_FOUND_MENU.getMessage()));
+                .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_MENU));
         Set<Allergy> allergies = allergyRepository.findAllById(requestDto.getAllergyIds())
                 .stream().collect(Collectors.toSet());
         menu.updateMenu(requestDto.getName(), requestDto.getPrice(), allergies);
@@ -87,7 +97,7 @@ public class MenuService {
         String lockKey = "lock:store:" + storeId;
         return executeWithLock(lockKey, () -> {
             Store store = storeRepository.findById(storeId)
-                    .orElseThrow(() -> new IllegalArgumentException("해당 스토어를 찾을 수 없습니다."));
+                    .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_STORE));
             List<Menu> menus = menuRepository.findAllByStoreAndIsDeletedFalse(store);
             return menus.stream().map(this::createMenuResponseDto).collect(Collectors.toList());
         });
@@ -95,24 +105,23 @@ public class MenuService {
 
     // 오너가 자신의 가게 메뉴만 조회
     public List<MenuResponseDto> getOwnerMenus(AuthUser authUser, Long storeId) {
-        if (authUser.getRole() != UserRole.ROLE_OWNER) {
-            throw new AccessDeniedException(ResponseCode.FORBIDDEN);
-        }
+        checkOwnerRole(authUser);
+
         Store store = storeRepository.findById(storeId)
-                .orElseThrow(() -> new IllegalArgumentException(ResponseCode.NOT_FOUND_STORE.getMessage()));
+                .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_STORE));
         List<Menu> menus = menuRepository.findAllByStoreAndIsDeletedFalse(store);
         return menus.stream().map(this::createMenuResponseDto).collect(Collectors.toList());
     }
 
     // 메뉴 삭제 (ROLE_OWNER 권한만 가능)
     public void deleteMenu(AuthUser authUser, Long storeId, Long menuId) {
-        if (authUser.getRole() != UserRole.ROLE_OWNER) {
-            throw new AccessDeniedException(ResponseCode.FORBIDDEN);
-        }
+        checkOwnerRole(authUser);
+
         Store store = storeRepository.findById(storeId)
-                .orElseThrow(() -> new IllegalArgumentException(ResponseCode.NOT_FOUND_STORE.getMessage()));
+                .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_STORE));
         Menu menu = menuRepository.findById(menuId)
-                .orElseThrow(() -> new IllegalArgumentException(ResponseCode.NOT_FOUND_MENU.getMessage()));
+                .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_MENU));
+
         if (!menu.getStore().getId().equals(store.getId())) {
             throw new AccessDeniedException(ResponseCode.FORBIDDEN);
         }
@@ -122,16 +131,26 @@ public class MenuService {
     }
 
     // 메뉴 단건 조회수
-    @Transactional
     public MenuResponseDto viewMenu(Long menuId) {
-        String lockKey = "lock:menu:view:" + menuId;
-        return executeWithLock(lockKey, () -> {
-            Menu menu = menuRepository.findById(menuId)
-                    .orElseThrow(() -> new IllegalArgumentException("메뉴를 찾을 수 없습니다."));
-            menu.incrementViews();
-            menuRepository.save(menu);
-            return createMenuResponseDto(menu);
-        });
+        String redisKey = "menu:view:" + menuId;
+
+        // Redis 카운터 사용하여 조회수 증가, 초기값 1로 설정
+        Long viewCount = redisTemplate.opsForValue().increment(redisKey, 1);
+        if (viewCount == null) {
+            viewCount = 1L;  // Redis 값이 없는 경우 1로 초기화
+        }
+
+        Menu menu = menuRepository.findById(menuId)
+                .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_MENU));
+
+        // Redis에서 관리되는 조회수 정보 포함하여 반환
+        return new MenuResponseDto(
+                menu.getId(),
+                menu.getName(),
+                menu.getPrice(),
+                menu.getAllergies().stream().map(Allergy::getName).collect(Collectors.toSet()),
+                viewCount  // Redis 조회수
+        );
     }
 
     // MenuResponseDto 생성 헬퍼 메서드
