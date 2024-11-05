@@ -159,4 +159,18 @@ public class WaitingQueueService {
     private String getSseKey(long storeId, String userId) {
         return "waitingQueue:store:" + storeId + ":user:" + userId;
     }
+
+    /**
+     * 웨이팅 대기열에 들어가 있는지 확인
+     * @param authUser
+     * @param storeId
+     * @return
+     */
+    public WaitingQueueResponse.WaitingInfo checkWaitingStatus(AuthUser authUser, long storeId) {
+        RScoredSortedSet<String> sortedSet = redissonClient.getScoredSortedSet(getRedisSortedSetKey(storeId));
+        Integer rank = sortedSet.rank(String.valueOf(authUser.getUserId()));
+
+        // rank가 null이 아니면 웨이팅 대기열에 등록 된 것
+        return new WaitingQueueResponse.WaitingInfo(rank != null);
+    }
 }

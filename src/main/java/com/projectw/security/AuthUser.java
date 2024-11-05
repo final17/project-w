@@ -1,6 +1,7 @@
 package com.projectw.security;
 
 import com.projectw.common.enums.UserRole;
+import com.projectw.domain.user.entity.User;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -23,4 +24,7 @@ public class AuthUser {
         this.role = role;
     }
 
+    public User toUserEntity() {
+        return new User(userId, email, role);
+    }
 }

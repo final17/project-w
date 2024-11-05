@@ -22,6 +22,8 @@ public class StoreResponseDto {
     private String address;
     private Long deposit;
     private UserOneResponseDto userOneResponseDto;
+    private Double latitude;
+    private Double longitude;
 
     public StoreResponseDto(Store saveStore) {
         id = saveStore.getId();
@@ -36,6 +38,8 @@ public class StoreResponseDto {
         phoneNumber = saveStore.getPhoneNumber();
         address = saveStore.getAddress();
         deposit = saveStore.getDeposit();
+        latitude = saveStore.getLatitude();
+        longitude = saveStore.getLongitude();
         userOneResponseDto = new UserOneResponseDto(saveStore.getUser());
     }
 }

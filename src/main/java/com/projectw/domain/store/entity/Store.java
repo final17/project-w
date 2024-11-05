@@ -1,7 +1,8 @@
 package com.projectw.domain.store.entity;
 
 import com.projectw.common.entity.Timestamped;
-import com.projectw.domain.menu.entity.Menu;
+import com.projectw.domain.category.FoodCategory;
+import com.projectw.domain.category.RegionCategory;
 import com.projectw.domain.reservation.entity.Reservation;
 import com.projectw.domain.store.dto.request.StoreRequestDto;
 import com.projectw.domain.user.entity.User;
@@ -25,12 +26,21 @@ public class Store extends Timestamped {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Enumerated(EnumType.STRING)
+    private RegionCategory region;
+
+    @Enumerated(EnumType.STRING)
+    private FoodCategory foodType;
+
     private String image;
 
     @Column(nullable = false)
     private String title;
 
     private String description;
+
+    private Double latitude;
+    private Double longitude;
 
     @Column(nullable = false)
     private LocalTime openTime;
@@ -72,7 +82,7 @@ public class Store extends Timestamped {
     private List<Reservation> reservations = new ArrayList<>();
 
     @Builder
-    public Store(String image, String title, String description, LocalTime openTime, LocalTime closeTime, Boolean isNextDay, Long reservationTableCount, Long tableCount, String phoneNumber, String address, LocalTime lastOrder, LocalTime turnover, User user, List<Reservation> reservations, Long deposit) {
+    public Store(String image, String title, String description, LocalTime openTime, LocalTime closeTime, Boolean isNextDay, Long reservationTableCount, Long tableCount, String phoneNumber, String address, LocalTime lastOrder, LocalTime turnover, User user, List<Reservation> reservations, Long deposit, Double latitude, Double longitude) {
         this.image = image;
         this.title = title;
         this.description = description;
@@ -88,6 +98,8 @@ public class Store extends Timestamped {
         this.user = user;
         this.reservations = reservations;
         this.deposit = deposit;
+        this.latitude = latitude;
+        this.longitude = longitude;
     }
 
     public Store putStore(StoreRequestDto storeRequestDto) {
@@ -103,6 +115,8 @@ public class Store extends Timestamped {
         this.address = storeRequestDto.getAddress();
         this.isNextDay = openTime.isAfter(lastOrder);
         this.deposit = storeRequestDto.getDeposit();
+        this.latitude = storeRequestDto.getLatitude();
+        this.longitude = storeRequestDto.getLongitude();
         return this;
     }
 

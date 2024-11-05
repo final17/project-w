@@ -1,20 +1,18 @@
 package com.projectw.domain.store.controller;
 
 import com.projectw.common.dto.SuccessResponse;
+import com.projectw.domain.store.dto.StoreLikeResposeDto;
 import com.projectw.domain.store.dto.response.StoreResponseDto;
+import com.projectw.domain.store.entity.Store;
 import com.projectw.domain.store.service.StoreUserService;
 import com.projectw.security.AuthUser;
-import com.sun.net.httpserver.Authenticator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.repository.query.Param;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/user/stores")
@@ -23,7 +21,7 @@ public class StoreUserController {
 
     private final StoreUserService storeUserService;
 
-    @GetMapping()
+    @GetMapping
     public ResponseEntity<SuccessResponse<Page<StoreResponseDto>>> getAllStore(
             @AuthenticationPrincipal AuthUser authUser,
             @RequestParam(defaultValue = "0") int page,
@@ -55,4 +53,18 @@ public class StoreUserController {
 
         return ResponseEntity.ok(SuccessResponse.of(storeResponseDto));
     }
+
+    @PatchMapping("/{storeId}")
+    public ResponseEntity<SuccessResponse<StoreLikeResposeDto>> likeStore(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable("storeId") Long storeId
+    ) {
+        StoreLikeResposeDto storeLikeResposeDto = storeUserService.likeStore(authUser, storeId);
+        return ResponseEntity.ok(SuccessResponse.of(storeLikeResposeDto));
+    }
+
+//    @GetMapping("/{storeId}/like")
+//    public ResponseEntity<SuccessResponse<StoreLikeResposeDto>> likeStoreFind() {
+//
+//    }
 }

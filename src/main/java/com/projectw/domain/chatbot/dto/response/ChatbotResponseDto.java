@@ -1,0 +1,12 @@
+package com.projectw.domain.chatbot.dto.response;
+
+import lombok.Getter;
+
+@Getter
+public class ChatbotResponseDto {
+    private String responseMessage;
+
+    public ChatbotResponseDto(String responseMessage) {
+        this.responseMessage = responseMessage;
+    }
+}

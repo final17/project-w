@@ -3,6 +3,7 @@ package com.projectw.domain.user.entity;
 import com.projectw.common.entity.Timestamped;
 import com.projectw.common.enums.UserRole;
 import com.projectw.domain.allergy.entity.Allergy;
+import com.projectw.domain.store.entity.StoreLike;
 import com.projectw.security.AuthUser;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -10,7 +11,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -36,14 +39,6 @@ public class User extends Timestamped {
 
     private boolean isDeleted;
 
-    @ManyToMany
-    @JoinTable(
-            name = "user_allergies", // 유저-알레르기 중간 테이블
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "allergy_id")
-    )
-    private Set<Allergy> allergies = new HashSet<>();
-
     @Builder
     public User(String password, String email, String nickname, UserRole role) {
         this.password = password;
@@ -64,10 +59,5 @@ public class User extends Timestamped {
 
     public void delete() {
         isDeleted = true;
-    }
-
-    // 유저 알레르기 업데이트
-    public void updateAllergies(Set<Allergy> allergies) {
-        this.allergies = allergies;
     }
 }

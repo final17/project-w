@@ -1,8 +1,13 @@
 package com.projectw.domain.store.service;
 
+import com.projectw.domain.store.dto.StoreLikeResposeDto;
 import com.projectw.domain.store.dto.response.StoreResponseDto;
 import com.projectw.domain.store.entity.Store;
+import com.projectw.domain.store.entity.StoreLike;
+import com.projectw.domain.store.repository.StoreLikeRepository;
 import com.projectw.domain.store.repository.StoreRepository;
+import com.projectw.domain.user.entity.User;
+import com.projectw.domain.user.repository.UserRepository;
 import com.projectw.security.AuthUser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,8 +16,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -20,6 +23,8 @@ import java.util.List;
 public class StoreUserServiceImpl implements StoreUserService {
 
     private final StoreRepository storeRepository;
+    private final StoreLikeRepository storeLikeRepository;
+    private final UserRepository userRepository;
 
     @Override
     public Page<StoreResponseDto> getAllStore(AuthUser authUser, Pageable pageable) {
@@ -29,7 +34,7 @@ public class StoreUserServiceImpl implements StoreUserService {
 
     @Override
     public StoreResponseDto getOneStore(AuthUser authUser, Long storeId) {
-        Store findStore = storeRepository.findById(storeId).orElseThrow();
+        Store findStore = storeRepository.findById(storeId).orElseThrow(()-> new IllegalArgumentException("음식점을 찾을 수 없습니다."));
         return new StoreResponseDto(findStore);
     }
 
@@ -40,4 +45,21 @@ public class StoreUserServiceImpl implements StoreUserService {
         return storeList.map(StoreResponseDto::new);
     }
 
+    @Override
+    @Transactional
+    public StoreLikeResposeDto likeStore(AuthUser authUser, Long storeId) {
+        Store findStore = storeRepository.findById(storeId).orElseThrow(() -> new IllegalArgumentException("음식점을 찾을 수 없습니다."));
+        User findUser = userRepository.findById(authUser.getUserId()).orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        StoreLike storeLike = storeLikeRepository.findByIdAndUserId(findStore.getId(), findUser.getId());
+
+        if (storeLike == null) {
+            StoreLike newStoreLike = new StoreLike(findUser, findStore);
+            storeLike = storeLikeRepository.save(newStoreLike);
+        } else {
+            storeLike.changeLike();
+        }
+
+        return new StoreLikeResposeDto(storeLike);
+    }
 }

@@ -1,6 +1,7 @@
 package com.projectw.domain.like.entity;
 
 import com.projectw.common.entity.Timestamped;
+import com.projectw.domain.menu.entity.Menu;
 import com.projectw.domain.review.entity.Review;
 import com.projectw.domain.user.entity.User;
 import jakarta.persistence.*;
@@ -26,9 +27,26 @@ public class Like extends Timestamped {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @ManyToOne
+    @JoinColumn(name = "menu_id")
+    private Menu menu;
+
     @Builder
-    public Like(Review review, User user) {
+    private Like(Review review, User user) {
         this.review = review;
         this.user = user;
+    }
+
+    public Like(Menu menu, User user) {
+        this.menu = menu;
+        this.user = user;
+    }
+
+    public static Like forReview(Review review, User user) {
+        return new Like(review, user);
+    }
+
+    public static Like forMenu(Menu menu, User user) {
+        return new Like(menu, user);
     }
 }
