@@ -6,7 +6,7 @@ import com.projectw.common.exceptions.ForbiddenException;
 import com.projectw.common.exceptions.NotFoundException;
 import com.projectw.common.exceptions.UserAlreadyInQueueException;
 import com.projectw.common.utils.RedisProducer;
-import com.projectw.domain.notification.service.SseNotificationService;
+import com.projectw.domain.notification.service.NotificationService;
 import com.projectw.domain.store.entity.Store;
 import com.projectw.domain.store.repository.StoreRepository;
 import com.projectw.domain.waiting.dto.WaitingPoll;
@@ -28,7 +28,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class WaitingQueueService {
     private final RedissonClient redissonClient;
-    private final SseNotificationService notificationService;
+    private final NotificationService notificationService;
     private final StoreRepository storeRepository;
     private final RedisProducer redisProducer;
 
