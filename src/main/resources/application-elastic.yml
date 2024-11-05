@@ -1,6 +1,12 @@
 spring:
   config:
     import: optional:file:.env[.properties]
+  task:
+    execution:
+      pool:
+        core-size: 8
+        max-size: 200
+        queue-capacity: 500
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
@@ -20,10 +26,12 @@ spring:
     username: elastic
     password: changeme
     uris: "http://localhost:9200"
+    encoded:
+      api:
+        key: c3luRXdaSUItWTk3VFFmT3BMMFI6MW5RTjFGVnBRdFNrQlVfS1NCdzd5Zw==
   sql:
     init:
       mode: always
 redis:
   cluster:
     nodes: "${HOST_IP}:7001,${HOST_IP}:7002,${HOST_IP}:7003,${HOST_IP}:7004,${HOST_IP}:7005,${HOST_IP}:7006"
-

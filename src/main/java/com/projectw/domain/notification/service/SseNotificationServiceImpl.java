@@ -11,9 +11,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @RequiredArgsConstructor
-public class SseNotificationServiceImpl implements SseNotificationService {
+public class SseNotificationServiceImpl implements NotificationService {
 
+    // repository
     private final ConcurrentHashMap<String, SseEmitter> emitters = new ConcurrentHashMap<>();
+
     private static final long TIMEOUT = 60 * 1000L;
     private static final long RECONNECTION_TIMEOUT = 0L;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -21,7 +23,7 @@ public class SseNotificationServiceImpl implements SseNotificationService {
     @Override
     public SseEmitter subscribe(String key, Object data) throws NotifyCationFailedException {
 
-        if (emitters.containsKey(key)) {
+        if (emitters.containsKey(key)) { // => findbyid
             return emitters.get(key);
         }
 
@@ -43,7 +45,7 @@ public class SseNotificationServiceImpl implements SseNotificationService {
             throw new NotifyCationFailedException();
         }
 
-        emitters.put(key, emitter);
+        emitters.put(key, emitter); // save -> 준다
         return emitter;
     }
 
