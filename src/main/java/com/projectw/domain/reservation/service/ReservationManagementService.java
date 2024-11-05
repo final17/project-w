@@ -44,8 +44,10 @@ public class ReservationManagementService {
         reservation.updateStatus(ReservationStatus.CANCEL);
 
         // PaymentEventListener 결제취소
-        PaymentCancelEvent paymentCancelEvent = new PaymentCancelEvent(reservation.getOrderId() , cancel.cancelReason());
-        eventPublisher.publishEvent(paymentCancelEvent);
+        if (reservation.isPaymentYN()){
+            PaymentCancelEvent paymentCancelEvent = new PaymentCancelEvent(reservation.getOrderId() , cancel.cancelReason());
+            eventPublisher.publishEvent(paymentCancelEvent);
+        }
     }
 
     @Transactional
