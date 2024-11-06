@@ -202,8 +202,6 @@ public class ReservationService {
                 rSetMultiMap.put(userId, reserveRedisMenu);
             }
         }
-        RBucket<Object> bucket = redissonClient.getBucket(key);
-        bucket.set(rSetMultiMap, 24, TimeUnit.HOURS); // 24시간 후 만료
     }
 
     /**

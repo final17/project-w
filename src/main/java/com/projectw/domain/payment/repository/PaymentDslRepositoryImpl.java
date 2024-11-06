@@ -14,7 +14,9 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 import static com.projectw.domain.payment.entity.QPayment.payment;
@@ -31,11 +33,12 @@ public class PaymentDslRepositoryImpl implements PaymentDslRepository {
     public Page<PaymentResponse.Payment> getPayments(Long userId, PaymentRequest.Payment pmt, Pageable pageable) {
         List<PaymentResponse.Payment> results = queryFactory
                 .select(Projections.constructor(PaymentResponse.Payment.class ,
-                        paymentSuccess.paymentKey,
+                        paymentCancel.paymentKey.coalesce(paymentSuccess.paymentKey),
                         payment.orderId,
                         payment.orderName,
                         paymentCancel.totalAmount.coalesce(paymentSuccess.totalAmount),
                         payment.status,
+                        paymentCancel.method.coalesce(paymentSuccess.method),
                         paymentCancel.requestedAt.coalesce(paymentSuccess.requestedAt)
                         ))
                 .from(payment)
@@ -70,12 +73,18 @@ public class PaymentDslRepositoryImpl implements PaymentDslRepository {
         return status != null ? payment.status.eq(status) : null;
     }
 
+    // 시작 날짜 변환
     private BooleanExpression startDtEquals(LocalDate startDt) {
-        return startDt != null ? paymentCancel.requestedAt.coalesce(paymentSuccess.requestedAt).goe(OffsetDateTime.from(startDt)) : null;
+        if (startDt == null) return null;
+        OffsetDateTime startDateTime = startDt.atTime(LocalTime.MIN).atOffset(ZoneOffset.UTC);
+        return paymentCancel.requestedAt.coalesce(paymentSuccess.requestedAt).goe(startDateTime);
     }
 
+    // 종료 날짜 변환
     private BooleanExpression endDtEquals(LocalDate endDt) {
-        return endDt != null ? paymentCancel.requestedAt.coalesce(paymentSuccess.requestedAt).loe(OffsetDateTime.from(endDt)) : null;
+        if (endDt == null) return null;
+        OffsetDateTime endDateTime = endDt.atTime(LocalTime.MAX).atOffset(ZoneOffset.UTC);
+        return paymentCancel.requestedAt.coalesce(paymentSuccess.requestedAt).loe(endDateTime);
     }
 
 }
