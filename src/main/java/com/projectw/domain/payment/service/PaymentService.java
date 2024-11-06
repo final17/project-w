@@ -35,6 +35,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -78,13 +81,17 @@ public class PaymentService {
         // 현재시간대를 기준으로 예약 가능한 시간 값이 들어왔는지 검증
         reservationCheckService.isReservationDateValid(prepare.date() , prepare.time());
 
+        // 장바구니가 비어있는지 검증
+        reservationCheckService.validateMenuPresence(userId , prepare.storeId());
+
         // 유저 있는지?
         User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_USER));
         // 식당이 있는지?
         Store store = storeRepository.findById(prepare.storeId()).orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_STORE));
 
         // 들어온 금액과 내부의 설정된 금액이 다를때!
-        reservationCheckService.validateDepositAmount(store , prepare.amount());
+        // 금액 비교 리뉴얼 작업!
+        reservationCheckService.validateMenuPricesEqual(userId , prepare.storeId() , prepare.amount());
 
         // 본인 식당에 예약 가능못하게
         reservationCheckService.validateUserAuthorization(store , user);
@@ -200,6 +207,14 @@ public class PaymentService {
             String errMessage = jsonNode.get("message").textValue();
             failPayment(orderId , errCode , errMessage);
         }
+    }
+
+    /**
+     * 결제내역 조회
+     * */
+    public Page<PaymentResponse.Payment> getPayments(Long userId , PaymentRequest.Payment payment) {
+        Pageable pageable = PageRequest.of(payment.page() - 1, payment.size());
+        return paymentRepository.getPayments(userId , payment , pageable);
     }
 
     @Transactional

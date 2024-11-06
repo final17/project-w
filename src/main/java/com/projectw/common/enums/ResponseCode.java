@@ -56,7 +56,8 @@ public enum ResponseCode {
     INVALID_AMOUNT("설정한 결제 금액과 다릅니다."),
     PAYMENT_NOT_FOUND("결제정보가 없습니다."),
     INSUFFICIENT_SEAT("좌석이 부족합니다."),
-    INVALID_CART("장바구니 데이터를 올바르게 입력해주시길 바랍니다.");
+    INVALID_CART("장바구니 데이터를 올바르게 입력해주시길 바랍니다."),
+    EMPTY_CART("장바구니가 비어있습니다.");
 
     private final String message;
 }

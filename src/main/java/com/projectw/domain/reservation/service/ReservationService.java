@@ -28,10 +28,7 @@ import com.projectw.domain.user.repository.UserRepository;
 import com.projectw.domain.waiting.dto.WaitingPoll;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.api.RMap;
-import org.redisson.api.RSet;
-import org.redisson.api.RSetMultimap;
-import org.redisson.api.RedissonClient;
+import org.redisson.api.*;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -45,6 +42,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -62,7 +60,6 @@ public class ReservationService {
 
     private final ApplicationEventPublisher eventPublisher;
     private final Scheduler scheduler;
-    private final RedisTemplate<String , Object> redisTemplate;
     private final RedissonClient redissonClient;
 
     @Transactional
@@ -70,13 +67,6 @@ public class ReservationService {
         // 예약번호 채번하기
         LocalDate now = LocalDate.now();
         Long reservationNo = reservationRepository.findMaxReservationDate(ReservationType.RESERVATION , now);
-
-        // 장바구니에 메뉴가 담겨있는지 검증
-        //insertReservation.user().getId()
-        String key = assembleCartRedisKey(insertReservation.store().getId());
-        RSetMultimap<Long, ReserveRedis.Menu> rSetMultiMap = redissonClient.getSetMultimap(key);
-        RSet<ReserveRedis.Menu> rSet = rSetMultiMap.get(insertReservation.user().getId());
-        boolean menuYN = !rSet.isEmpty();
 
         // 예약 Entity 만들기
         Reservation reservation = Reservation.builder()
@@ -87,7 +77,6 @@ public class ReservationService {
                 .reservationTime(insertReservation.reservationTime())
                 .numberPeople(insertReservation.numberPeople())
                 .reservationNo(reservationNo)
-                .menuYN(menuYN)
                 .paymentYN(false)
                 .paymentAmt(insertReservation.paymentAmt())
                 .user(insertReservation.user())
@@ -96,17 +85,37 @@ public class ReservationService {
 
         Reservation saveReservation = reservationRepository.save(reservation);
 
-        // menu 값이 있을때
-        if (menuYN) {
-            List<ReservationMenu> reservationMenus = new ArrayList<>();
-            for (ReserveRedis.Menu menu : rSet) {
-                Menu m = menuRepository.findById(menu.menuId()).orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_MENU));
-                ReservationMenu reservationMenu = new ReservationMenu(m , menu.menuName() , menu.price(), menu.menuCnt() , saveReservation);
-                reservationMenus.add(reservationMenu);
-                rSetMultiMap.remove(insertReservation.user().getId() , menu);
-            }
-            reservationMenuRepository.saveAll(reservationMenus);
+        // 장바구니에 메뉴가 담겨있는지 검증
+        String key = assembleCartRedisKey(insertReservation.store().getId());
+        RSetMultimap<Long, ReserveRedis.Menu> rSetMultiMap = redissonClient.getSetMultimap(key);
+
+        List<ReservationMenu> reservationMenus = new ArrayList<>();
+
+        List<ReserveRedis.Menu> reserveMenus = new ArrayList<>(rSetMultiMap.get(insertReservation.user().getId()));
+        List<Long> menuIds = reserveMenus.stream()
+                                .map(ReserveRedis.Menu::menuId)
+                                .collect(Collectors.toList());
+
+        List<Menu> menus = menuRepository.getMenus(menuIds);
+
+        // 메뉴가 존재하지 않을 경우 처리
+        if (menus.size() != menuIds.size()) {
+            throw new NotFoundException(ResponseCode.NOT_FOUND_MENU);
         }
+
+        // 예약 메뉴 생성
+        for (ReserveRedis.Menu menu : reserveMenus) {
+            Menu m = menus.stream()
+                    .filter(menuItem -> menuItem.getId().equals(menu.menuId()))
+                    .findFirst()
+                    .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_MENU));
+
+            ReservationMenu reservationMenu = new ReservationMenu(m, menu.menuName(), menu.price(), menu.menuCnt(), saveReservation);
+            reservationMenus.add(reservationMenu);
+            rSetMultiMap.remove(insertReservation.user().getId(), menu);
+        }
+
+        reservationMenuRepository.saveAll(reservationMenus);
 
         // 지정한 시간 후에 자동 실행!!
         scheduler.scheduleOnceAfterDelay(10 , TimeUnit.MINUTES , this::autoCancelMethod, saveReservation.getId());
@@ -165,6 +174,9 @@ public class ReservationService {
         }
     }
 
+    /**
+     * 장바구니 등록
+     * */
     public void addCartItem(Long userId , Long storeId , ReserveRequest.AddCart addCart) {
 
         // key 생성!
@@ -175,7 +187,8 @@ public class ReservationService {
 
         // redis에 담기
         for (ReserveMenuRequest.Menu menu : menus) {
-            ReserveRedis.Menu reserveRedisMenu = new ReserveRedis.Menu(menu.menuIds(), menu.menuName(), menu.price(), menu.menuCnt());
+            Menu m = menuRepository.findById(menu.menuId()).orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_MENU));
+            ReserveRedis.Menu reserveRedisMenu = new ReserveRedis.Menu(m.getId(), m.getName(), (long) m.getPrice(), menu.menuCnt());
             // 중복 체크
             boolean exists = false;
             for (ReserveRedis.Menu existingMenu : rSetMultiMap.get(userId)) {
@@ -189,9 +202,11 @@ public class ReservationService {
                 rSetMultiMap.put(userId, reserveRedisMenu);
             }
         }
-        redisTemplate.expire(key , 24 , TimeUnit.HOURS);
     }
 
+    /**
+     * 장바구니 1건 수정
+     * */
     public void updateCartItem(Long userId , Long storeId , ReserveRequest.UpdateCart updateCart) {
         // key 생성!
         String key = assembleCartRedisKey(storeId);
@@ -215,6 +230,9 @@ public class ReservationService {
         }
     }
 
+    /**
+     * 장바구니 삭제
+     * */
     public void removeCartItem(Long userId , Long storeId , ReserveRequest.RemoveCart removeCart) {
         String key = assembleCartRedisKey(storeId);
         RSetMultimap<Long, ReserveRedis.Menu> rSetMultiMap = redissonClient.getSetMultimap(key);
@@ -226,6 +244,9 @@ public class ReservationService {
         }
     }
 
+    /**
+     * 장바구니 조회
+     * */
     public List<ReserveResponse.Carts> getCartItems(Long userId , Long storeId) {
         String key = assembleCartRedisKey(storeId);
         RSetMultimap<Long, ReserveRedis.Menu> rSetMultiMap = redissonClient.getSetMultimap(key);
@@ -263,7 +284,6 @@ public class ReservationService {
                 .reservationTime(at.toLocalTime().truncatedTo(TimeUnit.SECONDS.toChronoUnit()))
                 .numberPeople(1L)
                 .reservationNo(num)
-                .menuYN(false)
                 .build();
 
         reservationRepository.save(reservation);

@@ -47,8 +47,6 @@ public class Reservation extends Timestamped {
     @Column(nullable = false)
     private Long numberPeople;   // 예약인원 , 입장인원
 
-    private boolean menuYN; // 메뉴 선택 여부
-
     @Column(nullable = false)
     private boolean paymentYN;
 
@@ -64,11 +62,10 @@ public class Reservation extends Timestamped {
     private Store store;
 
     @Builder
-    public Reservation(String orderId , ReservationStatus status , ReservationType type , boolean menuYN , LocalDate reservationDate , LocalTime reservationTime , Long reservationNo , Long numberPeople , boolean paymentYN , Long paymentAmt , User user , Store store) {
+    public Reservation(String orderId , ReservationStatus status , ReservationType type , LocalDate reservationDate , LocalTime reservationTime , Long reservationNo , Long numberPeople , boolean paymentYN , Long paymentAmt , User user , Store store) {
         this.orderId = orderId;
         this.status = status;
         this.type = type;
-        this.menuYN = menuYN;
         this.reservationDate = reservationDate;
         this.reservationTime = reservationTime;
         this.reservationNo = reservationNo;
