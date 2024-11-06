@@ -4,6 +4,7 @@ import com.projectw.common.enums.ResponseCode;
 import com.projectw.common.exceptions.ForbiddenException;
 import com.projectw.common.exceptions.InvalidRequestException;
 import com.projectw.common.exceptions.UnauthorizedException;
+import com.projectw.domain.reservation.dto.ReserveRedis;
 import com.projectw.domain.reservation.entity.Reservation;
 import com.projectw.domain.reservation.enums.ReservationStatus;
 import com.projectw.domain.reservation.enums.ReservationType;
@@ -13,6 +14,8 @@ import com.projectw.domain.store.entity.Store;
 import com.projectw.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RSetMultimap;
+import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -26,6 +29,7 @@ import java.util.List;
 public class ReservationCheckService {
 
     private final ReservationRepository reservationRepository;
+    private final RedissonClient redissonClient;
 
     /**
      * 날짜와 시간 값을 기준으로 현재 시간과 비교하여 값이 유효한지 검증
@@ -43,10 +47,29 @@ public class ReservationCheckService {
     }
 
     /**
+     * 장바구니가 비어있습니다.
+     * */
+    public void validateMenuPresence(Long userId , Long storeId) {
+        String key = "store:"+storeId;
+        RSetMultimap<Long, ReserveRedis.Menu> rSetMultiMap = redissonClient.getSetMultimap(key);
+        if (rSetMultiMap.get(userId).isEmpty()) {
+            throw new InvalidRequestException(ResponseCode.EMPTY_CART);
+        }
+    }
+
+    /**
      * 식당에 설정된 예약금과 들어온 예약금액이 같은지 검증
      * */
-    public void validateDepositAmount(Store store, Long amount) {
-        if (!store.getDeposit().equals(amount)) {
+    public void validateMenuPricesEqual(Long userId , Long storeId, Long amount) {
+        String key = "store:"+storeId;
+        RSetMultimap<Long, ReserveRedis.Menu> rSetMultiMap = redissonClient.getSetMultimap(key);
+
+        Long sum = 0L;
+        for (ReserveRedis.Menu menu : rSetMultiMap.get(userId)) {
+            sum += (menu.price() * menu.menuCnt());
+        }
+
+        if (!sum.equals(amount)) {
             throw new InvalidRequestException(ResponseCode.INVALID_AMOUNT);
         }
     }

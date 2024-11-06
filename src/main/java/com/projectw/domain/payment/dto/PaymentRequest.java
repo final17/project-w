@@ -1,12 +1,14 @@
 package com.projectw.domain.payment.dto;
 
+import com.projectw.domain.payment.enums.Status;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Objects;
 
-public sealed interface PaymentRequest permits PaymentRequest.Prepare , PaymentRequest.Susscess , PaymentRequest.Fail {
+public sealed interface PaymentRequest permits PaymentRequest.Prepare , PaymentRequest.Susscess , PaymentRequest.Fail , PaymentRequest.Payment {
     record Prepare(
             @NotNull(message = "날짜 데이터는 필수입니다.")
             LocalDate date,
@@ -14,7 +16,7 @@ public sealed interface PaymentRequest permits PaymentRequest.Prepare , PaymentR
             LocalTime time,
             @NotNull(message = "음식점 아이디는 필수입니다.")
             Long storeId,
-            @NotNull(message = "예약금은 필수입니다.")
+            @NotNull(message = "금액은 필수입니다.")
             Long amount,
             @NotNull(message = "입장인원값은 필수입니다.")
             Long numberPeople,
@@ -32,4 +34,17 @@ public sealed interface PaymentRequest permits PaymentRequest.Prepare , PaymentR
             String message,
             String code
     ) implements PaymentRequest {}
+
+    record Payment (
+            Status status,
+            LocalDate startDt,
+            LocalDate endDt,
+            Integer page,
+            Integer size
+    ) implements PaymentRequest {
+        public Payment {
+            if (Objects.isNull(page)) page = 1;
+            if (Objects.isNull(size)) size = 10;
+        }
+    }
 }
