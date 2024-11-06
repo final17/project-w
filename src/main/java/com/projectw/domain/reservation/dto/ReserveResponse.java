@@ -24,7 +24,7 @@ public sealed interface ReserveResponse permits ReserveResponse.Infos , ReserveR
     record Carts (
             Long menuId,
             String menuName,
-            int price,
+            Long price,
             Long cnt
     ) implements ReserveResponse {
     }

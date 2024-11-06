@@ -86,7 +86,7 @@ public class PaymentService {
         // 들어온 금액과 내부의 설정된 금액이 다를때!
         reservationCheckService.validateDepositAmount(store , prepare.amount());
 
-        // 본인 식당에 예약 가능한지?
+        // 본인 식당에 예약 가능못하게
         reservationCheckService.validateUserAuthorization(store , user);
 
         // 예약 가능한 시간대인지? 어떻게 처리할지 고민할 것

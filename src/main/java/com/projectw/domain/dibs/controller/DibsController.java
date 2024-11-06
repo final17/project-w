@@ -6,7 +6,6 @@ import com.projectw.domain.dibs.dto.response.DibsResponseDto;
 import com.projectw.domain.dibs.service.DibsService;
 import com.projectw.security.AuthUser;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -18,8 +17,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DibsController {
 
-    @Autowired
-    private DibsService dibsService;
+    private final DibsService dibsService;
 
     @PostMapping
     public ResponseEntity<DibsActionResponseDto> addOrRemoveDibs(

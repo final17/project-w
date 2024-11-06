@@ -3,6 +3,7 @@ package com.projectw.domain.menu.service;
 import com.projectw.common.enums.ResponseCode;
 import com.projectw.common.enums.UserRole;
 import com.projectw.common.exceptions.AccessDeniedException;
+import com.projectw.common.exceptions.NotFoundException;
 import com.projectw.domain.allergy.entity.Allergy;
 import com.projectw.domain.allergy.repository.AllergyRepository;
 import com.projectw.domain.menu.dto.request.MenuRequestDto;
@@ -53,14 +54,24 @@ public class MenuService {
         }
     }
 
-    // 메뉴 생성 (ROLE_OWNER 권한만 가능)
-    @Transactional
-    public MenuResponseDto createMenu(AuthUser authUser, MenuRequestDto requestDto, Long storeId) throws IOException {
+    // 권한 및 소유자 검사 메서드
+    private void checkOwnerRoleAndOwnership(AuthUser authUser, Store store) {
         if (authUser.getRole() != UserRole.ROLE_OWNER) {
             throw new AccessDeniedException(ResponseCode.FORBIDDEN);
         }
+        // Store 소유자 ID와 authUser의 userId를 비교하여 권한 확인
+        if (!store.getOwnerId().equals(authUser.getUserId())) {
+            throw new AccessDeniedException(ResponseCode.FORBIDDEN);
+        }
+    }
+
+    // 메뉴 생성 (ROLE_OWNER 권한만 가능)
+    @Transactional
+    public MenuResponseDto createMenu(AuthUser authUser, MenuRequestDto requestDto, Long storeId) throws IOException {
         Store store = storeRepository.findById(storeId)
-                .orElseThrow(() -> new IllegalArgumentException(ResponseCode.NOT_FOUND_STORE.getMessage()));
+                .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_STORE));
+        checkOwnerRoleAndOwnership(authUser, store);
+
         Set<Allergy> allergies = allergyRepository.findAllById(requestDto.getAllergyIds())
                 .stream().collect(Collectors.toSet());
         Menu menu = new Menu(requestDto.getName(), requestDto.getPrice(), store, allergies);
@@ -70,11 +81,12 @@ public class MenuService {
 
     // 메뉴 수정 (ROLE_OWNER 권한만 가능)
     public MenuResponseDto updateMenu(AuthUser authUser, MenuRequestDto requestDto, Long storeId, Long menuId) throws IOException {
-        if (authUser.getRole() != UserRole.ROLE_OWNER) {
-            throw new AccessDeniedException(ResponseCode.FORBIDDEN);
-        }
+        Store store = storeRepository.findById(storeId)
+                .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_STORE));
+        checkOwnerRoleAndOwnership(authUser, store);
+
         Menu menu = menuRepository.findById(menuId)
-                .orElseThrow(() -> new IllegalArgumentException(ResponseCode.NOT_FOUND_MENU.getMessage()));
+                .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_MENU));
         Set<Allergy> allergies = allergyRepository.findAllById(requestDto.getAllergyIds())
                 .stream().collect(Collectors.toSet());
         menu.updateMenu(requestDto.getName(), requestDto.getPrice(), allergies);
@@ -87,7 +99,7 @@ public class MenuService {
         String lockKey = "lock:store:" + storeId;
         return executeWithLock(lockKey, () -> {
             Store store = storeRepository.findById(storeId)
-                    .orElseThrow(() -> new IllegalArgumentException("해당 스토어를 찾을 수 없습니다."));
+                    .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_STORE));
             List<Menu> menus = menuRepository.findAllByStoreAndIsDeletedFalse(store);
             return menus.stream().map(this::createMenuResponseDto).collect(Collectors.toList());
         });
@@ -95,24 +107,23 @@ public class MenuService {
 
     // 오너가 자신의 가게 메뉴만 조회
     public List<MenuResponseDto> getOwnerMenus(AuthUser authUser, Long storeId) {
-        if (authUser.getRole() != UserRole.ROLE_OWNER) {
-            throw new AccessDeniedException(ResponseCode.FORBIDDEN);
-        }
         Store store = storeRepository.findById(storeId)
-                .orElseThrow(() -> new IllegalArgumentException(ResponseCode.NOT_FOUND_STORE.getMessage()));
+                .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_STORE));
+        checkOwnerRoleAndOwnership(authUser, store);
+
         List<Menu> menus = menuRepository.findAllByStoreAndIsDeletedFalse(store);
         return menus.stream().map(this::createMenuResponseDto).collect(Collectors.toList());
     }
 
     // 메뉴 삭제 (ROLE_OWNER 권한만 가능)
     public void deleteMenu(AuthUser authUser, Long storeId, Long menuId) {
-        if (authUser.getRole() != UserRole.ROLE_OWNER) {
-            throw new AccessDeniedException(ResponseCode.FORBIDDEN);
-        }
         Store store = storeRepository.findById(storeId)
-                .orElseThrow(() -> new IllegalArgumentException(ResponseCode.NOT_FOUND_STORE.getMessage()));
+                .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_STORE));
+        checkOwnerRoleAndOwnership(authUser, store);
+
         Menu menu = menuRepository.findById(menuId)
-                .orElseThrow(() -> new IllegalArgumentException(ResponseCode.NOT_FOUND_MENU.getMessage()));
+                .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_MENU));
+
         if (!menu.getStore().getId().equals(store.getId())) {
             throw new AccessDeniedException(ResponseCode.FORBIDDEN);
         }
@@ -121,13 +132,13 @@ public class MenuService {
         menuRepository.save(menu);
     }
 
-    // 메뉴 단건 조회수
+    // 메뉴 단건 조회수 증가
     @Transactional
     public MenuResponseDto viewMenu(Long menuId) {
         String lockKey = "lock:menu:view:" + menuId;
         return executeWithLock(lockKey, () -> {
             Menu menu = menuRepository.findById(menuId)
-                    .orElseThrow(() -> new IllegalArgumentException("메뉴를 찾을 수 없습니다."));
+                    .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_MENU));
             menu.incrementViews();
             menuRepository.save(menu);
             return createMenuResponseDto(menu);

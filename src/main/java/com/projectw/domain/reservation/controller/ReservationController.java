@@ -84,7 +84,7 @@ public class ReservationController {
 
     /**
      * method : getCartItems
-     * memo   : 유저가 해당 음식점에서 메뉴를 삭제하는 작업
+     * memo   : 유저가 해당 음식점에서 메뉴를 조회하는 작업
      * */
     @Secured({UserRole.Authority.USER})
     @GetMapping("/store/{storeId}/cart")

@@ -42,22 +42,19 @@ public sealed interface ReserveRequest permits
     ) implements ReserveRequest {}
 
     record AddCart(
-            @NotNull(message = "메뉴 식별키는 필수입니다.")
-            List<String> menuIds,
-            @NotNull(message = "메뉴 개수는 필수입니다.")
-            List<Long> menuCnt
+            List<ReserveMenuRequest.Menu> menus
     ) implements ReserveRequest {}
 
     record UpdateCart(
             @NotNull(message = "메뉴 식별키는 필수입니다.")
-            String menuId,
+            Long menuId,
             @NotNull(message = "메뉴 개수는 필수입니다.")
             Long menuCnt
     ) implements ReserveRequest {}
 
     record RemoveCart(
             @NotNull(message = "메뉴 식별키는 필수입니다.")
-            String menuId
+            Long menuId
     ) implements ReserveRequest {}
 
     record Parameter(

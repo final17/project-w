@@ -1,5 +1,6 @@
 package com.projectw.domain.store.service;
 
+import com.projectw.domain.store.dto.StoreLikeResposeDto;
 import com.projectw.domain.store.dto.response.StoreResponseDto;
 import com.projectw.security.AuthUser;
 import org.springframework.data.domain.Page;
@@ -16,4 +17,5 @@ public interface StoreUserService {
 
     Page<StoreResponseDto> serchStoreName(AuthUser authUser, String storeName, Pageable pageable);
 
+    StoreLikeResposeDto likeStore(AuthUser authUser, Long storeId);
 }
