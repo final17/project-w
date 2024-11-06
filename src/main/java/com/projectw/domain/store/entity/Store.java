@@ -81,6 +81,10 @@ public class Store extends Timestamped {
     @OneToMany(mappedBy = "store")
     private List<Reservation> reservations = new ArrayList<>();
 
+    public Long getOwnerId() {
+        return user.getId();
+    }
+
     @Builder
     public Store(String image, String title, String description, LocalTime openTime, LocalTime closeTime, Boolean isNextDay, Long reservationTableCount, Long tableCount, String phoneNumber, String address, LocalTime lastOrder, LocalTime turnover, User user, List<Reservation> reservations, Long deposit, Double latitude, Double longitude) {
         this.image = image;

@@ -54,9 +54,13 @@ public class MenuService {
         }
     }
 
-    // 권한 검사 메서드
-    private void checkOwnerRole(AuthUser authUser) {
+    // 권한 및 소유자 검사 메서드
+    private void checkOwnerRoleAndOwnership(AuthUser authUser, Store store) {
         if (authUser.getRole() != UserRole.ROLE_OWNER) {
+            throw new AccessDeniedException(ResponseCode.FORBIDDEN);
+        }
+        // Store 소유자 ID와 authUser의 userId를 비교하여 권한 확인
+        if (!store.getOwnerId().equals(authUser.getUserId())) {
             throw new AccessDeniedException(ResponseCode.FORBIDDEN);
         }
     }
@@ -64,10 +68,10 @@ public class MenuService {
     // 메뉴 생성 (ROLE_OWNER 권한만 가능)
     @Transactional
     public MenuResponseDto createMenu(AuthUser authUser, MenuRequestDto requestDto, Long storeId) throws IOException {
-        checkOwnerRole(authUser);
-
         Store store = storeRepository.findById(storeId)
                 .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_STORE));
+        checkOwnerRoleAndOwnership(authUser, store);
+
         Set<Allergy> allergies = allergyRepository.findAllById(requestDto.getAllergyIds())
                 .stream().collect(Collectors.toSet());
         Menu menu = new Menu(requestDto.getName(), requestDto.getPrice(), store, allergies);
@@ -77,7 +81,9 @@ public class MenuService {
 
     // 메뉴 수정 (ROLE_OWNER 권한만 가능)
     public MenuResponseDto updateMenu(AuthUser authUser, MenuRequestDto requestDto, Long storeId, Long menuId) throws IOException {
-        checkOwnerRole(authUser);
+        Store store = storeRepository.findById(storeId)
+                .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_STORE));
+        checkOwnerRoleAndOwnership(authUser, store);
 
         Menu menu = menuRepository.findById(menuId)
                 .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_MENU));
@@ -101,20 +107,20 @@ public class MenuService {
 
     // 오너가 자신의 가게 메뉴만 조회
     public List<MenuResponseDto> getOwnerMenus(AuthUser authUser, Long storeId) {
-        checkOwnerRole(authUser);
-
         Store store = storeRepository.findById(storeId)
                 .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_STORE));
+        checkOwnerRoleAndOwnership(authUser, store);
+
         List<Menu> menus = menuRepository.findAllByStoreAndIsDeletedFalse(store);
         return menus.stream().map(this::createMenuResponseDto).collect(Collectors.toList());
     }
 
     // 메뉴 삭제 (ROLE_OWNER 권한만 가능)
     public void deleteMenu(AuthUser authUser, Long storeId, Long menuId) {
-        checkOwnerRole(authUser);
-
         Store store = storeRepository.findById(storeId)
                 .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_STORE));
+        checkOwnerRoleAndOwnership(authUser, store);
+
         Menu menu = menuRepository.findById(menuId)
                 .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_MENU));
 
