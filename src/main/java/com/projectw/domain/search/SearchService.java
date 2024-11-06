@@ -72,13 +72,25 @@ public class SearchService {
      */
     @ExecutionTimeLog
      public KeywordSearchResponse.Search intergratedSearch(KeywordSearchRequest.Search search) {
-         BoolQuery.Builder boolBuilder = QueryBuilders.bool();
 
         log.info("가게명 검색!!");
-        boolBuilder.must(m->m.match(x-> x.field("full_text").query(search.keyword()).operator(Operator.And))).boost(4f)
-             .should(m->m.match(x->x.field("title").query(search.keyword()).boost(2f)));
+        log.info("keyword: {}", search.keyword());
+        BoolQuery.Builder boolBuilder = new BoolQuery.Builder()
+                .must(m -> m.match(t -> t
+                        .field("full_text")
+                        .query(search.keyword())
+                        .operator(Operator.And)))
+                .should(s -> s.match(t -> t
+                        .field("title")
+                        .query(search.keyword())
+                        .boost(1.5f)))
+                .should(s -> s.term(t -> t
+                        .field("title.keyword")
+                        .value(search.keyword())
+                        .boost(2.0f)));
 
-         if(search.filters() != null){
+
+        if(search.filters() != null){
 
              if(search.filters().districtCategories() != null && !search.filters().districtCategories().isEmpty()) {
                  List<FieldValue> list = search.filters().districtCategories().stream().map(x -> FieldValue.of(HierarchicalCategoryUtils.codeToCategory(DistrictCategory.class, x).getPath())).toList();
@@ -86,15 +98,8 @@ public class SearchService {
                  Query query = TermsQuery.of(x -> x.field("district_category.keyword").terms(t -> t.value(list)))._toQuery();
                  boolBuilder.filter(query);
              }
-
-             if(search.filters().cuisineCategories() != null && !search.filters().cuisineCategories().isEmpty()) {
-                 List<FieldValue> list = search.filters().cuisineCategories().stream().map(x -> FieldValue.of(HierarchicalCategoryUtils.codeToCategory(DistrictCategory.class, x).getName())).toList();
-
-                 Query query = TermsQuery.of(x -> x.field("district_category.keyword").terms(t -> t.value(list)))._toQuery();
-                 boolBuilder.filter(query);
-             }
          }
-         BoolQuery query = boolBuilder.build();
+        BoolQuery query = boolBuilder.build();
          SearchRequest searchRequest = SearchRequest.of(s -> s
                  .index("stores")
                  .size(30)

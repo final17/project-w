@@ -3,6 +3,9 @@ package com.projectw.common.config;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
@@ -45,7 +48,8 @@ public class ElasticsearchConfig {
                             .setDefaultCredentialsProvider(credentialsProvider)
                     ).build();
 
-            RestClientTransport transport = new RestClientTransport(restClient, new JacksonJsonpMapper());
+            ObjectMapper mapper = JsonMapper.builder().addModule(new JavaTimeModule()).build();
+            RestClientTransport transport = new RestClientTransport(restClient, new JacksonJsonpMapper(mapper));
 
             return new ElasticsearchClient(transport);
         } catch (Exception e) {
