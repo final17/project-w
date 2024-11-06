@@ -1,5 +1,6 @@
 package com.projectw.domain.search;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,14 +11,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class StoreDoc {
     private Integer id;
-
-    @JsonProperty("created_at")
-    private String createdAt;
-
-    @JsonProperty("updated_at")
-    private String updatedAt;
 
     private String address;
 
@@ -51,7 +47,7 @@ public class StoreDoc {
 
     private String title;
 
-    private Float turnover;
+    private Double turnover;  // Float -> Double로 변경
 
     @JsonProperty("menu_id")
     private Integer menuId;
@@ -61,9 +57,9 @@ public class StoreDoc {
 
     private Integer deposit;
 
-    private Float latitude;
+    private Double latitude;  // Float -> Double로 변경
 
-    private Float longitude;
+    private Double longitude; // Float -> Double로 변경
 
     @JsonProperty("district_category")
     private String districtCategory;
