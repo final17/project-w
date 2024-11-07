@@ -12,7 +12,7 @@ public class RedisWeightingSystem {
     }
 
     // 가중치를 계산하여 업데이트하는 메서드
-    public void updateStoreWeight(String storeId, int reservations, int waitingCount) {
+    public void updateStoreWeight(String storeId, String storeName, int reservations, int waitingCount) {
         double weight = calculateWeight(reservations, waitingCount);
         waitingService.addOrUpdateStoreWeight(storeId, weight);
     }

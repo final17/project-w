@@ -1,39 +1,50 @@
 package com.projectw.domain.waiting.controller;
 
-import com.projectw.common.config.RedisWeightingSystem;
-import com.projectw.domain.waiting.dto.StoreRankResponse;
+import com.projectw.common.dto.SuccessResponse;
+import com.projectw.domain.waiting.dto.StoreRank;
 import com.projectw.domain.waiting.service.WaitingService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Set;
 
 @RestController
 @RequestMapping("/api/v2/waiting")
+@RequiredArgsConstructor
 public class WaitingController {
 
-    private final RedisWeightingSystem redisWeightingSystem;
     private final WaitingService waitingService;
 
-    public WaitingController(RedisWeightingSystem redisWeightingSystem, WaitingService waitingService) {
-        this.redisWeightingSystem = redisWeightingSystem;
-        this.waitingService = waitingService;
-    }
+    /**
+     * 가게의 웨이팅 가중치를 업데이트합니다.
+     */
+    @PostMapping("/stores/{storeId}/updateWeight")
+    public ResponseEntity<SuccessResponse<Void>> updateWeight(
+            @PathVariable String storeId,
+            @RequestParam double weight) {
 
-    @PostMapping("/updateWeight")
-    public StoreRankResponse updateWeight(@RequestParam String storeId,
-                                          @RequestParam int reservations,
-                                          @RequestParam int waitingCount) {
-        if (storeId == null || storeId.isEmpty() || reservations < 0 || waitingCount < 0) {
+        if (storeId == null || storeId.isEmpty() || weight < 0) {
             throw new IllegalArgumentException("Invalid parameters for updating weight.");
         }
 
-        redisWeightingSystem.updateStoreWeight(storeId, reservations, waitingCount);
-        return new StoreRankResponse("Weight updated successfully!");
+        waitingService.addOrUpdateStoreWeight(storeId, weight);
+        return ResponseEntity.ok(SuccessResponse.of(null));
     }
 
+    /**
+     * 전체 상위 N개의 랭크가 높은 가게를 조회합니다.
+     */
     @GetMapping("/topRanked")
-    public StoreRankResponse getTopRankedStores(@RequestParam int topN) {
-        Set<String> topStores = waitingService.getTopRankedStores(topN);
-        return new StoreRankResponse("Top ranked stores retrieved successfully!", topStores);
+    public ResponseEntity<SuccessResponse<StoreRank>> getTopRankedStores(@RequestParam int topN) {
+
+        if (topN <= 0) {
+            throw new IllegalArgumentException("Invalid topN parameter. It must be greater than 0.");
+        }
+
+        Set<StoreRank.StoreInfo> topStores = waitingService.getTopRankedStores(topN);
+        StoreRank storeRankResponse = new StoreRank("웨이팅 맛집 순위입니다.", topStores);
+
+        return ResponseEntity.ok(SuccessResponse.of(storeRankResponse));
     }
 }
