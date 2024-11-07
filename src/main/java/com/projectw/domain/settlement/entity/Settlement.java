@@ -3,7 +3,6 @@ package com.projectw.domain.settlement.entity;
 import com.projectw.common.entity.Timestamped;
 import com.projectw.domain.payment.enums.PaymentMethod;
 import com.projectw.domain.payment.enums.Status;
-import com.projectw.domain.settlement.entity.embeddables.Fees;
 import com.projectw.domain.store.entity.Store;
 import com.projectw.domain.user.entity.User;
 import jakarta.persistence.*;
@@ -55,9 +54,6 @@ public class Settlement extends Timestamped {
     @Column(nullable = false)
     private LocalDate paidOutDate;  // 지급 금액을 상점에 지급할 정산 지급일
 
-    @Embedded
-    private Fees fees;    // JSON [type , fee]
-
     @Column(nullable = false)
     @Enumerated(value = EnumType.STRING)
     private Status status;  // 대기 , 취소 , 완료 , 실패
@@ -81,7 +77,6 @@ public class Settlement extends Timestamped {
                       OffsetDateTime approvedAt ,
                       LocalDate soldDate ,
                       LocalDate paidOutDate ,
-                      Fees fees ,
                       Status status ,
                       User user ,
                       Store store ) {
@@ -95,7 +90,6 @@ public class Settlement extends Timestamped {
         this.approvedAt = approvedAt;
         this.soldDate = soldDate;
         this.paidOutDate = paidOutDate;
-        this.fees = fees;
         this.status = status;
         this.user = user;
         this.store = store;
