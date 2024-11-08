@@ -16,7 +16,7 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @GetMapping("/api/categories")
-    public ResponseEntity<SuccessResponse<List<CategoryMapperValue>>> CategoryController(@RequestParam(name = "type") CategoryType type) {
+    public ResponseEntity<SuccessResponse<List<CategoryMapperValue>>> categoryController(@RequestParam(name = "type") CategoryType type) {
 
         return ResponseEntity.ok(SuccessResponse.of(categoryService.getCategories(type)));
     }

@@ -64,6 +64,19 @@ public class StoreOwnerController {
         return ResponseEntity.ok(SuccessResponse.of(""));
     }
 
+    /**
+     * 음식점 카테고리 변경
+     */
+    @PatchMapping("/{storeId}")
+    public ResponseEntity<SuccessResponse<StoreResponse.Info>> updateCategory(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable long storeId,
+            @RequestBody StoreRequest.Category category
+    ) {
+        StoreResponse.Info info = storeOwnerService.updateCategory(authUser, storeId, category);
+        return ResponseEntity.ok(SuccessResponse.of(info));
+    }
+
     private void validateCoordinates(Double latitude, Double longitude) {
         if (latitude == null || longitude == null) {
             throw new IllegalArgumentException("위도와 경도는 필수 입력값입니다.");
