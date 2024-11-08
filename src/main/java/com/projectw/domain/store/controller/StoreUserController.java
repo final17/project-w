@@ -1,9 +1,8 @@
 package com.projectw.domain.store.controller;
 
 import com.projectw.common.dto.SuccessResponse;
-import com.projectw.domain.store.dto.StoreLikeResposeDto;
+import com.projectw.domain.store.dto.response.StoreLikeResposeDto;
 import com.projectw.domain.store.dto.response.StoreResponseDto;
-import com.projectw.domain.store.entity.Store;
 import com.projectw.domain.store.service.StoreUserService;
 import com.projectw.security.AuthUser;
 import lombok.RequiredArgsConstructor;
@@ -63,8 +62,15 @@ public class StoreUserController {
         return ResponseEntity.ok(SuccessResponse.of(storeLikeResposeDto));
     }
 
-//    @GetMapping("/{storeId}/like")
-//    public ResponseEntity<SuccessResponse<StoreLikeResposeDto>> likeStoreFind() {
-//
-//    }
+    // 좋아하는 store 목록 조회
+    @GetMapping("/likes")
+    public ResponseEntity<SuccessResponse<Page<StoreLikeResposeDto>>> getLikeStore(
+            @AuthenticationPrincipal AuthUser authUser,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<StoreLikeResposeDto> storeLikeResposeDto = storeUserService.getLikeStore(authUser, pageable);
+        return ResponseEntity.ok(SuccessResponse.of(storeLikeResposeDto));
+    }
 }

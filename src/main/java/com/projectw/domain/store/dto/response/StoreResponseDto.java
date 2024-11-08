@@ -24,6 +24,7 @@ public class StoreResponseDto {
     private UserOneResponseDto userOneResponseDto;
     private Double latitude;
     private Double longitude;
+    private Long view;
 
     public StoreResponseDto(Store saveStore) {
         id = saveStore.getId();
@@ -41,5 +42,6 @@ public class StoreResponseDto {
         latitude = saveStore.getLatitude();
         longitude = saveStore.getLongitude();
         userOneResponseDto = new UserOneResponseDto(saveStore.getUser());
+        view = saveStore.getView();
     }
 }
