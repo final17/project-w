@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.projectw.domain.crawler.dto.response.CrawlerResponseDto;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
@@ -20,6 +21,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
 
 @Service
 @RequiredArgsConstructor
@@ -29,7 +32,21 @@ public class CrawlerService {
     private final RedissonClient redissonClient;
     private final ObjectMapper objectMapper;
     private static final long CACHE_TTL_HOURS = 24; // 캐시 유효 시간
+    private List<String> proxyHosts = List.of("54.180.140.244", "3.35.133.31");
+    private int proxyIndex = 0;
+    private static final int PROXY_PORT = 3128;
+    private static final int MAX_REQUESTS_BEFORE_CHANGE = 10; // 10번 접속마다 IP 변경
 
+    // 각 프록시의 접속 횟수를 관리하는 변수
+    private AtomicInteger[] proxyRequestCounts = new AtomicInteger[proxyHosts.size()];
+
+    @PostConstruct
+    public void init() {
+        // 각 프록시의 접속 횟수를 관리하는 변수 초기화
+        for (int i = 0; i < proxyRequestCounts.length; i++) {
+            proxyRequestCounts[i] = new AtomicInteger(0); // 접속 횟수 초기화
+        }
+    }
     /**
      * 네이버 블로그 검색 with Redis 캐싱
      */
@@ -104,23 +121,26 @@ public class CrawlerService {
         log.info("Crawling URL: {}", url);
 
         try {
-            Document doc = Jsoup.connect(url)
-                    .userAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36")
-                    .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7")
-                    .header("Accept-Language", "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7")
-                    .header("Accept-Encoding", "gzip, deflate, br")
-                    .header("Cache-Control", "no-cache")
-                    .header("Cookie", "NNB=VVEU745SXPUFE")
-                    .header("sec-ch-ua", "\"Chromium\";v=\"118\", \"Google Chrome\";v=\"118\", \"Not=A?Brand\";v=\"99\"")
-                    .header("sec-ch-ua-mobile", "?0")
-                    .header("sec-ch-ua-platform", "\"macOS\"")
-                    .header("Sec-Fetch-Dest", "document")
-                    .header("Sec-Fetch-Mode", "navigate")
-                    .header("Sec-Fetch-Site", "none")
-                    .header("Sec-Fetch-User", "?1")
-                    .referrer("https://search.naver.com")
-                    .timeout(5000)
-                    .get();
+//            Document doc = Jsoup.connect(url)
+//                    .userAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36")
+//                    .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7")
+//                    .header("Accept-Language", "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7")
+//                    .header("Accept-Encoding", "gzip, deflate, br")
+//                    .header("Cache-Control", "no-cache")
+//                    .header("Cookie", "NNB=VVEU745SXPUFE")
+//                    .header("sec-ch-ua", "\"Chromium\";v=\"118\", \"Google Chrome\";v=\"118\", \"Not=A?Brand\";v=\"99\"")
+//                    .header("sec-ch-ua-mobile", "?0")
+//                    .header("sec-ch-ua-platform", "\"macOS\"")
+//                    .header("Sec-Fetch-Dest", "document")
+//                    .header("Sec-Fetch-Mode", "navigate")
+//                    .header("Sec-Fetch-Site", "none")
+//                    .header("Sec-Fetch-User", "?1")
+//                    .referrer("https://search.naver.com")
+//                    .timeout(5000)
+//                    .get();
+
+            Document doc = createConnection(url); // createConnection() 사용
+
 
             Elements posts = doc.select("div.total_area");
             if (posts.isEmpty()) {
@@ -191,9 +211,12 @@ public class CrawlerService {
         );
 
         try {
-            Document doc = Jsoup.connect(url)
-                    .userAgent("Mozilla/5.0")
-                    .get();
+//            Document doc = Jsoup.connect(url)
+//                    .userAgent("Mozilla/5.0")
+//                    .get();
+
+            Document doc = createConnection(url); // createConnection() 사용
+
 
             Elements articles = doc.select("div.news_wrap");
 
@@ -238,5 +261,37 @@ public class CrawlerService {
             }
         }
         return "";
+    }
+
+
+
+    private Document createConnection(String url) throws IOException {
+
+        String currentProxy = proxyHosts.get(proxyIndex);
+        int currentRequestCount = proxyRequestCounts[proxyIndex].incrementAndGet(); // 접속 횟수 증가
+
+        if (currentRequestCount >= MAX_REQUESTS_BEFORE_CHANGE) {
+            // 접속 횟수가 MAX_REQUESTS_BEFORE_CHANGE 이상이면 IP를 변경
+            proxyIndex = (proxyIndex + 1) % proxyHosts.size(); // 다음 프록시로 변경
+            proxyRequestCounts[proxyIndex].set(0); // 새로운 프록시의 접속 횟수 리셋
+        }
+        return Jsoup.connect(url)
+                .proxy(currentProxy, PROXY_PORT) // 프록시 설정
+                .userAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36") // User-Agent 설정
+                .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7") // Accept 헤더 설정
+                .header("Accept-Language", "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7") // Accept-Language 헤더 설정
+                .header("Accept-Encoding", "gzip, deflate, br") // Accept-Encoding 헤더 설정
+                .header("Cache-Control", "no-cache") // Cache-Control 헤더 설정
+                .header("Cookie", "NNB=VVEU745SXPUFE") // Cookie 헤더 설정
+                .header("sec-ch-ua", "\"Chromium\";v=\"118\", \"Google Chrome\";v=\"118\", \"Not=A?Brand\";v=\"99\"") // sec-ch-ua 헤더 설정
+                .header("sec-ch-ua-mobile", "?0") // sec-ch-ua-mobile 헤더 설정
+                .header("sec-ch-ua-platform", "\"macOS\"") // sec-ch-ua-platform 헤더 설정
+                .header("Sec-Fetch-Dest", "document") // Sec-Fetch-Dest 헤더 설정
+                .header("Sec-Fetch-Mode", "navigate") // Sec-Fetch-Mode 헤더 설정
+                .header("Sec-Fetch-Site", "none") // Sec-Fetch-Site 헤더 설정
+                .header("Sec-Fetch-User", "?1") // Sec-Fetch-User 헤더 설정
+                .referrer("https://search.naver.com") // referrer 설정
+                .timeout(5000) // 타임아웃 설정
+                .get(); // GET 요청 수행
     }
 }
