@@ -1,4 +1,4 @@
-package com.projectw.domain.chatbot.dto;
+package com.projectw.domain.chatbot.dto.request;
 
 import lombok.Getter;
 

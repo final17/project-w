@@ -3,6 +3,7 @@ package com.projectw.domain.user.entity;
 import com.projectw.common.entity.Timestamped;
 import com.projectw.common.enums.UserRole;
 import com.projectw.domain.allergy.entity.Allergy;
+import com.projectw.domain.store.entity.StoreLike;
 import com.projectw.security.AuthUser;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -10,7 +11,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity

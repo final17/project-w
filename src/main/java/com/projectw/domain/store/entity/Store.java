@@ -1,8 +1,6 @@
 package com.projectw.domain.store.entity;
 
 import com.projectw.common.entity.Timestamped;
-import com.projectw.domain.category.FoodCategory;
-import com.projectw.domain.category.RegionCategory;
 import com.projectw.domain.reservation.entity.Reservation;
 import com.projectw.domain.store.dto.request.StoreRequestDto;
 import com.projectw.domain.user.entity.User;
@@ -26,11 +24,7 @@ public class Store extends Timestamped {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Enumerated(EnumType.STRING)
-    private RegionCategory region;
-
-    @Enumerated(EnumType.STRING)
-    private FoodCategory foodType;
+    private String districtCategory;
 
     private String image;
 
@@ -80,6 +74,10 @@ public class Store extends Timestamped {
 
     @OneToMany(mappedBy = "store")
     private List<Reservation> reservations = new ArrayList<>();
+
+    public Long getOwnerId() {
+        return user.getId();
+    }
 
     @Builder
     public Store(String image, String title, String description, LocalTime openTime, LocalTime closeTime, Boolean isNextDay, Long reservationTableCount, Long tableCount, String phoneNumber, String address, LocalTime lastOrder, LocalTime turnover, User user, List<Reservation> reservations, Long deposit, Double latitude, Double longitude) {

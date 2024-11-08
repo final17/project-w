@@ -6,7 +6,7 @@ import com.projectw.common.exceptions.ForbiddenException;
 import com.projectw.common.exceptions.NotFoundException;
 import com.projectw.common.exceptions.UserAlreadyInQueueException;
 import com.projectw.common.utils.RedisProducer;
-import com.projectw.domain.notification.service.SseNotificationService;
+import com.projectw.domain.notification.service.NotificationService;
 import com.projectw.domain.store.entity.Store;
 import com.projectw.domain.store.repository.StoreRepository;
 import com.projectw.domain.waiting.dto.WaitingPoll;
@@ -28,10 +28,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class WaitingQueueService {
     private final RedissonClient redissonClient;
-    private final SseNotificationService notificationService;
+    private final NotificationService notificationService;
     private final StoreRepository storeRepository;
     private final RedisProducer redisProducer;
-
+    private final WaitingService waitingService;
 
     public SseEmitter connect(AuthUser authUser, long storeId) {
         RScoredSortedSet<String> sortedSet = redissonClient.getScoredSortedSet(getRedisSortedSetKey(storeId));
@@ -57,6 +57,8 @@ public class WaitingQueueService {
         // 발권 번호를 score로 설정하여 대기열에 추가
         long score = redissonClient.getAtomicLong(getRedisWaitingNumKey(storeId)).incrementAndGet();
         sortedSet.add(score, String.valueOf(authUser.getUserId()));
+        // 웨이팅 서비스에서 레스토랑의 가중치 증가
+        waitingService.incrementWeight(String.valueOf(storeId), 1.0);
         updateAllUsers(storeId);
 
         return new WaitingQueueResponse.Info(sortedSet.size(), authUser.getUserId());
@@ -83,6 +85,10 @@ public class WaitingQueueService {
 
         Double score = sortedSet.firstScore();
         String popUserId = sortedSet.pollFirst();
+
+        // 웨이팅 서비스에서 레스토랑 가중치 감소
+        waitingService.incrementWeight(String.valueOf(storeId), -1.0);
+
         notificationService.delete(getSseKey(storeId, popUserId));
         redisProducer.send("waiting-poll", new WaitingPoll(score.longValue(), storeId, Long.parseLong(popUserId), LocalDateTime.now()));
         updateAllUsers(storeId);
@@ -95,6 +101,10 @@ public class WaitingQueueService {
     public void cancel(AuthUser authUser, long storeId) {
         RScoredSortedSet<String> sortedSet = redissonClient.getScoredSortedSet(getRedisSortedSetKey(storeId));
         sortedSet.remove(String.valueOf(authUser.getUserId()));
+
+        // 웨이팅 서비스에서 레스토랑 가중치 감소
+        waitingService.incrementWeight(String.valueOf(storeId), -1.0);
+
         notificationService.delete(getSseKey(storeId, String.valueOf(authUser.getUserId())));
         updateAllUsers(storeId);
     }

@@ -31,7 +31,10 @@ public class SecurityFilter extends OncePerRequestFilter {
         String requestURI = request.getRequestURI();
         log.info("Request URI: {}", requestURI);
 
-        if(requestURI.equals("/health")) {
+        if(requestURI.equals("/health") ||
+                requestURI.startsWith("/api/search") ||
+                requestURI.startsWith("/api/categories") ||
+                requestURI.startsWith("/search")) {
             filterChain.doFilter(request, response);
             return;
         }

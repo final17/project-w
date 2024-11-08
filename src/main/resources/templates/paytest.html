@@ -1,160 +1,356 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Restaurant Reservation Payment Demo</title>
-    <script src="https://js.tosspayments.com/v1/payment"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>검색 페이지</title>
+    <!-- Bootstrap CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f7f7f7;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-
-        .container {
-            background-color: #fff;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-            width: 400px;
-            padding: 20px;
-            text-align: center;
-        }
-
-        .title {
-            font-size: 24px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 20px;
-        }
-
-        .input-group {
-            margin-bottom: 15px;
-            text-align: left;
-        }
-
-        .input-group label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .input-group input {
+        .autocomplete-results {
+            max-height: 400px;
+            overflow-y: auto;
+            position: absolute;
+            background-color: white;
             width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            z-index: 1000;
+        }
+        .autocomplete-item {
             padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 16px;
-        }
-
-        .btn {
-            width: 100%;
-            padding: 12px;
-            background-color: #007aff;
-            border: none;
-            color: white;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 6px;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            display: flex;
+            align-items: center;
         }
-
-        .btn:hover {
-            background-color: #005bb5;
+        .autocomplete-item:hover {
+            background-color: #f1f1f1;
         }
-
-        .toss-logo {
-            margin-top: 20px;
+        .highlight {
+            color: #FF6347; /* 주황 붉은색 */
+            font-weight: bold;
         }
-
-        .toss-logo img {
-            width: 150px;
+        .selected-category {
+            background-color: #FF6347;
+            color: white;
+        }
+        .selected-categories-container {
+            margin-top: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        .selected-category-badge {
+            background-color: #FF6347;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            cursor: pointer;
         }
     </style>
 </head>
-<body>
+<body class="bg-light">
 
-<div class="container">
-    <div class="title">식당 예약 결제 테스트</div>
-
-    <div class="input-group">
-        <label for="restaurant-name">식당 이름</label>
-        <input type="text" id="restaurant-name" placeholder="식당 이름을 입력하세요" value="테스트 식당">
+<div class="container my-5">
+    <div class="text-center mb-5">
+        <h1 class="display-6 fw-bold">검색 페이지</h1>
+        <p class="text-muted">원하는 정보를 빠르고 쉽게 검색하세요.</p>
     </div>
 
-    <div class="input-group">
-        <label for="people">예약 인원</label>
-        <input type="number" id="people" placeholder="예약 인원을 입력하세요" value="2">
+    <!-- 검색 입력 필드 및 버튼 -->
+    <div class="position-relative mb-4">
+        <div class="input-group">
+            <input type="text" id="searchInput" class="form-control" placeholder="검색어를 입력하세요" aria-label="Search">
+            <button id="searchButton" class="btn btn-primary" type="button">검색</button>
+            <button id="filterButton" class="btn btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#filterModal">필터</button>
+        </div>
+        <!-- 자동완성 결과 컨테이너 -->
+        <div id="autocompleteResults" class="autocomplete-results"></div>
     </div>
 
-    <div class="input-group">
-        <label for="deposit">예약금 (원)</label>
-        <input type="number" id="deposit" placeholder="예약금을 입력하세요" value="50000">
-    </div>
+    <!-- 선택된 카테고리 배지 표시 -->
+    <div id="selectedCategoriesDisplay" class="selected-categories-container"></div>
 
-    <button class="btn" onclick="createTempOrderAndRequestPayment()">결제하기</button>
+    <!-- 검색 결과 리스트 -->
+    <div id="searchResults" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4"></div>
+</div>
 
-    <div class="toss-logo">
-        <img src="../static/logo.png" alt="Toss 로고">
+<!-- 필터 모달 -->
+<div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="filterModalLabel">지역 선택</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="regionFilters" class="d-flex flex-wrap gap-2">
+                    <!-- 지역 필터가 동적으로 추가됩니다 -->
+                </div>
+                <!-- 선택된 카테고리 표시 영역 -->
+                <div id="selectedCategories" class="selected-categories-container"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+                <button type="button" class="btn btn-primary" id="applyFilterButton">결과 보기</button>
+            </div>
+        </div>
     </div>
 </div>
 
+<!-- Bootstrap JavaScript Bundle with Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    var clientKey = "test_ck_ALnQvDd2VJln5R4gqw2O8Mj7X41m"; // 테스트용 클라이언트 키
-    var tossPayments = TossPayments(clientKey);
+    const defaultImageUrl = 'https://via.placeholder.com/50';
+    let selectedRegionCode = null;
+    let selectedSubcategories = new Map(); // name을 저장하기 위해 Set 대신 Map 사용
 
-    // 가주문을 생성한 후, Toss Payments 결제 요청을 실행하는 함수
-    function createTempOrderAndRequestPayment() {
-        const restaurantName = document.getElementById('restaurant-name').value;
-        const people = document.getElementById('people').value;
-        const deposit = document.getElementById('deposit').value;
+    document.addEventListener('DOMContentLoaded', () => {
+        loadRegionFilters();
+    });
 
-        // 가주문 생성 API 요청
-        fetch('/api/temp-order', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                orderName: `${restaurantName} 예약 (${people}명)`,
-                totalAmount: deposit
+    // 지역 필터 데이터를 불러와서 표시
+    function loadRegionFilters() {
+        fetch('http://localhost:8080/api/categories?type=DISTRICT')
+            .then(response => response.json())
+            .then(data => {
+                const regionFiltersContainer = document.getElementById('regionFilters');
+                data.data.forEach(region => {
+                    if (region.depth === 1) {
+                        const button = document.createElement('button');
+                        button.classList.add('btn', 'btn-outline-primary', 'm-1');
+                        button.textContent = region.name;
+                        button.dataset.code = region.code;
+                        button.addEventListener('click', () => {
+                            selectedRegionCode = region.code;
+                            highlightSelectedFilter(button);
+                            loadSubcategories(region.code);
+                        });
+                        regionFiltersContainer.appendChild(button);
+                    }
+                });
             })
+            .catch(error => console.error('Error loading filters:', error));
+    }
+
+    function loadSubcategories(regionCode) {
+        // 모든 기존 서브카테고리 버튼 삭제
+        document.getElementById('regionFilters').querySelectorAll('.subcategory-btn').forEach(btn => btn.remove());
+
+        fetch('http://localhost:8080/api/categories?type=DISTRICT')
+            .then(response => response.json())
+            .then(data => {
+                const regionFiltersContainer = document.getElementById('regionFilters');
+                data.data.forEach(subcategory => {
+                    if (subcategory.depth === 2 && subcategory.code.includes(regionCode)) {
+                        const button = document.createElement('button');
+                        button.classList.add('btn', 'btn-outline-secondary', 'm-1', 'subcategory-btn');
+                        button.textContent = subcategory.name;
+                        button.dataset.code = subcategory.code;
+                        if (selectedSubcategories.has(subcategory.code)) {
+                            button.classList.add('selected-category');
+                        }
+                        button.addEventListener('click', () => toggleSubcategorySelection(button, subcategory));
+                        regionFiltersContainer.appendChild(button);
+                    }
+                });
+            })
+            .catch(error => console.error('Error loading subcategories:', error));
+    }
+
+    function toggleSubcategorySelection(button, subcategory) {
+        const code = subcategory.code;
+        const name = subcategory.name;
+        if (selectedSubcategories.has(code)) {
+            selectedSubcategories.delete(code);
+            button.classList.remove('selected-category');
+        } else {
+            selectedSubcategories.set(code, name);
+            button.classList.add('selected-category');
+        }
+        displaySelectedCategories();
+        updateSelectedCategoriesDisplay();
+    }
+
+    function highlightSelectedFilter(selectedButton) {
+        document.querySelectorAll('#regionFilters button').forEach(button => {
+            button.classList.remove('btn-primary');
+            button.classList.add('btn-outline-primary');
+        });
+        selectedButton.classList.remove('btn-outline-primary');
+        selectedButton.classList.add('btn-primary');
+    }
+
+    function displaySelectedCategories() {
+        const container = document.getElementById('selectedCategories');
+        container.innerHTML = '';
+        selectedSubcategories.forEach((name, code) => {
+            const badge = document.createElement('span');
+            badge.classList.add('selected-category-badge');
+            badge.textContent = name;
+            container.appendChild(badge);
+        });
+    }
+
+    function updateSelectedCategoriesDisplay() {
+        const displayContainer = document.getElementById('selectedCategoriesDisplay');
+        displayContainer.innerHTML = '';
+        selectedSubcategories.forEach((name, code) => {
+            const badge = document.createElement('span');
+            badge.classList.add('selected-category-badge');
+            badge.textContent = name;
+            badge.addEventListener('click', () => {
+                selectedSubcategories.delete(code);
+                displaySelectedCategories();
+                updateSelectedCategoriesDisplay();
+                document.querySelector(`[data-code="${code}"]`).classList.remove('selected-category');
+            });
+            displayContainer.appendChild(badge);
+        });
+    }
+
+    // 검색어 입력 시 자동완성 요청
+    document.getElementById('searchInput').addEventListener('input', () => {
+        const query = document.getElementById('searchInput').value;
+        if (query.length > 0) {
+            fetch(`http://localhost:8080/api/search/autocomplete?keyword=${query}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 200 && data.data.stores) {
+                        displayAutocompleteResults(data.data.stores, query);
+                    }
+                })
+                .catch(error => console.error('Autocomplete error:', error));
+        } else {
+            document.getElementById('autocompleteResults').innerHTML = '';
+        }
+    });
+
+    // 자동완성 결과 표시 함수
+    function displayAutocompleteResults(results, keyword) {
+        const resultsContainer = document.getElementById('autocompleteResults');
+        resultsContainer.innerHTML = '';
+
+        results.forEach(result => {
+            const item = document.createElement('div');
+            item.classList.add('autocomplete-item');
+
+            // 이미지 처리
+            const img = document.createElement('img');
+            img.src = result.image || defaultImageUrl;
+            img.alt = result.title;
+            img.classList.add('me-2', 'rounded');
+
+            // 제목 하이라이트
+            const title = highlightText(result.title, keyword);
+
+            const info = document.createElement('div');
+            info.innerHTML = `<strong>${title}</strong><br><small>${result.address}</small>`;
+
+            item.appendChild(img);
+            item.appendChild(info);
+
+            item.addEventListener('click', () => {
+                window.location.href = `/store/${result.id}`;
+            });
+
+            resultsContainer.appendChild(item);
+        });
+    }
+
+    function highlightText(text, keyword) {
+        const regex = new RegExp(`(${keyword})`, 'gi');
+        return text.replace(regex, `<span class="highlight">$1</span>`);
+    }
+
+    // 검색 버튼 클릭 시 API 호출
+    document.getElementById('searchButton').addEventListener('click', () => {
+        const query = document.getElementById('searchInput').value;
+        document.getElementById('autocompleteResults').innerHTML = ''; // 검색 시 자동완성 결과 닫기
+        performSearch(query);
+    });
+
+    // 필터 모달에서 '결과 보기' 버튼 클릭 시
+    document.getElementById('applyFilterButton').addEventListener('click', () => {
+        const query = document.getElementById('searchInput').value;
+        performSearch(query);
+        bootstrap.Modal.getInstance(document.getElementById('filterModal')).hide();
+    });
+
+    function performSearch(query) {
+        const requestBody = {
+            size: 30,
+            filters: selectedRegionCode ? { districtCategories: Array.from(selectedSubcategories.keys()) } : {},
+            keyword: query
+        };
+
+        fetch('http://localhost:8080/api/search', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody)
         })
             .then(response => response.json())
             .then(data => {
-                if (data.success) {
-                    // 가주문 생성에 성공하면 결제 요청
-                    const orderId = data.data.orderId;
-                    const orderName = data.data.orderName;
-                    const amount = data.data.totalAmount;
-
-                    requestPayment(orderId, amount, orderName);
+                if (data.status === 200 && data.data && data.data.stores) {
+                    displaySearchResults(data.data.stores);
                 } else {
-                    alert('가주문 생성에 실패했습니다.');
+                    displayNoResults(); // 결과가 없을 때 메시지 표시
                 }
             })
-            .catch(error => {
-                console.error('가주문 생성 오류:', error);
-            });
+            .catch(error => console.error('Search error:', error));
     }
 
-    // Toss Payments 결제 요청 함수
-    function requestPayment(orderId, amount, orderName) {
-        tossPayments.requestPayment('카드', {
-            amount: amount,
-            orderId: orderId,
-            orderName: orderName,
-            successUrl: 'http://localhost:8080/payments/success',
-            failUrl: 'http://localhost:8080/payments/fail'
+    function displaySearchResults(results) {
+        const resultsContainer = document.getElementById('searchResults');
+        resultsContainer.innerHTML = '';
+
+        results.forEach(result => {
+            const col = document.createElement('div');
+            col.classList.add('col');
+
+            const card = document.createElement('div');
+            card.classList.add('card', 'h-100', 'shadow-sm');
+
+            const img = document.createElement('img');
+            img.src = result.image || defaultImageUrl;
+            img.classList.add('card-img-top');
+            img.alt = result.title;
+
+            const cardBody = document.createElement('div');
+            cardBody.classList.add('card-body');
+
+            const title = document.createElement('h5');
+            title.classList.add('card-title');
+            title.textContent = result.title;
+
+            const description = document.createElement('p');
+            description.classList.add('card-text', 'text-muted');
+            description.textContent = result.address;
+
+            cardBody.appendChild(title);
+            cardBody.appendChild(description);
+            card.appendChild(img);
+            card.appendChild(cardBody);
+            col.appendChild(card);
+            resultsContainer.appendChild(col);
         });
     }
-</script>
 
+    function displayNoResults() {
+        const resultsContainer = document.getElementById('searchResults');
+        resultsContainer.innerHTML = `
+            <div class="text-center">
+                <img src="https://via.placeholder.com/150" alt="No results" class="my-4">
+                <p>앗! 조건에 맞는 매장이 없어요.</p>
+                <ul class="text-muted">
+                    <li>더 일반적인 검색어를 사용해 보세요.</li>
+                    <li>문장이 아닌 단어로 검색해 보세요.</li>
+                    <li>설정된 필터를 확인하고 변경해 보세요.</li>
+                </ul>
+            </div>
+        `;
+    }
+</script>
 </body>
 </html>

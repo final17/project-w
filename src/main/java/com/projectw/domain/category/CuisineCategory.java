@@ -3,21 +3,22 @@ package com.projectw.domain.category;
 import java.util.ArrayList;
 import java.util.List;
 
-public enum FoodCategory implements HierarchicalCategory {
+public enum CuisineCategory implements HierarchicalCategory {
 
-    ROOT("음식종류", "FT", null),
-        KOREAN_FOOD("한식", "1", ROOT),
-        JAPANESE_FOOD("일식", "2", ROOT),
-            초밥("초밥", "2", JAPANESE_FOOD);
+    ROOT("cuisine","CUISINE", "C", null),
+        KOREAN_FOOD("cuisine","한식", "1", ROOT),
+        JAPANESE_FOOD("cuisine","일식", "2", ROOT);
 
 
+    private final String type;
     private final String name;
     private final String code;
     private final HierarchicalCategory parent;
     private final List<HierarchicalCategory> children;
     private final int depth;
 
-    FoodCategory(String name, String code, HierarchicalCategory parent) {
+    CuisineCategory(String type, String name, String code, HierarchicalCategory parent) {
+        this.type = type;
         this.name = name;
         this.parent = parent;
         this.code = code;
@@ -36,7 +37,12 @@ public enum FoodCategory implements HierarchicalCategory {
     public String getCode() {
         if(parent == null) return code;
 
-        return parent.getCode() + "-" + code;
+        return parent.getCode() + code;
+    }
+
+    @Override
+    public String getType() {
+        return type;
     }
 
     @Override
@@ -46,7 +52,7 @@ public enum FoodCategory implements HierarchicalCategory {
 
     @Override
     public String getPath() {
-        if(parent == null) return name;
+        if(parent == ROOT || parent == null) return name;
 
         return parent.getPath() + "/" + name;
     }
