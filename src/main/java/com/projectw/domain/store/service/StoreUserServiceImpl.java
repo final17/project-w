@@ -1,6 +1,6 @@
 package com.projectw.domain.store.service;
 
-import com.projectw.domain.store.dto.StoreLikeResposeDto;
+import com.projectw.domain.store.dto.response.StoreLikeResposeDto;
 import com.projectw.domain.store.dto.response.StoreResponseDto;
 import com.projectw.domain.store.entity.Store;
 import com.projectw.domain.store.entity.StoreLike;
@@ -33,8 +33,10 @@ public class StoreUserServiceImpl implements StoreUserService {
     }
 
     @Override
+    @Transactional
     public StoreResponseDto getOneStore(AuthUser authUser, Long storeId) {
         Store findStore = storeRepository.findById(storeId).orElseThrow(()-> new IllegalArgumentException("음식점을 찾을 수 없습니다."));
+        findStore.addView();
         return new StoreResponseDto(findStore);
     }
 
@@ -51,7 +53,7 @@ public class StoreUserServiceImpl implements StoreUserService {
         Store findStore = storeRepository.findById(storeId).orElseThrow(() -> new IllegalArgumentException("음식점을 찾을 수 없습니다."));
         User findUser = userRepository.findById(authUser.getUserId()).orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
-        StoreLike storeLike = storeLikeRepository.findByIdAndUserId(findStore.getId(), findUser.getId());
+        StoreLike storeLike = storeLikeRepository.findByStoreIdAndUserId(findStore.getId(), findUser.getId());
 
         if (storeLike == null) {
             StoreLike newStoreLike = new StoreLike(findUser, findStore);
@@ -61,5 +63,11 @@ public class StoreUserServiceImpl implements StoreUserService {
         }
 
         return new StoreLikeResposeDto(storeLike);
+    }
+
+    @Override
+    public Page<StoreLikeResposeDto> getLikeStore(AuthUser authUser, Pageable pageable) {
+        Page<StoreLike> storeLikes = storeLikeRepository.findAllByUserId(authUser.getUserId(), pageable);
+        return storeLikes.map(StoreLikeResposeDto::new);
     }
 }

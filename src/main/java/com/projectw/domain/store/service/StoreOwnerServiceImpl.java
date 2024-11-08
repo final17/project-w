@@ -2,6 +2,7 @@ package com.projectw.domain.store.service;
 
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import com.projectw.common.config.S3Service;
 import com.projectw.common.exceptions.AccessDeniedException;
 import com.projectw.domain.category.DistrictCategory;
 import com.projectw.domain.category.HierarchicalCategory;
@@ -20,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
@@ -35,17 +37,28 @@ public class StoreOwnerServiceImpl implements StoreOwnerService{
 
     private final StoreRepository storeRepository;
     private final UserRepository userRepository;
+
     private final ElasticsearchClient elasticClient;
     private final MenuRepository menuRepository;
 
+    private final S3Service s3Service;
+
+
     @Override
     @Transactional
-    public StoreResponseDto createStore(AuthUser authUser, StoreRequestDto storeRequestDto) {
+    public StoreResponseDto createStore(AuthUser authUser, StoreRequestDto storeRequestDto, MultipartFile image) {
 
         User user = userRepository.findById(authUser.getUserId()).orElseThrow();
         HierarchicalCategory category = HierarchicalCategoryUtils.codeToCategory(DistrictCategory.class, storeRequestDto.getDistrictCategoryCode());
+
+
+        String imageName = null;
+        if (image != null) {
+            imageName = s3Service.uploadFile(image);
+        }
+
         Store newStore = Store.builder()
-                .image(null)
+                .image(imageName)
                 .title(storeRequestDto.getTitle())
                 .districtCategoryCode(category.getPath())
                 .description(storeRequestDto.getDescription())
@@ -92,9 +105,17 @@ public class StoreOwnerServiceImpl implements StoreOwnerService{
 
     @Override
     @Transactional
-    public StoreResponseDto putStore(AuthUser authUser, Long storeId, StoreRequestDto storeRequestDto) {
+    public StoreResponseDto putStore(AuthUser authUser, Long storeId, StoreRequestDto storeRequestDto, MultipartFile image) {
         Store findStore = checkUserAndFindStore(authUser, storeId);
-        Store putStore = findStore.putStore(storeRequestDto);
+
+        // 이미지가 있다면 기존 이미지를 삭제하고 새로운 이미지를 업로드합니다.
+        String imageName = null;
+        if (image != null) {
+            s3Service.deleteFile(findStore.getImage());
+            imageName = s3Service.uploadFile(image);
+        }
+
+        Store putStore = findStore.putStore(imageName, storeRequestDto);
 
         List<Menu> menus = menuRepository.findAllByStoreId(putStore.getId());
         StoreDoc newDoc = StoreDoc.of(putStore, User.fromAuthUser(authUser), menus);
@@ -115,6 +136,7 @@ public class StoreOwnerServiceImpl implements StoreOwnerService{
     @Transactional
     public void deleteStore(AuthUser authUser, Long storeid) {
         Store findStore = checkUserAndFindStore(authUser, storeid);
+
         if(findStore == null) return;
 
         try{
@@ -126,6 +148,10 @@ public class StoreOwnerServiceImpl implements StoreOwnerService{
         } catch (IOException e) {
             log.error("store Id: {} 엘라스틱 서치에서 삭제 실패: {}", storeid, e.getMessage());
         }
+
+        // 이미지 삭제
+        s3Service.deleteFile(findStore.getImage());
+        findStore.deleteStore();
     }
 
     private Store checkUserAndFindStore(AuthUser authUser, Long storeId){
