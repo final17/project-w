@@ -14,6 +14,7 @@ import com.projectw.domain.auth.dto.AuthResponse;
 import com.projectw.domain.auth.dto.AuthResponse.DuplicateCheck;
 import com.projectw.domain.auth.dto.AuthResponse.Reissue;
 import com.projectw.domain.auth.dto.AuthResponse.Signup;
+import com.projectw.domain.auth.dto.KakaoAuthResponse;
 import com.projectw.domain.user.entity.User;
 import com.projectw.domain.user.repository.UserRepository;
 import com.projectw.security.AuthUser;
@@ -24,10 +25,12 @@ import lombok.RequiredArgsConstructor;
 import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.Duration;
 
@@ -40,9 +43,80 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private final RedissonClient redissonClient;
+    private final RestTemplate restTemplate;
+
+    @Value("${kakao.client-id}")
+    private String kakaoClientId;
+
+    @Value("${kakao.redirect-uri}")
+    private String kakaoRedirectUri;
 
     @Value("${ADMIN_TOKEN}")
     private String adminToken;
+
+    /**
+     * 카카오 로그인 처리
+     *
+     * @param accessToken 카카오에서 제공한 액세스 토큰
+     * @return 로그인 응답 데이터
+     */
+    public AuthResponse.Login kakaoLogin(String accessToken) {
+        // 카카오 사용자 정보 가져오기
+        KakaoAuthResponse.KakaoAccount kakaoAccount = getKakaoUserInfo(accessToken);
+
+        // 기존 사용자 확인 또는 신규 사용자 등록
+        User user = userRepository.findByEmail(kakaoAccount.email())
+                .orElseGet(() -> registerNewKakaoUser(kakaoAccount));
+
+        // JWT 토큰 생성
+        String jwtAccessToken = jwtUtil.createAccessToken(user.getId(), user.getEmail(), user.getRole());
+        String jwtRefreshToken = jwtUtil.createRefreshToken(user.getId(), user.getEmail(), user.getRole());
+
+        // Redis에 리프레시 토큰 저장
+        redissonClient.getBucket(JwtUtil.REDIS_REFRESH_TOKEN_PREFIX + user.getId())
+                .set(jwtRefreshToken, Duration.ofMillis(TokenType.REFRESH.getLifeTime()));
+
+        return new AuthResponse.Login(user, jwtAccessToken, jwtRefreshToken);
+    }
+
+    /**
+     * 카카오 사용자 정보 가져오기
+     *
+     * @param accessToken 카카오 액세스 토큰
+     * @return 카카오 사용자 정보
+     */
+    private KakaoAuthResponse.KakaoAccount getKakaoUserInfo(String accessToken) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + accessToken);
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+        ResponseEntity<KakaoAuthResponse.KakaoAccount> response = restTemplate.exchange(
+                "https://kapi.kakao.com/v2/user/me",
+                HttpMethod.GET,
+                entity,
+                KakaoAuthResponse.KakaoAccount.class
+        );
+
+        if (response.getStatusCode() != HttpStatus.OK || response.getBody() == null) {
+            throw new InvalidTokenException();
+        }
+
+        return response.getBody();
+    }
+
+    /**
+     * 신규 카카오 사용자 등록
+     *
+     * @param kakaoAccount 카카오 계정 정보
+     * @return 등록된 사용자 엔티티
+     */
+    private User registerNewKakaoUser(KakaoAuthResponse.KakaoAccount kakaoAccount) {
+        String email = kakaoAccount.email();
+        String nickname = kakaoAccount.profile().nickname();
+
+        User newUser = new User(null, email, nickname, UserRole.ROLE_USER);
+        return userRepository.save(newUser);
+    }
 
     /**
      * 회원 가입
