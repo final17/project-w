@@ -47,7 +47,7 @@ public class StoreUserController {
             @RequestParam(defaultValue = "10") int size
     ) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<StoreResponse.Info> storeResponseDto = storeUserService.serchStoreName(authUser, storeName, pageable);
+        Page<StoreResponse.Info> storeResponseDto = storeUserService.searchStoreName(authUser, storeName, pageable);
 
         return ResponseEntity.ok(SuccessResponse.of(storeResponseDto));
     }

@@ -12,7 +12,7 @@ public interface StoreUserService {
 
     StoreResponse.Info getOneStore(AuthUser authUser, Long storeId);
 
-    Page<StoreResponse.Info> serchStoreName(AuthUser authUser, String storeName, Pageable pageable);
+    Page<StoreResponse.Info> searchStoreName(AuthUser authUser, String storeName, Pageable pageable);
 
     StoreResponse.Like likeStore(AuthUser authUser, Long storeId);
 
