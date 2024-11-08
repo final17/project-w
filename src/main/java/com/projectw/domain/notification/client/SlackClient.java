@@ -18,16 +18,7 @@ public class SlackClient implements MessageClient{
 
     @Override
     public void sendMessage(String message) {
-
-        try {
-            Slack instance = Slack.getInstance();
-            Map<String, String> map = new HashMap<>();
-            map.put("text", message);
-
-            instance.send(slackAlertWebhookUrl, mapper.writeValueAsString(map));
-        } catch (Exception e) {
-            log.error("Slack Message Send Failed!! {}", e.getMessage());
-        }
+        sendMessage(slackAlertWebhookUrl, message);
     }
 
     public void sendMessage(String hookUrl, String message) {

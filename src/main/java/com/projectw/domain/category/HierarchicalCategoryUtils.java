@@ -1,5 +1,8 @@
 package com.projectw.domain.category;
 
+import com.projectw.common.exceptions.ApiException;
+import org.springframework.http.HttpStatus;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -25,13 +28,13 @@ public class HierarchicalCategoryUtils {
         return categories;
     }
 
-    public static  <T extends Enum<T> & HierarchicalCategory> HierarchicalCategory codeToCategory(Class<T> type, String code) {
+    public static  <T extends Enum<T> & HierarchicalCategory> T codeToCategory(Class<T> type, String code) {
         T[] enumConstants = type.getEnumConstants();
         for(T e : enumConstants) {
-            if(e.getCode().equals(code)) return e;
+            if(e.getCode().equals(code)) return (T) e;
         }
 
-        throw new IllegalArgumentException("존재하지 않는 카테고리 코드입니다. CODE => " + code);
+        throw new ApiException(HttpStatus.BAD_REQUEST, "존재하지 않는 카테고리 코드입니다. type: "+ type.getSimpleName() + " CODE: " + code);
     }
 
     /**

@@ -1,6 +1,5 @@
 package com.projectw.domain.category;
 
-import com.projectw.domain.store.dto.response.CategoryMapperValue;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

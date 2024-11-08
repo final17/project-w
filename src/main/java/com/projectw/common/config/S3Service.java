@@ -6,6 +6,7 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -57,6 +58,7 @@ public class S3Service {
 
     // 파일 삭제
     public void deleteFile(String fileName) {
+        if(!StringUtils.hasText(fileName)) return;
         try {
             amazonS3.deleteObject(bucketName, fileName);
         } catch (AmazonServiceException e) {
