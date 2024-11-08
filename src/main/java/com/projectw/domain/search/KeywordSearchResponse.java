@@ -1,6 +1,6 @@
 package com.projectw.domain.search;
 
-import com.projectw.domain.store.dto.response.CategoryMapperValue;
+import com.projectw.domain.category.CategoryMapperValue;
 import lombok.Builder;
 
 import java.util.List;

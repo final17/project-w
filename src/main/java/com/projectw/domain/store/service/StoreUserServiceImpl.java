@@ -1,7 +1,6 @@
 package com.projectw.domain.store.service;
 
-import com.projectw.domain.store.dto.response.StoreLikeResposeDto;
-import com.projectw.domain.store.dto.response.StoreResponseDto;
+import com.projectw.domain.store.dto.StoreResponse;
 import com.projectw.domain.store.entity.Store;
 import com.projectw.domain.store.entity.StoreLike;
 import com.projectw.domain.store.repository.StoreLikeRepository;
@@ -27,29 +26,29 @@ public class StoreUserServiceImpl implements StoreUserService {
     private final UserRepository userRepository;
 
     @Override
-    public Page<StoreResponseDto> getAllStore(AuthUser authUser, Pageable pageable) {
+    public Page<StoreResponse.Info> getAllStore(AuthUser authUser, Pageable pageable) {
         Page<Store> allStore = storeRepository.findAll(pageable);
-        return allStore.map(StoreResponseDto::new);
+        return allStore.map(StoreResponse.Info::new);
     }
 
     @Override
     @Transactional
-    public StoreResponseDto getOneStore(AuthUser authUser, Long storeId) {
+    public StoreResponse.Info getOneStore(AuthUser authUser, Long storeId) {
         Store findStore = storeRepository.findById(storeId).orElseThrow(()-> new IllegalArgumentException("음식점을 찾을 수 없습니다."));
         findStore.addView();
-        return new StoreResponseDto(findStore);
+        return new StoreResponse.Info(findStore);
     }
 
     @Override
-    public Page<StoreResponseDto> serchStoreName(AuthUser authUser, String storeName, Pageable pageable) {
+    public Page<StoreResponse.Info> serchStoreName(AuthUser authUser, String storeName, Pageable pageable) {
         Page<Store> storeList = storeRepository.findAllByTitle(pageable, storeName);
 
-        return storeList.map(StoreResponseDto::new);
+        return storeList.map(StoreResponse.Info::new);
     }
 
     @Override
     @Transactional
-    public StoreLikeResposeDto likeStore(AuthUser authUser, Long storeId) {
+    public StoreResponse.Like likeStore(AuthUser authUser, Long storeId) {
         Store findStore = storeRepository.findById(storeId).orElseThrow(() -> new IllegalArgumentException("음식점을 찾을 수 없습니다."));
         User findUser = userRepository.findById(authUser.getUserId()).orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
@@ -62,12 +61,12 @@ public class StoreUserServiceImpl implements StoreUserService {
             storeLike.changeLike();
         }
 
-        return new StoreLikeResposeDto(storeLike);
+        return new StoreResponse.Like(storeLike);
     }
 
     @Override
-    public Page<StoreLikeResposeDto> getLikeStore(AuthUser authUser, Pageable pageable) {
+    public Page<StoreResponse.Like> getLikeStore(AuthUser authUser, Pageable pageable) {
         Page<StoreLike> storeLikes = storeLikeRepository.findAllByUserId(authUser.getUserId(), pageable);
-        return storeLikes.map(StoreLikeResposeDto::new);
+        return storeLikes.map(StoreResponse.Like::new);
     }
 }

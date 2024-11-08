@@ -9,7 +9,10 @@ import com.projectw.domain.category.HierarchicalCategory;
 import com.projectw.domain.category.HierarchicalCategoryUtils;
 import org.junit.jupiter.api.Test;
 
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +23,7 @@ class SearchServiceTest {
     public void test() throws Exception {
         // given
         String inputFilePath = "C:\\Users\\jjho9\\OneDrive\\바탕 화면\\project-w\\src\\main\\resources\\fooddata.csv";
-        String outputFilePath = "C:\\Users\\jjho9\\OneDrive\\바탕 화면\\project-w\\src\\main\\resources\\output2.csv";
+        String outputFilePath = "C:\\Users\\jjho9\\OneDrive\\바탕 화면\\project-w\\src\\main\\resources\\fooddata.csv";
         List<HierarchicalCategory> c = HierarchicalCategoryUtils.getCategoriesByDepth(DistrictCategory.class, 2);
         try (FileReader fileReader = new FileReader(inputFilePath, StandardCharsets.UTF_8);
              BufferedWriter writer = new BufferedWriter(new FileWriter(outputFilePath,  StandardCharsets.UTF_8))) {
@@ -101,6 +104,66 @@ class SearchServiceTest {
                     writer.write(String.join(",", record) + "," + (result == null ? "" : result.getPath()));
                     writer.newLine();
                 }
+            }
+            System.out.println("검사완료");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    @Test
+    public void test22() throws Exception {
+        // given
+        String inputFilePath = "C:\\Users\\jjho9\\OneDrive\\바탕 화면\\project-w\\src\\main\\resources\\output.csv";
+        String outputFilePath = "C:\\Users\\jjho9\\OneDrive\\바탕 화면\\project-w\\src\\main\\resources\\fooddata.csv";
+        List<HierarchicalCategory> c = HierarchicalCategoryUtils.getCategoriesByDepth(DistrictCategory.class, 2);
+        try (FileReader fileReader = new FileReader(inputFilePath, StandardCharsets.UTF_8);
+             BufferedWriter writer = new BufferedWriter(new FileWriter(outputFilePath,  StandardCharsets.UTF_8))) {
+            // CSVParser에 quote character를 설정
+            CSVParser parser = new CSVParserBuilder()
+                    .withSeparator(',')
+                    .withQuoteChar('"') // 인용 부호를 "로 설정
+                    .build();
+
+            // CSVReader에 parser 설정
+            CSVReader csvReader = new CSVReaderBuilder(fileReader)
+                    .withCSVParser(parser)
+                    .build();
+
+
+
+            // 한 줄씩 읽어서 처리
+            String[] headerLine = csvReader.readNext();
+            if (headerLine != null) {
+                // 기존 헤더 + 새로운 컬럼명 추가
+                writer.write(String.join(",", headerLine));
+                writer.newLine();
+            }
+
+            int size = headerLine.length;
+            // 3번 주소
+            String[] record;
+            DistrictCategory[] values = DistrictCategory.values();
+            while ((record = csvReader.readNext()) != null) {
+                DistrictCategory result = null;
+                int last = record.length - 1;
+                String s = record[last];
+
+                for (DistrictCategory value : values) {
+                    if (s.equals(value.getPath())) {
+                        result = value;
+                        break;
+                    }
+                }
+
+                if(result != null) {
+                    String name = result.name();
+                    record[last] = name;
+                }
+                record[3] = "\"" + record[3] + "\"";
+                writer.write(String.join(",", record));
+                writer.newLine();
             }
             System.out.println("검사완료");
         } catch (IOException e) {

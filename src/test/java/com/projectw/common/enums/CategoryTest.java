@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.projectw.domain.category.CuisineCategory;
 import com.projectw.domain.category.HierarchicalCategory;
 import com.projectw.domain.category.HierarchicalCategoryUtils;
-import com.projectw.domain.store.dto.response.CategoryMapperValue;
+import com.projectw.domain.category.CategoryMapperValue;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

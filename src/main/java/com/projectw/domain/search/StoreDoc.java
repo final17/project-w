@@ -93,7 +93,7 @@ public class StoreDoc {
                 .deposit(store.getDeposit().intValue())
                 .latitude(store.getLatitude())
                 .longitude(store.getLongitude())
-                .districtCategory(store.getDistrictCategory())
+                .districtCategory(store.getDistrictCategory().getPath())
                 .build();
     }
 }

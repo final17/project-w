@@ -1,7 +1,6 @@
 package com.projectw.domain.category;
 
 import com.projectw.common.dto.SuccessResponse;
-import com.projectw.domain.store.dto.response.CategoryMapperValue;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -2,17 +2,17 @@ package com.projectw.domain.store.entity;
 
 import com.projectw.common.entity.Timestamped;
 import com.projectw.domain.category.DistrictCategory;
-import com.projectw.domain.category.HierarchicalCategory;
 import com.projectw.domain.category.HierarchicalCategoryUtils;
 import com.projectw.domain.menu.entity.Menu;
 import com.projectw.domain.reservation.entity.Reservation;
-import com.projectw.domain.store.dto.request.StoreRequestDto;
+import com.projectw.domain.store.dto.StoreRequest;
 import com.projectw.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -28,7 +28,8 @@ public class Store extends Timestamped {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String districtCategory;
+    @Enumerated(EnumType.STRING)
+    private DistrictCategory districtCategory;
 
     private String image;
 
@@ -90,10 +91,10 @@ public class Store extends Timestamped {
     private List<Menu> menus = new ArrayList<>();
 
     @Builder
-    public Store(String image, String districtCategoryCode, String title, String description, LocalTime openTime, LocalTime closeTime, Boolean isNextDay, Long reservationTableCount, Long tableCount, String phoneNumber, String address, LocalTime lastOrder, LocalTime turnover, User user, List<Reservation> reservations, Long deposit, Double latitude, Double longitude) {
+    public Store(String image, DistrictCategory districtCategory, String title, String description, LocalTime openTime, LocalTime closeTime, Boolean isNextDay, Long reservationTableCount, Long tableCount, String phoneNumber, String address, LocalTime lastOrder, LocalTime turnover, User user, List<Reservation> reservations, Long deposit, Double latitude, Double longitude) {
         this.image = image;
         this.title = title;
-        this.districtCategory = districtCategoryCode;
+        this.districtCategory = districtCategory;
         this.description = description;
         this.openTime = openTime;
         this.closeTime = closeTime;
@@ -113,23 +114,29 @@ public class Store extends Timestamped {
     }
 
 
-    public Store putStore(String imageName, StoreRequestDto storeRequestDto) {
-        HierarchicalCategory category = HierarchicalCategoryUtils.codeToCategory(DistrictCategory.class, storeRequestDto.getDistrictCategoryCode());
+    public Store putStore(String imageName, StoreRequest.Create storeRequestDto) {
+
+        DistrictCategory category = null;
+
+        if(StringUtils.hasText(storeRequestDto.districtCategoryCode())) {
+            category = HierarchicalCategoryUtils.codeToCategory(DistrictCategory.class, storeRequestDto.districtCategoryCode());
+        }
+
         this.image = imageName;
-        this.title = storeRequestDto.getTitle();
-        this.districtCategory = category.getPath();
-        this.description = storeRequestDto.getDescription();
-        this.openTime = storeRequestDto.getOpenTime();
-        this.lastOrder = storeRequestDto.getLastOrder();
-        this.closeTime = storeRequestDto.getCloseTime();
-        this.turnover = storeRequestDto.getTurnover();
-        this.reservationTableCount = storeRequestDto.getReservationTableCount();
-        this.tableCount = storeRequestDto.getTableCount();
-        this.address = storeRequestDto.getAddress();
+        this.title = storeRequestDto.title();
+        this.districtCategory = category;
+        this.description = storeRequestDto.description();
+        this.openTime = storeRequestDto.openTime();
+        this.lastOrder = storeRequestDto.lastOrder();
+        this.closeTime = storeRequestDto.closeTime();
+        this.turnover = storeRequestDto.turnover();
+        this.reservationTableCount = storeRequestDto.reservationTableCount();
+        this.tableCount = storeRequestDto.tableCount();
+        this.address = storeRequestDto.address();
         this.isNextDay = openTime.isAfter(lastOrder);
-        this.deposit = storeRequestDto.getDeposit();
-        this.latitude = storeRequestDto.getLatitude();
-        this.longitude = storeRequestDto.getLongitude();
+        this.deposit = storeRequestDto.deposit();
+        this.latitude = storeRequestDto.latitude();
+        this.longitude = storeRequestDto.longitude();
         return this;
     }
 
@@ -139,5 +146,13 @@ public class Store extends Timestamped {
 
     public void addView() {
         this.view += 1;
+    }
+
+    public void updateDistrictCategory(String districtCategoryCode) {
+        DistrictCategory category = null;
+        if(StringUtils.hasText(districtCategoryCode)) {
+            category = HierarchicalCategoryUtils.codeToCategory(DistrictCategory.class, districtCategoryCode);
+        }
+        this.districtCategory = category;
     }
 }
