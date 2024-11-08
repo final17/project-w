@@ -7,6 +7,7 @@ import java.time.LocalTime;
 @Getter
 public class StoreRequestDto {
     private String title;
+    private String districtCategoryCode;
     private String description;
     private LocalTime openTime;
     private LocalTime lastOrder;

@@ -1,6 +1,10 @@
 package com.projectw.domain.store.entity;
 
 import com.projectw.common.entity.Timestamped;
+import com.projectw.domain.category.DistrictCategory;
+import com.projectw.domain.category.HierarchicalCategory;
+import com.projectw.domain.category.HierarchicalCategoryUtils;
+import com.projectw.domain.menu.entity.Menu;
 import com.projectw.domain.reservation.entity.Reservation;
 import com.projectw.domain.store.dto.request.StoreRequestDto;
 import com.projectw.domain.user.entity.User;
@@ -72,17 +76,21 @@ public class Store extends Timestamped {
     @JoinColumn(nullable = false)
     private User user;
 
-    @OneToMany(mappedBy = "store")
+    @OneToMany(mappedBy = "store", fetch = FetchType.LAZY)
     private List<Reservation> reservations = new ArrayList<>();
 
     public Long getOwnerId() {
         return user.getId();
     }
 
+    @OneToMany(mappedBy = "store", fetch = FetchType.LAZY)
+    private List<Menu> menus = new ArrayList<>();
+
     @Builder
-    public Store(String image, String title, String description, LocalTime openTime, LocalTime closeTime, Boolean isNextDay, Long reservationTableCount, Long tableCount, String phoneNumber, String address, LocalTime lastOrder, LocalTime turnover, User user, List<Reservation> reservations, Long deposit, Double latitude, Double longitude) {
+    public Store(String image, String districtCategoryCode, String title, String description, LocalTime openTime, LocalTime closeTime, Boolean isNextDay, Long reservationTableCount, Long tableCount, String phoneNumber, String address, LocalTime lastOrder, LocalTime turnover, User user, List<Reservation> reservations, Long deposit, Double latitude, Double longitude) {
         this.image = image;
         this.title = title;
+        this.districtCategory = districtCategoryCode;
         this.description = description;
         this.openTime = openTime;
         this.closeTime = closeTime;
@@ -101,8 +109,10 @@ public class Store extends Timestamped {
     }
 
     public Store putStore(StoreRequestDto storeRequestDto) {
+        HierarchicalCategory category = HierarchicalCategoryUtils.codeToCategory(DistrictCategory.class, storeRequestDto.getDistrictCategoryCode());
         this.image = null;
         this.title = storeRequestDto.getTitle();
+        this.districtCategory = category.getPath();
         this.description = storeRequestDto.getDescription();
         this.openTime = storeRequestDto.getOpenTime();
         this.lastOrder = storeRequestDto.getLastOrder();

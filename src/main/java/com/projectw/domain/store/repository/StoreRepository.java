@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.List;
 import java.util.Optional;
 
 public interface StoreRepository extends JpaRepository<Store, Long>, StoreDslRepository{
@@ -22,5 +21,4 @@ public interface StoreRepository extends JpaRepository<Store, Long>, StoreDslRep
 
     @Query("SELECT s FROM Store s WHERE s.title LIKE %:title% ")
     Page<Store> findAllByTitle(Pageable pageable, String title);
-
 }
