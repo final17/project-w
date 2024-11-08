@@ -1,6 +1,7 @@
 package com.projectw.domain.store.service;
 
 
+import com.projectw.common.config.S3Service;
 import com.projectw.common.exceptions.AccessDeniedException;
 import com.projectw.domain.store.dto.request.StoreRequestDto;
 import com.projectw.domain.store.dto.response.StoreResponseDto;
@@ -14,7 +15,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,15 +32,21 @@ public class StoreOwnerServiceImpl implements StoreOwnerService{
 
     private final StoreRepository storeRepository;
     private final UserRepository userRepository;
+    private final S3Service s3Service;
 
     @Override
     @Transactional
-    public StoreResponseDto createStore(AuthUser authUser, StoreRequestDto storeRequestDto) {
+    public StoreResponseDto createStore(AuthUser authUser, StoreRequestDto storeRequestDto, MultipartFile image) {
 
         User user = userRepository.findById(authUser.getUserId()).orElseThrow();
 
+        String imageName = null;
+        if (image != null) {
+            imageName = s3Service.uploadFile(image);
+        }
+
         Store newStore = Store.builder()
-                .image(null)
+                .image(imageName)
                 .title(storeRequestDto.getTitle())
                 .description(storeRequestDto.getDescription())
                 .openTime(storeRequestDto.getOpenTime())
@@ -68,9 +77,17 @@ public class StoreOwnerServiceImpl implements StoreOwnerService{
 
     @Override
     @Transactional
-    public StoreResponseDto putStore(AuthUser authUser, Long storeId, StoreRequestDto storeRequestDto) {
+    public StoreResponseDto putStore(AuthUser authUser, Long storeId, StoreRequestDto storeRequestDto, MultipartFile image) {
         Store findStore = checkUserAndFindStore(authUser, storeId);
-        Store putStore = findStore.putStore(storeRequestDto);
+
+        // 이미지가 있다면 기존 이미지를 삭제하고 새로운 이미지를 업로드합니다.
+        String imageName = null;
+        if (image != null) {
+            s3Service.deleteFile(findStore.getImage());
+            imageName = s3Service.uploadFile(image);
+        }
+
+        Store putStore = findStore.putStore(imageName, storeRequestDto);
 
         return new StoreResponseDto(putStore);
     }
@@ -79,6 +96,8 @@ public class StoreOwnerServiceImpl implements StoreOwnerService{
     @Transactional
     public void deleteStore(AuthUser authUser, Long storeid) {
         Store findStore = checkUserAndFindStore(authUser, storeid);
+        // 이미지 삭제
+        s3Service.deleteFile(findStore.getImage());
         findStore.deleteStore();
     }
 

@@ -1,4 +1,4 @@
-package com.projectw.domain.store.dto;
+package com.projectw.domain.store.dto.response;
 
 import com.projectw.domain.store.entity.StoreLike;
 import lombok.Getter;
