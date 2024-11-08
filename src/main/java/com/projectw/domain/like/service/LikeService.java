@@ -1,6 +1,6 @@
 package com.projectw.domain.like.service;
 
-import com.projectw.domain.like.dto.Response.LikeResponseDto;
+import com.projectw.domain.like.dto.response.LikeResponseDto;
 import com.projectw.domain.like.entity.Like;
 import com.projectw.domain.like.repository.LikeRepository;
 import com.projectw.domain.menu.entity.Menu;

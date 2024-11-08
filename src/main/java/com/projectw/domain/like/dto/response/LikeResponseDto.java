@@ -1,4 +1,4 @@
-package com.projectw.domain.like.dto.Response;
+package com.projectw.domain.like.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
