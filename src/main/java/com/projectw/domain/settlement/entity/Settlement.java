@@ -29,9 +29,6 @@ public class Settlement extends Timestamped {
     @Column(nullable = false)
     private String paymentKey; // 결제의 키 값
 
-    @Column(nullable = false)
-    private String transactionKey; // 거래의 키 값(승인 거래와 취소 거래하는데 사용)
-
     @Column(nullable = false , unique = true)
     private String orderId;     // 주문번호
 
@@ -49,10 +46,10 @@ public class Settlement extends Timestamped {
     private OffsetDateTime approvedAt; // 결제 승인 시간
 
     @Column(nullable = false)
-    private LocalDate soldDate; // 지급 금액의 정산 기준이 되는 정산 매출일
+    private LocalDate soldDate; // 지급 금액의 정산 기준이 되는 정산 매출일 + 3일(주말일 경우 주말을 계산해서 만들기)
 
     @Column(nullable = false)
-    private LocalDate paidOutDate;  // 지급 금액을 상점에 지급할 정산 지급일
+    private LocalDate paidOutDate;  // 지급 금액을 상점에 지급할 정산 지급일 + 3일(주말일 경우 주말을 계산해서 만들기)
 
     @Column(nullable = false)
     @Enumerated(value = EnumType.STRING)
@@ -69,7 +66,6 @@ public class Settlement extends Timestamped {
     @Builder
     public Settlement(String mId ,
                       String paymentKey ,
-                      String transactionKey ,
                       String orderId ,
                       String currency ,
                       PaymentMethod method ,
@@ -82,7 +78,6 @@ public class Settlement extends Timestamped {
                       Store store ) {
         this.mId = mId;
         this.paymentKey = paymentKey;
-        this.transactionKey = transactionKey;
         this.orderId = orderId;
         this.currency = currency;
         this.method = method;
