@@ -68,6 +68,9 @@ public class Store extends Timestamped {
     @Column(nullable = false)
     private Boolean isDeleted = false;
 
+    @Column(nullable = false)
+    private Long view;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
     private User user;
@@ -98,10 +101,11 @@ public class Store extends Timestamped {
         this.deposit = deposit;
         this.latitude = latitude;
         this.longitude = longitude;
+        this.view = 0L;
     }
 
-    public Store putStore(StoreRequestDto storeRequestDto) {
-        this.image = null;
+    public Store putStore(String imageName, StoreRequestDto storeRequestDto) {
+        this.image = imageName;
         this.title = storeRequestDto.getTitle();
         this.description = storeRequestDto.getDescription();
         this.openTime = storeRequestDto.getOpenTime();
@@ -120,5 +124,9 @@ public class Store extends Timestamped {
 
     public void deleteStore() {
         this.isDeleted = true;
+    }
+
+    public void addView() {
+        this.view += 1;
     }
 }

@@ -7,9 +7,11 @@ import com.projectw.domain.store.service.StoreOwnerService;
 import com.projectw.security.AuthUser;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -21,13 +23,14 @@ public class StoreOwnerController {
     private final StoreOwnerService storeOwnerService;
 
     // 음식점 생성
-    @PostMapping()
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<SuccessResponse<StoreResponseDto>> createStore(
             @AuthenticationPrincipal AuthUser authUser,
-            @Valid @RequestBody StoreRequestDto storeRequestDto
+            @RequestPart(name = "image", required = false) MultipartFile image,
+            @RequestPart StoreRequestDto storeRequestDto
     ) {
         validateCoordinates(storeRequestDto.getLatitude(), storeRequestDto.getLongitude());
-        StoreResponseDto storeResponseDto = storeOwnerService.createStore(authUser, storeRequestDto);
+        StoreResponseDto storeResponseDto = storeOwnerService.createStore(authUser, storeRequestDto, image);
         return ResponseEntity.ok(SuccessResponse.of(storeResponseDto));
     }
 
@@ -42,13 +45,14 @@ public class StoreOwnerController {
     }
 
     // 음식점 정보 수정
-    @PutMapping("/{storeId}")
+    @PutMapping(value = "/{storeId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<SuccessResponse<StoreResponseDto>> putStore(
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable("storeId") Long storeId,
-            @RequestBody StoreRequestDto storeRequestDto
+            @RequestPart(name = "image", required = false) MultipartFile image,
+            @RequestPart StoreRequestDto storeRequestDto
     ) {
-        StoreResponseDto storeResponseDto = storeOwnerService.putStore(authUser, storeId, storeRequestDto);
+        StoreResponseDto storeResponseDto = storeOwnerService.putStore(authUser, storeId, storeRequestDto, image);
         return ResponseEntity.ok(SuccessResponse.of(storeResponseDto));
     }
 
