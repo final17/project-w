@@ -28,5 +28,8 @@ public interface ReviewRepository extends JpaRepository<Review, Long>, ReviewDsl
             @Param("menu") Menu menu
     );
 
+    Page<Review> findAllByUserOrderByCreatedAtDesc(User user, Pageable pageable);
+
+
 
 }
