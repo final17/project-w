@@ -103,7 +103,7 @@ public class PaymentService {
 
         if (reservationYN) {
             // 예약 성공
-            String orderId = PREFIX_ORDER_ID + UUID.randomUUID().toString().substring(0, 8);
+            String orderId = PREFIX_ORDER_ID + UUID.randomUUID().toString().replaceAll("-" , "");
 
             Payment payment = Payment.builder()
                     .orderId(orderId)
@@ -201,6 +201,9 @@ public class PaymentService {
             // 취소로 변경
             Payment payment = paymentRepository.findByOrderIdAndStatus(orderId , Status.COMPLETED).orElseThrow(() -> new PaymentNotFoundException(ResponseCode.PAYMENT_NOT_FOUND));
             payment.updateStatus(Status.CANCELLED);
+
+            // 정산된 데이터인지 아닌지?
+
         } else {
             // 실패시 에러 저장
             String errCode = jsonNode.get("code").textValue();

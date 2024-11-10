@@ -10,7 +10,8 @@ import java.util.Arrays;
 public enum Status {
     PENDING(Status.StatusType.PENDING),
     COMPLETED(Status.StatusType.COMPLETED),
-    CANCELLED(Status.StatusType.CANCELLED);
+    CANCELLED(Status.StatusType.CANCELLED),
+    REFUNDED(Status.StatusType.REFUNDED);
 
     private final String status;
 
@@ -25,5 +26,6 @@ public enum Status {
         public static final String PENDING = "PENDING";
         public static final String COMPLETED = "COMPLETED";
         public static final String CANCELLED = "CANCELLED";
+        public static final String REFUNDED = "REFUNDED";
     }
 }
