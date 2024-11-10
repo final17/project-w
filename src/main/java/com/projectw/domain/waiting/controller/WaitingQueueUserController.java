@@ -51,6 +51,11 @@ public class WaitingQueueUserController {
         return ResponseEntity.ok().body(SuccessResponse.of(null));
     }
 
+    /**
+     * 내가 웨이팅 등록한 가게 아이디 목록 조회
+     * @param authUser
+     * @return
+     */
     @GetMapping("/api/v2/user/waitings/stores")
     public ResponseEntity<SuccessResponse<WaitingQueueResponse.MyWaitingStoreList>> getRegisteredWaitingStoreIds(@AuthenticationPrincipal AuthUser authUser) {
         return ResponseEntity.ok(SuccessResponse.of(waitingHistoryService.getRegisteredStoreList(authUser)));
