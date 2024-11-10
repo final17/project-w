@@ -168,4 +168,21 @@ public class ReviewService {
             throw new RuntimeException("이미지 삭제 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
+
+    @Transactional
+    public Page<ReviewResponseDto> getUserReviews(String email, Pageable pageable) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        Page<Review> reviews = reviewRepository.findAllByUserOrderByCreatedAtDesc(user, pageable);
+
+        return reviews.map(review -> {
+            // 좋아요 수 계산
+            Long likeCount = likeRepository.countByReview(review);
+            // 현재 사용자의 좋아요 여부 확인
+            boolean liked = likeRepository.existsByReviewAndUser(review, user);
+
+            return ReviewResponseDto.from(review, likeCount, liked);
+        });
+    }
 }

@@ -183,4 +183,15 @@ public class WaitingQueueService {
         // rank가 null이 아니면 웨이팅 대기열에 등록 된 것
         return new WaitingQueueResponse.WaitingInfo(rank != null);
     }
+
+    public record CompletedWaitingInfo(
+            int waitingNumber,
+            Long storeId,
+            String storeName,
+            LocalDateTime completedAt,
+            boolean hasReview
+    ) {}
+
+
+
 }

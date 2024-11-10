@@ -77,4 +77,15 @@ public class ReviewController {
         return ResponseEntity.ok(reviewService.deleteReview(reviewId, email));
     }
 
+    @GetMapping("/my")
+    public ResponseEntity<Page<ReviewResponseDto>> getUserReviews(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @AuthenticationPrincipal AuthUser user) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<ReviewResponseDto> reviews = reviewService.getUserReviews(user.getEmail(), pageable);
+        return ResponseEntity.ok(reviews);
+    }
+
 }

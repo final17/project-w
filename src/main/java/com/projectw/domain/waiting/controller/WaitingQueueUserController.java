@@ -5,10 +5,13 @@ import com.projectw.domain.waiting.dto.WaitingQueueResponse;
 import com.projectw.domain.waiting.service.WaitingQueueService;
 import com.projectw.security.AuthUser;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
+import java.awt.print.Pageable;
 
 @RestController
 @RequiredArgsConstructor
@@ -59,6 +62,7 @@ public class WaitingQueueUserController {
     ) {
         return ResponseEntity.ok(SuccessResponse.of(waitingQueueService.checkWaitingStatus(authUser, storeId)));
     }
+
 
 
 }
