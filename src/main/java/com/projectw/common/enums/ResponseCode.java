@@ -60,7 +60,11 @@ public enum ResponseCode {
     PAYMENT_NOT_FOUND("결제정보가 없습니다."),
     INSUFFICIENT_SEAT("좌석이 부족합니다."),
     INVALID_CART("장바구니 데이터를 올바르게 입력해주시길 바랍니다."),
-    EMPTY_CART("장바구니가 비어있습니다.")
-;
+    EMPTY_CART("장바구니가 비어있습니다."),
+    INVALID_TIME_RANGE("입력 시간은 0보다 크거나 같고 24보다 작아야합니다."),
+    INVALID_DATE_RANGE("시작일은 종료일 이전이어야 합니다."),
+    START_DATE_AFTER_END_DATE ("시작일은 종료일 이전이어야 합니다."),
+    INVALID_WAITING_STATISTICS_DATE_RANGE("시작일은 가게 오픈일 이후, 종료일은 현재 날짜보다 이전이어야 합니다.");
+
     private final String message;
 }
