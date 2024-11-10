@@ -20,6 +20,9 @@ public enum ResponseCode {
     NOT_FOUND_STORE("해당 가게는 존재하지 않습니다."),
     NOT_FOUND_MENU("해당 메뉴는 존재하지 않습니다."),
     NOT_FOUND_RESERVATION("해당 예약은 존재하지 않습니다."),
+    NOT_FOUND_WAITING_HISTORY("해당 웨이팅 기록은 존재하지 않습니다."),
+    NOT_FOUND_DAILY_WAITING_STATISTICS("해당 날짜의 웨이팅 통계 데이터가 존재하지 않습니다."),
+    NOT_FOUND_HOURLY_WAITING_STATISTICS("해당 시간의 웨이팅 통계 데이터가 존재하지 않습니다."),
     INVALID_USER_AUTHORITY("해당 사용자 권한은 유효하지 않습니다."),
     DUPLICATE_EMAIL("이미 존재하는 이메일입니다."),
     WRONG_EMAIL_OR_PASSWORD("이메일 혹은 비밀번호가 일치하지 않습니다."),
@@ -57,7 +60,11 @@ public enum ResponseCode {
     PAYMENT_NOT_FOUND("결제정보가 없습니다."),
     INSUFFICIENT_SEAT("좌석이 부족합니다."),
     INVALID_CART("장바구니 데이터를 올바르게 입력해주시길 바랍니다."),
-    EMPTY_CART("장바구니가 비어있습니다.");
+    EMPTY_CART("장바구니가 비어있습니다."),
+    INVALID_TIME_RANGE("입력 시간은 0보다 크거나 같고 24보다 작아야합니다."),
+    INVALID_DATE_RANGE("시작일은 종료일 이전이어야 합니다."),
+    START_DATE_AFTER_END_DATE ("시작일은 종료일 이전이어야 합니다."),
+    INVALID_WAITING_STATISTICS_DATE_RANGE("시작일은 가게 오픈일 이후, 종료일은 현재 날짜보다 이전이어야 합니다.");
 
     private final String message;
 }
