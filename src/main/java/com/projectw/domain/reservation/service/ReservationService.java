@@ -28,19 +28,21 @@ import com.projectw.domain.user.repository.UserRepository;
 import com.projectw.domain.waiting.dto.WaitingPoll;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.api.*;
+import org.redisson.api.RSetMultimap;
+import org.redisson.api.RedissonClient;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -276,14 +278,17 @@ public class ReservationService {
         Store store = storeRepository.findById(storeId).orElseThrow(()-> new NotFoundException(ResponseCode.NOT_FOUND_STORE));
 
         Reservation reservation = Reservation.builder()
-                .status(ReservationStatus.APPLY)
-                .type(ReservationType.WAIT)
-                .user(user)
-                .store(store)
+                .orderId(UUID.randomUUID().toString())
+                .status(ReservationStatus.COMPLETE)
+                .type(ReservationType.WAIT)          // 웨이팅 , 예약 중 예약이라는 의미
                 .reservationDate(at.toLocalDate())
                 .reservationTime(at.toLocalTime().truncatedTo(TimeUnit.SECONDS.toChronoUnit()))
                 .numberPeople(1L)
                 .reservationNo(num)
+                .paymentYN(false)
+                .paymentAmt(0L)
+                .user(user)
+                .store(store)
                 .build();
 
         reservationRepository.save(reservation);
