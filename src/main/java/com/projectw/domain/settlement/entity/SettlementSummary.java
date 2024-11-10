@@ -2,6 +2,8 @@ package com.projectw.domain.settlement.entity;
 
 import com.projectw.common.entity.Timestamped;
 import com.projectw.domain.settlement.enums.SummaryType;
+import com.projectw.domain.store.entity.Store;
+import com.projectw.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -19,7 +21,7 @@ public class SettlementSummary extends Timestamped {
     private Long id;
 
     @Column(nullable = false)
-    private LocalDate summaryDate;  // 집계 기준 날짜
+    private String summaryDate;  // 집계 기준 날짜
 
     @Column(nullable = false)
     @Enumerated(value = EnumType.STRING)
@@ -34,11 +36,21 @@ public class SettlementSummary extends Timestamped {
     @Column(nullable = false)
     private Long totalTransactions; // 집계된 총 거래수
 
-    public SettlementSummary(LocalDate summaryDate , SummaryType type , Long totalAmount , Long totalFee , Long totalTransactions) {
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "store_id", nullable = false)
+    private Store store;
+
+    public SettlementSummary(String summaryDate , SummaryType type , Long totalAmount , Long totalFee , Long totalTransactions , User user , Store store) {
         this.summaryDate = summaryDate;
         this.type = type;
         this.totalAmount = totalAmount;
         this.totalFee = totalFee;
         this.totalTransactions = totalTransactions;
+        this.user = user;
+        this.store = store;
     }
 }
