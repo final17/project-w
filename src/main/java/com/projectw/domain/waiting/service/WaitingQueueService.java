@@ -123,6 +123,7 @@ public class WaitingQueueService {
 
         Store store = storeRepository.findById(storeId)
                 .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_STORE));
+
         waitingHistoryService.cancelHistory(User.fromAuthUser(authUser), store);
 
         RScoredSortedSet<String> sortedSet = redissonClient.getScoredSortedSet(getRedisSortedSetKey(storeId));
@@ -140,6 +141,15 @@ public class WaitingQueueService {
      */
     @RedisLock("#storeId")
     public void clearQueueFromRank(AuthUser authUser, long storeId, int cutline) {
+
+        Store store = storeRepository.findWithUserById(storeId)
+                .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_STORE));
+
+        if(!store.getUser().getId().equals(authUser.getUserId())) {
+            throw new ForbiddenException(ResponseCode.FORBIDDEN);
+        }
+
+
         RScoredSortedSet<String> sortedSet = redissonClient.getScoredSortedSet(getRedisSortedSetKey(storeId));
         cutline = Math.max(cutline, 0);
 
@@ -159,6 +169,13 @@ public class WaitingQueueService {
      * 해당 가게의 웨이팅 중인 웨이팅번호, 유저 아이디 조회
      */
     public WaitingQueueResponse.List getWaitingList(AuthUser authUser, long storeId) {
+        Store store = storeRepository.findWithUserById(storeId)
+                .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_STORE));
+
+        if(!store.getUser().getId().equals(authUser.getUserId())) {
+            throw new ForbiddenException(ResponseCode.FORBIDDEN);
+        }
+
         RScoredSortedSet<String> sortedSet = redissonClient.getScoredSortedSet(getRedisSortedSetKey(storeId));
         if(sortedSet.isEmpty()) {
             return new WaitingQueueResponse.List(0, List.of());
@@ -190,10 +207,6 @@ public class WaitingQueueService {
     private String getRedisWaitingNumKey(long storeId) {return "waiting:store:" + storeId;}
     private String getRedisSortedSetKey(long storeId) {
         return "waitingQueue:store:" + storeId + ":user:";
-    }
-
-    private String getUserWaitingStoresKey(long userId) {
-        return "waitingQueue:user:" + userId + ":stores";
     }
 
     private String getSseKey(long storeId, String userId) {
