@@ -12,7 +12,7 @@ public sealed interface StoreResponse permits StoreResponse.Info, StoreResponse.
             Long id,
             String title,
             String description,
-            CategoryMapperValue districtCategory,
+            CategoryMapperValue districtCategory, // 여기서 null 체크 필요
             LocalTime openTime,
             LocalTime lastOrder,
             LocalTime closeTime,
@@ -29,23 +29,25 @@ public sealed interface StoreResponse permits StoreResponse.Info, StoreResponse.
     ) implements StoreResponse {
         public Info(Store saveStore) {
             this(
-            saveStore.getId(),
-            saveStore.getTitle(),
-            saveStore.getDescription(),
-            new CategoryMapperValue(saveStore.getDistrictCategory()),
-            saveStore.getOpenTime(),
-            saveStore.getLastOrder(),
-            saveStore.getCloseTime(),
-            saveStore.getTurnover(),
-            saveStore.getReservationTableCount(),
-            saveStore.getTableCount(),
-            saveStore.getPhoneNumber(),
-            saveStore.getAddress(),
-            saveStore.getDeposit(),
-            new UserOneResponseDto(saveStore.getUser()),
-            saveStore.getLatitude(),
-            saveStore.getLongitude(),
-            saveStore.getView()
+                    saveStore.getId(),
+                    saveStore.getTitle(),
+                    saveStore.getDescription(),
+                    saveStore.getDistrictCategory() != null
+                            ? new CategoryMapperValue(saveStore.getDistrictCategory())
+                            : null, // null 체크 추가
+                    saveStore.getOpenTime(),
+                    saveStore.getLastOrder(),
+                    saveStore.getCloseTime(),
+                    saveStore.getTurnover(),
+                    saveStore.getReservationTableCount(),
+                    saveStore.getTableCount(),
+                    saveStore.getPhoneNumber(),
+                    saveStore.getAddress(),
+                    saveStore.getDeposit(),
+                    new UserOneResponseDto(saveStore.getUser()),
+                    saveStore.getLatitude(),
+                    saveStore.getLongitude(),
+                    saveStore.getView()
             );
         }
     }
