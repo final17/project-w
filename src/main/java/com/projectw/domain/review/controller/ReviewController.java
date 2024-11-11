@@ -1,19 +1,13 @@
 package com.projectw.domain.review.controller;
 
-import com.projectw.common.dto.SuccessResponse;
 import com.projectw.domain.review.dto.ReviewRequest;
 import com.projectw.domain.review.dto.ReviewResponse;
-import com.projectw.domain.review.dto.request.ReviewRequestDto;
-import com.projectw.domain.review.dto.request.ReviewUpdateDto;
-import com.projectw.domain.review.dto.response.ReviewResponseDto;
-import com.projectw.domain.review.service.ReviewService;
+import com.projectw.domain.review.service.ReviewServiceImpl;
 import com.projectw.security.AuthUser;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -26,16 +20,18 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/reviews")
 public class ReviewController {
-    private final ReviewService reviewService;
+    private final ReviewServiceImpl reviewService;
 
-    @PostMapping(value = "{menuId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/{storeId}/{menuId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ReviewResponse.Info> createReview(
+            @PathVariable Long storeId,
             @PathVariable Long menuId,
             @ModelAttribute ReviewRequest.Create reviewRequest,  // ReviewRequest.Create 사용
             @RequestParam(value = "images", required = false) List<MultipartFile> images,
             @AuthenticationPrincipal AuthUser user
     ) {
         ReviewResponse.Info responseDto = reviewService.createReview(
+                storeId,
                 menuId,
                 reviewRequest,
                 user.getEmail(),
