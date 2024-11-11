@@ -27,8 +27,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(SearchController.class)
 @AutoConfigureMockMvc
-@MockBean(JpaMetamodelMappingContext.class)
-@Import({WebSecurityConfig.class, JwtUtil.class})
+@MockBean({JpaMetamodelMappingContext.class, JwtUtil.class})
+@Import({WebSecurityConfig.class})
 class SearchControllerTest {
 
     @Autowired
