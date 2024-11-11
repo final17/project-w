@@ -7,6 +7,8 @@ import com.projectw.domain.menu.repository.MenuRepository;
 import com.projectw.domain.reservation.entity.Reservation;
 import com.projectw.domain.reservation.enums.ReservationStatus;
 import com.projectw.domain.reservation.repository.ReservationRepository;
+import com.projectw.domain.review.dto.ReviewRequest;
+import com.projectw.domain.review.dto.ReviewResponse;
 import com.projectw.domain.review.dto.request.ReviewRequestDto;
 import com.projectw.domain.review.dto.request.ReviewUpdateDto;
 import com.projectw.domain.review.dto.response.ReviewResponseDto;
@@ -37,7 +39,7 @@ public class ReviewService {
     private final S3Service s3Service;
 
     @Transactional
-    public ReviewResponseDto createReview(Long menuId, ReviewRequestDto reviewRequestDto, String email, List<MultipartFile> images) {
+    public ReviewResponse.Info createReview(Long menuId, ReviewRequest.Create reviewRequestDto, String email, List<MultipartFile> images) {
         Menu menu = menuRepository.findById(menuId)
                 .orElseThrow(() -> new IllegalArgumentException("메뉴를 찾을 수 없습니다."));
 
@@ -56,18 +58,18 @@ public class ReviewService {
         }
 
         Review review = Review.builder()
-                .title(reviewRequestDto.getTitle())
-                .content(reviewRequestDto.getContent())
-                .rating(reviewRequestDto.getRating())
+                .title(reviewRequestDto.title())
+                .content(reviewRequestDto.content())
+                .rating(reviewRequestDto.rating())
                 .reservation(reservation)
                 .build();
 
         processImages(images, review);
         Review savedReview = reviewRepository.save(review);
-        return ReviewResponseDto.fromWithMenu(savedReview, 0L, false, menu);
+        return new ReviewResponse.Info(savedReview, user);
     }
 
-    public Page<ReviewResponseDto> getMenuReviews(Long menuId, Pageable pageable) {
+    public Page<ReviewResponse.Info> getMenuReviews(Long menuId, Pageable pageable) {
         Menu menu = menuRepository.findById(menuId)
                 .orElseThrow(() -> new IllegalArgumentException("메뉴를 찾을 수 없습니다."));
 
@@ -76,24 +78,14 @@ public class ReviewService {
         return reviewsWithCount.map(objects -> {
             Review review = (Review) objects[0];
             Long likeCount = (Long) objects[1];
+            User user = review.getUser();
 
-            return ReviewResponseDto.builder()
-                    .id(review.getId())
-                    .title(review.getTitle())
-                    .content(review.getContent())
-                    .rating(review.getRating())
-                    .nickname(review.getUser().getNickname())
-                    .createdAt(review.getCreatedAt())
-                    .likeCount(likeCount)
-                    .imageUrls(review.getImages().stream()
-                            .map(ReviewImage::getImageUrl)
-                            .toList())
-                    .build();
+            return new ReviewResponse.Info(review, user);
         });
     }
 
     @Transactional
-    public ReviewResponseDto updateReview(Long reviewId, ReviewUpdateDto updateDto, String email) {
+    public ReviewResponse.Info updateReview(Long reviewId, ReviewRequest.Update updateDto, String email, List<MultipartFile> images) {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new IllegalArgumentException("리뷰를 찾을 수 없습니다."));
 
@@ -105,9 +97,9 @@ public class ReviewService {
         }
 
         // 이미지 삭제 처리
-        if (updateDto.getDeleteImageIds() != null && !updateDto.getDeleteImageIds().isEmpty()) {
+        if (updateDto.deleteImageIds() != null && !updateDto.deleteImageIds().isEmpty()) {
             review.getImages().stream()
-                    .filter(image -> updateDto.getDeleteImageIds().contains(image.getId()))
+                    .filter(image -> updateDto.deleteImageIds().contains(image.getId()))
                     .forEach(image -> {
                         try {
                             deleteImage(image);
@@ -116,20 +108,25 @@ public class ReviewService {
                         }
                     });
             review.getImages().removeIf(image ->
-                    updateDto.getDeleteImageIds().contains(image.getId()));
+                    updateDto.deleteImageIds().contains(image.getId()));
         }
 
-        processImages(updateDto.getNewImages(), review);
-        review.update(updateDto.getContent(), updateDto.getRating());
+        // 새로운 이미지 추가 처리
+        if (images != null && !images.isEmpty()) {
+            processImages(images, review);
+        }
+
+        // 리뷰 내용과 평점 업데이트
+        review.update(updateDto.content(), updateDto.rating());
 
         Long likeCount = likeRepository.countByReview(review);
         boolean liked = likeRepository.existsByReviewAndUser(review, user);
 
-        return ReviewResponseDto.from(review, likeCount, liked);
+        return new ReviewResponse.Info(review, user);  // ReviewResponse.Info로 반환
     }
 
     @Transactional
-    public ReviewResponseDto deleteReview(Long reviewId, String email) {
+    public ReviewResponse.Info deleteReview(Long reviewId, String email) {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new IllegalArgumentException("리뷰를 찾을 수 없습니다."));
         User user = userRepository.findByEmail(email)
@@ -142,7 +139,7 @@ public class ReviewService {
         Long likeCount = likeRepository.countByReview(review);
         boolean liked = likeRepository.existsByReviewAndUser(review, user);
 
-        return ReviewResponseDto.from(review, likeCount, liked);
+        return new ReviewResponse.Info(review, user);
     }
 
     @Transactional
@@ -170,7 +167,7 @@ public class ReviewService {
     }
 
     @Transactional
-    public Page<ReviewResponseDto> getUserReviews(String email, Pageable pageable) {
+    public Page<ReviewResponse.Info> getUserReviews(String email, Pageable pageable) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
@@ -182,7 +179,7 @@ public class ReviewService {
             // 현재 사용자의 좋아요 여부 확인
             boolean liked = likeRepository.existsByReviewAndUser(review, user);
 
-            return ReviewResponseDto.from(review, likeCount, liked);
+            return new ReviewResponse.Info(review, user);
         });
     }
 }
