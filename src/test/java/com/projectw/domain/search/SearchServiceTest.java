@@ -14,6 +14,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,8 +23,8 @@ class SearchServiceTest {
     @Test
     public void test() throws Exception {
         // given
-        String inputFilePath = "C:\\Users\\jjho9\\OneDrive\\바탕 화면\\project-w\\src\\main\\resources\\fooddata.csv";
-        String outputFilePath = "C:\\Users\\jjho9\\OneDrive\\바탕 화면\\project-w\\src\\main\\resources\\fooddata.csv";
+        String inputFilePath = "C:\\Users\\jjho9\\OneDrive\\바탕 화면\\project-w\\src\\main\\resources\\fooddata_es.csv";
+        String outputFilePath = "C:\\Users\\jjho9\\OneDrive\\바탕 화면\\project-w\\src\\main\\resources\\fooddata2.csv";
         List<HierarchicalCategory> c = HierarchicalCategoryUtils.getCategoriesByDepth(DistrictCategory.class, 2);
         try (FileReader fileReader = new FileReader(inputFilePath, StandardCharsets.UTF_8);
              BufferedWriter writer = new BufferedWriter(new FileWriter(outputFilePath,  StandardCharsets.UTF_8))) {
@@ -44,7 +45,7 @@ class SearchServiceTest {
             String[] headerLine = csvReader.readNext();
             if (headerLine != null) {
                 // 기존 헤더 + 새로운 컬럼명 추가
-                writer.write(String.join(",", headerLine) + ",districtCategory");
+                writer.write(String.join(",", headerLine));
                 writer.newLine();
             }
 
@@ -97,11 +98,11 @@ class SearchServiceTest {
                             }
                         }
                     }
-                    record[3] = "\"" + record[3] + "\"";
+                    record[1] = LocalDateTime.now().minusDays(1L).toString();
+                    record[2] = LocalDateTime.now().minusDays(1L).toString();
                 } catch (Exception e) {
-                    record[3] = "\"\"";
                 } finally {
-                    writer.write(String.join(",", record) + "," + (result == null ? "" : result.getPath()));
+                    writer.write(String.join(",", record) + (result == null ? DistrictCategory.SEOUL.name(): result.name()));
                     writer.newLine();
                 }
             }
@@ -113,17 +114,16 @@ class SearchServiceTest {
 
 
     @Test
-    public void test22() throws Exception {
+    public void test3333() throws Exception {
         // given
-        String inputFilePath = "C:\\Users\\jjho9\\OneDrive\\바탕 화면\\project-w\\src\\main\\resources\\output.csv";
-        String outputFilePath = "C:\\Users\\jjho9\\OneDrive\\바탕 화면\\project-w\\src\\main\\resources\\fooddata.csv";
+        String inputFilePath = "C:\\Users\\jjho9\\OneDrive\\바탕 화면\\project-w\\src\\main\\resources\\fooddata3.csv";
+        String outputFilePath = "C:\\Users\\jjho9\\OneDrive\\바탕 화면\\project-w\\src\\main\\resources\\fooddata_es.csv";
         List<HierarchicalCategory> c = HierarchicalCategoryUtils.getCategoriesByDepth(DistrictCategory.class, 2);
         try (FileReader fileReader = new FileReader(inputFilePath, StandardCharsets.UTF_8);
              BufferedWriter writer = new BufferedWriter(new FileWriter(outputFilePath,  StandardCharsets.UTF_8))) {
             // CSVParser에 quote character를 설정
             CSVParser parser = new CSVParserBuilder()
                     .withSeparator(',')
-                    .withQuoteChar('"') // 인용 부호를 "로 설정
                     .build();
 
             // CSVReader에 parser 설정
@@ -141,27 +141,112 @@ class SearchServiceTest {
                 writer.newLine();
             }
 
-            int size = headerLine.length;
             // 3번 주소
             String[] record;
             DistrictCategory[] values = DistrictCategory.values();
+            int cnt = 0;
             while ((record = csvReader.readNext()) != null) {
+//                record[1] = LocalDateTime.now().minusDays(1L).toString();
+//                record[2] = LocalDateTime.now().minusDays(1L).toString();
+//                writer.write(String.join(",", record));
+//                writer.newLine();
                 DistrictCategory result = null;
                 int last = record.length - 1;
                 String s = record[last];
 
                 for (DistrictCategory value : values) {
-                    if (s.equals(value.getPath())) {
+                    if (s.equals(value.name())) {
                         result = value;
                         break;
                     }
                 }
 
                 if(result != null) {
-                    String name = result.name();
+                    String name = result.getPath();
                     record[last] = name;
                 }
-                record[3] = "\"" + record[3] + "\"";
+                writer.write(String.join(",", record));
+                writer.newLine();
+                ++cnt;
+                System.out.println("cnt = " + cnt);
+            }
+            System.out.println("검사완료");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void test22() throws Exception {
+        // given
+        String inputFilePath = "C:\\Users\\jjho9\\OneDrive\\바탕 화면\\project-w\\src\\main\\resources\\fooddata_db.csv";
+        String outputFilePath = "C:\\Users\\jjho9\\OneDrive\\바탕 화면\\project-w\\src\\main\\resources\\fooddata_db.csv";
+        List<HierarchicalCategory> c = HierarchicalCategoryUtils.getCategoriesByDepth(DistrictCategory.class, 2);
+        try (FileReader fileReader = new FileReader(inputFilePath, StandardCharsets.UTF_8);
+             BufferedWriter writer = new BufferedWriter(new FileWriter(outputFilePath,  StandardCharsets.UTF_8))) {
+            // CSVParser에 quote character를 설정
+            CSVParser parser = new CSVParserBuilder()
+                    .withSeparator(',')
+                    .withQuoteChar('"') // 인용 부호를 "로 설정
+                    .build();
+
+            // CSVReader에 parser 설정
+            CSVReader csvReader = new CSVReaderBuilder(fileReader)
+                    .withCSVParser(parser)
+                    .build();
+
+
+            // 한 줄씩 읽어서 처리
+            String[] headerLine = csvReader.readNext();
+            if (headerLine != null) {
+                // 기존 헤더 + 새로운 컬럼명 추가
+                writer.write(String.join(",", headerLine));
+                writer.newLine();
+            }
+
+            int size = headerLine.length;
+            // 3번 주소
+            String[] record;
+            DistrictCategory[] values = DistrictCategory.values();
+            while ((record = csvReader.readNext()) != null) {
+//                DistrictCategory result = null;
+//                int last = record.length - 1;
+//                String s = record[last];
+
+//                for (DistrictCategory value : values) {
+//                    if (s.equals(value.name())) {
+//                        result = value;
+//                        break;
+//                    }
+//                }
+//
+//                if(result != null) {
+//                    String name = result.getPath();
+//                    record[last] = name;
+//                }
+                // 4, 10
+                String close = record[4];
+                int i = close.indexOf(':');
+                if(close.substring(0, i).length() != 2){
+                    record[4] = "0"+record[4];
+                }
+                String open = record[10];
+                i = open.indexOf(':');
+                if(open.substring(0, i).length() != 2){
+                    record[10] = "0"+record[10];
+                }
+
+                String lo = record[9];
+                i = lo.indexOf(':');
+                if(lo.substring(0, i).length() != 2){
+                    record[9] = "0"+record[9];
+                }
+
+                String turnover = record[15];
+                i = turnover.indexOf(':');
+                if(turnover.substring(0, i).length() != 2){
+                    record[15] = "0"+record[15];
+                }
                 writer.write(String.join(",", record));
                 writer.newLine();
             }
