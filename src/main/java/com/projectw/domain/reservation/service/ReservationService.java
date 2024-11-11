@@ -189,7 +189,7 @@ public class ReservationService {
 
         // redis에 담기
         for (ReserveMenuRequest.Menu menu : menus) {
-            Menu m = menuRepository.findById(menu.menuId()).orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_MENU));
+            Menu m = menuRepository.findByIdAndStoreId(menu.menuId() , storeId).orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_MENU));
             ReserveRedis.Menu reserveRedisMenu = new ReserveRedis.Menu(m.getId(), m.getName(), (long) m.getPrice(), menu.menuCnt());
             // 중복 체크
             boolean exists = false;
