@@ -81,13 +81,13 @@ public class PaymentService {
         // 현재시간대를 기준으로 예약 가능한 시간 값이 들어왔는지 검증
         reservationCheckService.isReservationDateValid(prepare.date() , prepare.time());
 
-        // 장바구니가 비어있는지 검증
-        reservationCheckService.validateMenuPresence(userId , prepare.storeId());
-
         // 유저 있는지?
         User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_USER));
         // 식당이 있는지?
         Store store = storeRepository.findById(prepare.storeId()).orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_STORE));
+
+        // 장바구니가 비어있는지 검증
+        reservationCheckService.validateMenuPresence(userId , prepare.storeId());
 
         // 들어온 금액과 내부의 설정된 금액이 다를때!
         // 금액 비교 리뉴얼 작업!
