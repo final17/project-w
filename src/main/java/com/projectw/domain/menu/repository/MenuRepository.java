@@ -4,6 +4,7 @@ import com.projectw.domain.menu.entity.Menu;
 import com.projectw.domain.store.entity.Store;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -18,4 +19,7 @@ public interface MenuRepository extends JpaRepository<Menu, Long> {
 
     @Query("SELECT m FROM Menu m WHERE m.id IN(:menuIds)")
     List<Menu> getMenus(List<Long> menuIds);
+
+    @Query("SELECT m FROM Menu m WHERE m.store.id = :id")
+    List<Menu> findAllByStoreId(@Param("id") Long id);
 }

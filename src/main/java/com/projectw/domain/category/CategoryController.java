@@ -1,7 +1,6 @@
 package com.projectw.domain.category;
 
 import com.projectw.common.dto.SuccessResponse;
-import com.projectw.domain.store.dto.response.CategoryMapperValue;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,7 +16,7 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @GetMapping("/api/categories")
-    public ResponseEntity<SuccessResponse<List<CategoryMapperValue>>> CategoryController(@RequestParam(name = "type") CategoryType type) {
+    public ResponseEntity<SuccessResponse<List<CategoryMapperValue>>> categoryController(@RequestParam(name = "type") CategoryType type) {
 
         return ResponseEntity.ok(SuccessResponse.of(categoryService.getCategories(type)));
     }

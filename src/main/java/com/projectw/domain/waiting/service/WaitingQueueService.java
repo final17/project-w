@@ -9,8 +9,12 @@ import com.projectw.common.utils.RedisProducer;
 import com.projectw.domain.notification.service.NotificationService;
 import com.projectw.domain.store.entity.Store;
 import com.projectw.domain.store.repository.StoreRepository;
+import com.projectw.domain.user.entity.User;
+import com.projectw.domain.user.repository.UserRepository;
 import com.projectw.domain.waiting.dto.WaitingPoll;
 import com.projectw.domain.waiting.dto.WaitingQueueResponse;
+import com.projectw.domain.waiting.enums.WaitingStatus;
+import com.projectw.domain.waiting.repository.WaitingHistoryRepository;
 import com.projectw.security.AuthUser;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RScoredSortedSet;
@@ -32,6 +36,9 @@ public class WaitingQueueService {
     private final StoreRepository storeRepository;
     private final RedisProducer redisProducer;
     private final WaitingService waitingService;
+    private final WaitingHistoryService waitingHistoryService;
+    private final UserRepository userRepository;
+    private final WaitingHistoryRepository waitingHistoryRepository;
 
     public SseEmitter connect(AuthUser authUser, long storeId) {
         RScoredSortedSet<String> sortedSet = redissonClient.getScoredSortedSet(getRedisSortedSetKey(storeId));
@@ -47,12 +54,19 @@ public class WaitingQueueService {
 
     @RedisLock(value = "#storeId")
     public WaitingQueueResponse.Info addUserToQueue(AuthUser authUser, long storeId){
-        RScoredSortedSet<String> sortedSet = redissonClient.getScoredSortedSet(getRedisSortedSetKey(storeId));
-        Integer rank = sortedSet.rank(String.valueOf(authUser.getUserId()));
 
-        if(rank != null) {
+        Store store = storeRepository.findWithUserById(storeId)
+                .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_STORE));
+
+        // REGISTERED 상태가 존재하면 이미 웨이팅 중
+        if(waitingHistoryRepository.existsByUserAndStoreAndStatus(User.fromAuthUser(authUser), store, WaitingStatus.REGISTERED)){
             throw new UserAlreadyInQueueException(ResponseCode.ALREADY_WAITING);
         }
+
+        // 웨이팅 기록 생성
+        waitingHistoryService.createHistory(User.fromAuthUser(authUser), store);
+
+        RScoredSortedSet<String> sortedSet = redissonClient.getScoredSortedSet(getRedisSortedSetKey(storeId));
 
         // 발권 번호를 score로 설정하여 대기열에 추가
         long score = redissonClient.getAtomicLong(getRedisWaitingNumKey(storeId)).incrementAndGet();
@@ -70,11 +84,6 @@ public class WaitingQueueService {
     @RedisLock("#storeId")
     public void pollFirstUser(AuthUser authUser, long storeId) {
 
-        RScoredSortedSet<String> sortedSet = redissonClient.getScoredSortedSet(getRedisSortedSetKey(storeId));
-        if(sortedSet.isEmpty()) {
-           return;
-        }
-
         Store store = storeRepository.findWithUserById(storeId)
                 .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_STORE));
 
@@ -83,8 +92,20 @@ public class WaitingQueueService {
             throw new ForbiddenException(ResponseCode.FORBIDDEN);
         }
 
+        RScoredSortedSet<String> sortedSet = redissonClient.getScoredSortedSet(getRedisSortedSetKey(storeId));
+        if(sortedSet.isEmpty()) {
+           return;
+        }
+
+
         Double score = sortedSet.firstScore();
         String popUserId = sortedSet.pollFirst();
+
+        User user = userRepository.findById(Long.parseLong(popUserId))
+                .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_USER));
+
+        // 완료로 변경
+        waitingHistoryService.completeHistory(user, store);
 
         // 웨이팅 서비스에서 레스토랑 가중치 감소
         waitingService.incrementWeight(String.valueOf(storeId), -1.0);
@@ -99,6 +120,11 @@ public class WaitingQueueService {
      */
     @RedisLock("#storeId")
     public void cancel(AuthUser authUser, long storeId) {
+
+        Store store = storeRepository.findById(storeId)
+                .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_STORE));
+        waitingHistoryService.cancelHistory(User.fromAuthUser(authUser), store);
+
         RScoredSortedSet<String> sortedSet = redissonClient.getScoredSortedSet(getRedisSortedSetKey(storeId));
         sortedSet.remove(String.valueOf(authUser.getUserId()));
 
@@ -166,6 +192,10 @@ public class WaitingQueueService {
         return "waitingQueue:store:" + storeId + ":user:";
     }
 
+    private String getUserWaitingStoresKey(long userId) {
+        return "waitingQueue:user:" + userId + ":stores";
+    }
+
     private String getSseKey(long storeId, String userId) {
         return "waitingQueue:store:" + storeId + ":user:" + userId;
     }
@@ -183,4 +213,5 @@ public class WaitingQueueService {
         // rank가 null이 아니면 웨이팅 대기열에 등록 된 것
         return new WaitingQueueResponse.WaitingInfo(rank != null);
     }
+
 }

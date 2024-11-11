@@ -1,7 +1,5 @@
 package com.projectw.domain.category;
 
-import com.projectw.domain.store.dto.response.CategoryMapper;
-
 import java.util.List;
 
 public interface HierarchicalCategory extends CategoryMapper {

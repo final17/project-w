@@ -23,7 +23,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.List;
 
 @Service
@@ -151,17 +150,12 @@ public class ReviewService {
         if (images == null || images.isEmpty()) return;
 
         for (MultipartFile image : images) {
-            try {
-                String imageUrl = s3Service.uploadFile(image);
-                ReviewImage reviewImage = ReviewImage.builder()
-                        .imageUrl(imageUrl)
-                        .review(review)
-                        .build();
-                review.addImage(reviewImage);
-            } catch (IOException e) {
-                log.error("이미지 업로드 실패", e);
-                throw new RuntimeException("이미지 업로드 중 오류가 발생했습니다: " + e.getMessage());
-            }
+            String imageUrl = s3Service.uploadFile(image);
+            ReviewImage reviewImage = ReviewImage.builder()
+                    .imageUrl(imageUrl)
+                    .review(review)
+                    .build();
+            review.addImage(reviewImage);
         }
     }
 

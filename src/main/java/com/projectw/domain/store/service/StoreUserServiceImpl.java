@@ -1,7 +1,6 @@
 package com.projectw.domain.store.service;
 
-import com.projectw.domain.store.dto.response.StoreLikeResposeDto;
-import com.projectw.domain.store.dto.response.StoreResponseDto;
+import com.projectw.domain.store.dto.StoreResponse;
 import com.projectw.domain.store.entity.Store;
 import com.projectw.domain.store.entity.StoreLike;
 import com.projectw.domain.store.repository.StoreLikeRepository;
@@ -33,14 +32,14 @@ public class StoreUserServiceImpl implements StoreUserService {
     private final RedissonClient redissonClient;
 
     @Override
-    public Page<StoreResponseDto> getAllStore(AuthUser authUser, Pageable pageable) {
+    public Page<StoreResponse.Info> getAllStore(AuthUser authUser, Pageable pageable) {
         Page<Store> allStore = storeRepository.findAll(pageable);
-        return allStore.map(StoreResponseDto::new);
+        return allStore.map(StoreResponse.Info::new);
     }
 
     @Override
     @Transactional
-    public StoreResponseDto getOneStore(AuthUser authUser, Long storeId) {
+    public StoreResponse.Info getOneStore(AuthUser authUser, Long storeId) {
         String key = "store:view:" + storeId;
         RLock rLock = redissonClient.getLock(key);
         Store store = null;
@@ -67,7 +66,7 @@ public class StoreUserServiceImpl implements StoreUserService {
             }
         }
 
-        return new StoreResponseDto(store);
+        return new StoreResponse.Info(store);
     }
 
     @Transactional
@@ -78,14 +77,14 @@ public class StoreUserServiceImpl implements StoreUserService {
     }
 
     @Override
-    public Page<StoreResponseDto> serchStoreName(AuthUser authUser, String storeName, Pageable pageable) {
+    public Page<StoreResponse.Info> searchStoreName(AuthUser authUser, String storeName, Pageable pageable) {
         Page<Store> storeList = storeRepository.findAllByTitle(pageable, storeName);
 
-        return storeList.map(StoreResponseDto::new);
+        return storeList.map(StoreResponse.Info::new);
     }
 
     @Override
-    public StoreLikeResposeDto likeStore(AuthUser authUser, Long storeId) {
+    public StoreResponse.Like likeStore(AuthUser authUser, Long storeId) {
         String key = "store:like:" + storeId;
         RLock rLock = redissonClient.getLock(key);
         StoreLike storeLike = null;
@@ -113,7 +112,7 @@ public class StoreUserServiceImpl implements StoreUserService {
             }
         }
 
-        return new StoreLikeResposeDto(storeLike);
+        return new StoreResponse.Like(storeLike);
     }
 
     @Transactional
@@ -135,8 +134,8 @@ public class StoreUserServiceImpl implements StoreUserService {
     }
 
     @Override
-    public Page<StoreLikeResposeDto> getLikeStore(AuthUser authUser, Pageable pageable) {
+    public Page<StoreResponse.Like> getLikeStore(AuthUser authUser, Pageable pageable) {
         Page<StoreLike> storeLikes = storeLikeRepository.findAllByUserId(authUser.getUserId(), pageable);
-        return storeLikes.map(StoreLikeResposeDto::new);
+        return storeLikes.map(StoreResponse.Like::new);
     }
 }

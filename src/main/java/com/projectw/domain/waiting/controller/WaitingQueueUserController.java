@@ -2,6 +2,7 @@ package com.projectw.domain.waiting.controller;
 
 import com.projectw.common.dto.SuccessResponse;
 import com.projectw.domain.waiting.dto.WaitingQueueResponse;
+import com.projectw.domain.waiting.service.WaitingHistoryService;
 import com.projectw.domain.waiting.service.WaitingQueueService;
 import com.projectw.security.AuthUser;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 public class WaitingQueueUserController {
 
     private final WaitingQueueService waitingQueueService;
+    private final WaitingHistoryService waitingHistoryService;
 
     /**
      * 알림을 받기 위해 서버에게 SSE 요청
@@ -47,6 +49,16 @@ public class WaitingQueueUserController {
 
         waitingQueueService.cancel(user, storeId);
         return ResponseEntity.ok().body(SuccessResponse.of(null));
+    }
+
+    /**
+     * 내가 웨이팅 등록한 가게 아이디 목록 조회
+     * @param authUser
+     * @return
+     */
+    @GetMapping("/api/v2/user/waitings/stores")
+    public ResponseEntity<SuccessResponse<WaitingQueueResponse.MyWaitingStoreList>> getRegisteredWaitingStoreIds(@AuthenticationPrincipal AuthUser authUser) {
+        return ResponseEntity.ok(SuccessResponse.of(waitingHistoryService.getRegisteredStoreList(authUser)));
     }
 
     /**

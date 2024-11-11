@@ -1,5 +1,6 @@
 package com.projectw.domain.menu.service;
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import com.projectw.common.enums.ResponseCode;
 import com.projectw.common.enums.UserRole;
 import com.projectw.common.exceptions.AccessDeniedException;
@@ -10,10 +11,13 @@ import com.projectw.domain.menu.dto.request.MenuRequestDto;
 import com.projectw.domain.menu.dto.response.MenuResponseDto;
 import com.projectw.domain.menu.entity.Menu;
 import com.projectw.domain.menu.repository.MenuRepository;
+import com.projectw.domain.search.StoreDoc;
 import com.projectw.domain.store.entity.Store;
 import com.projectw.domain.store.repository.StoreRepository;
+import com.projectw.domain.user.entity.User;
 import com.projectw.security.AuthUser;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
@@ -28,12 +32,14 @@ import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
+@Slf4j
 public class MenuService {
 
     private final MenuRepository menuRepository;
     private final StoreRepository storeRepository;
     private final AllergyRepository allergyRepository;
     private final RedissonClient redissonClient;
+    private final ElasticsearchClient elasticsearchClient;
 
     // 공통된 락 처리 메서드
     private <T> T executeWithLock(String lockKey, Supplier<T> action) {
@@ -54,7 +60,7 @@ public class MenuService {
         }
     }
 
-    // 권한 및 소유자 검사 메서드
+    // 권한 검사 메서드
     private void checkOwnerRoleAndOwnership(AuthUser authUser, Store store) {
         if (authUser.getRole() != UserRole.ROLE_OWNER) {
             throw new AccessDeniedException(ResponseCode.FORBIDDEN);
@@ -72,10 +78,14 @@ public class MenuService {
                 .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_STORE));
         checkOwnerRoleAndOwnership(authUser, store);
 
+
         Set<Allergy> allergies = allergyRepository.findAllById(requestDto.getAllergyIds())
                 .stream().collect(Collectors.toSet());
+
         Menu menu = new Menu(requestDto.getName(), requestDto.getPrice(), store, allergies);
         Menu savedMenu = menuRepository.save(menu);
+
+        updateToElasticsearch(store, authUser);
         return createMenuResponseDto(savedMenu);
     }
 
@@ -87,10 +97,14 @@ public class MenuService {
 
         Menu menu = menuRepository.findById(menuId)
                 .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_MENU));
+
         Set<Allergy> allergies = allergyRepository.findAllById(requestDto.getAllergyIds())
                 .stream().collect(Collectors.toSet());
+
         menu.updateMenu(requestDto.getName(), requestDto.getPrice(), allergies);
         Menu updatedMenu = menuRepository.save(menu);
+
+        updateToElasticsearch(store, authUser);
         return createMenuResponseDto(updatedMenu);
     }
 
@@ -130,6 +144,8 @@ public class MenuService {
 
         menu.deleteMenu();
         menuRepository.save(menu);
+
+        updateToElasticsearch(store, authUser);
     }
 
     // 메뉴 단건 조회수 증가
@@ -154,5 +170,25 @@ public class MenuService {
                 menu.getAllergies().stream().map(Allergy::getName).collect(Collectors.toSet()),
                 menu.getViewCount()
         );
+    }
+
+
+    /**
+     * 엘라스틱 서치 index 업데이트
+     * @param store
+     * @param authUser
+     */
+    private void updateToElasticsearch(Store store, AuthUser authUser) {
+
+        List<Menu> menus = menuRepository.findAllByStoreId(store.getId());
+        StoreDoc doc = StoreDoc.of(store, User.fromAuthUser(authUser), menus);
+        try {
+            elasticsearchClient.update(update -> update
+                    .index("stores")
+                    .id(String.valueOf(store.getId()))
+                    .doc(doc), StoreDoc.class);
+        } catch (IOException e) {
+            log.error("StoreId: {} 엘라스틱 서치 업데이트 실패: {}", store.getId(), e.getMessage());
+        }
     }
 }

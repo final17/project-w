@@ -1,4 +1,4 @@
-package com.projectw.domain.store.dto.response;
+package com.projectw.domain.category;
 
 public interface CategoryMapper {
 
