@@ -3,6 +3,9 @@ package com.projectw.domain.review.dto;
 import com.projectw.domain.menu.entity.Menu;
 import com.projectw.domain.review.entity.Review;
 import com.projectw.domain.user.entity.User;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 public sealed interface ReviewResponse permits ReviewResponse.Info, ReviewResponse.Like {
 
@@ -15,10 +18,15 @@ public sealed interface ReviewResponse permits ReviewResponse.Info, ReviewRespon
             String createdAt,
             String updatedAt,
             String userNickname,
-            String userEmail
+            String userEmail,
+            List<String> imageUrls,
+            Long likeCount
+
+
     ) implements ReviewResponse {
         // Info를 생성하는 생성자
-        public Info(Review review, User user) {
+        public Info(Review review, User user, List<String> imagesUrls, Long likeCount
+        ) {
             this(
                     review.getId(),
                     review.getTitle(),
@@ -27,9 +35,14 @@ public sealed interface ReviewResponse permits ReviewResponse.Info, ReviewRespon
                     review.getCreatedAt().toString(),
                     review.getUpdatedAt().toString(),
                     user.getNickname(),
-                    user.getEmail()
+                    user.getEmail(),
+                    imagesUrls,
+                    likeCount
+
+
             );
         }
+
     }
 
     // ReviewResponse에 대한 Like 구현 (예시로 작성, 필요에 따라 수정)
