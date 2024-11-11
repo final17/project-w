@@ -30,8 +30,8 @@ public class SettlementSummaryDslRepositoryImpl implements SettlementSummaryDslR
                 .from(settlementSummary)
                 .where(
                         settlementSummary.type.eq(summary.summaryType()),
-                        settlementSummary.user.id.eq(userId),
-                        settlementSummary.store.id.eq(storeId),
+                        settlementSummary.userId.eq(userId),
+                        settlementSummary.storeId.eq(storeId),
                         startDtEquals(summary.startDt()),
                         endDtEquals(summary.endDt())
                 )
