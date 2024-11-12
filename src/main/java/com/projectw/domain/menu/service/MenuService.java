@@ -152,7 +152,7 @@ public class MenuService {
         return menus.stream().map(this::createDetailResponseDto).collect(Collectors.toList());
     }
 
-    // 메뉴 삭제 (ROLE_OWNER 권한만 가능)
+    // 메뉴 삭제 (ROLE_OWNER 권한만 가능함)
     public void deleteMenu(AuthUser authUser, Long storeId, Long menuId) {
         Store store = storeRepository.findById(storeId)
                 .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_STORE));
