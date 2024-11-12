@@ -3,8 +3,12 @@ package com.projectw.domain.follow.controller;
 import com.projectw.domain.follow.dto.FollowResponseDto;
 import com.projectw.domain.follow.dto.FollowUserDto;
 import com.projectw.domain.follow.service.FollowService;
+import com.projectw.domain.store.dto.StoreResponse;
+import com.projectw.domain.store.service.StoreUserServiceImpl;
 import com.projectw.security.AuthUser;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +21,7 @@ import java.util.List;
 public class FollowController {
 
     private final FollowService followService;
+    private final StoreUserServiceImpl storeUserService;
 
     // 팔로우 추가/취소 메서드
     @PostMapping("/{targetUserId}")
@@ -39,5 +44,13 @@ public class FollowController {
     public ResponseEntity<List<FollowUserDto>> getFollowerList(@AuthenticationPrincipal AuthUser authUser) {
         List<FollowUserDto> followerList = followService.getFollowerList(authUser);
         return ResponseEntity.ok(followerList);
+    }
+
+    @GetMapping("/followed/liked")
+    public Page<StoreResponse.Like> getLikedStoresOfFollowedUsers(
+            AuthUser authUser,
+            Pageable pageable
+    ) {
+        return storeUserService.getLikedStoresOfFollowedUsers(authUser, pageable);
     }
 }
