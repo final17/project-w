@@ -1,9 +1,13 @@
 package com.projectw.domain.review.service;
+
+import com.projectw.common.config.S3Service;
+import com.projectw.common.enums.UserRole;
 import com.projectw.domain.like.repository.LikeRepository;
 import com.projectw.domain.menu.entity.Menu;
 import com.projectw.domain.menu.repository.MenuRepository;
 import com.projectw.domain.reservation.entity.Reservation;
 import com.projectw.domain.reservation.enums.ReservationStatus;
+import com.projectw.domain.reservation.enums.ReservationType;
 import com.projectw.domain.reservation.repository.ReservationRepository;
 import com.projectw.domain.review.dto.ReviewRequest;
 import com.projectw.domain.review.dto.ReviewResponse;
@@ -14,30 +18,29 @@ import com.projectw.domain.store.entity.Store;
 import com.projectw.domain.store.repository.StoreRepository;
 import com.projectw.domain.user.entity.User;
 import com.projectw.domain.user.repository.UserRepository;
-import com.projectw.common.config.S3Service;
-import jakarta.persistence.EntityManager;
-import org.aspectj.lang.annotation.Before;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 class ReviewServiceImplTest {
 
@@ -261,32 +264,59 @@ class ReviewServiceImplTest {
         assertThrows(IllegalArgumentException.class, () -> reviewService.updateReview(1L, mock(ReviewRequest.Update.class), "test@example.com", List.of()));
     }
 
-//
-//    @Test
-//    void testGetMenuReviews() {
-//        // Review 객체 생성 (record 타입이라 생성자로 초기화)
-//        Review review = new Review("title", "contents", 5, ); // 생성자 방식 사용
-//
-//        // Like count 예시
-//        Long likeCount = 10L;
-//
-//        // Page<Object[]> 반환 설정
-//        Object[] reviewWithLikeCount = { review, likeCount };
-//        PageImpl<Object[]> page = new PageImpl<>(List.of(reviewWithLikeCount), PageRequest.of(0, 10), 1);
-//
-//        // Mocking reviewRepository.findAllByMenuWithUserAndLikeCount 호출
-//        when(reviewRepository.findAllByMenuWithUserAndLikeCount(any(Menu.class), any(Pageable.class)))
-//                .thenReturn(page);
-//
-//        // 서비스 메서드 호출
-//        Page<ReviewResponse.Info> result = reviewService.getMenuReviews(menu.getId(), PageRequest.of(0, 10));
-//
-//        // 검증
-//        assertThat(result.getTotalElements()).isEqualTo(1);
-//        ReviewResponse.Info reviewInfo = result.getContent().get(0);
-//        assertThat(reviewInfo.id()).isEqualTo(1L);
-//        assertThat(reviewInfo.title()).isEqualTo("Great Review");
-//        assertThat(reviewInfo.likeCount()).isEqualTo(likeCount);
-//    }
+
+    @Test
+    void testGetMenuReviews() {
+        // Given
+        Menu menu = new Menu();
+        User user = new User("password", "test@example.com", "nickname", UserRole.ROLE_USER);
+
+        Reservation reservation = Reservation.builder()
+                .orderId("TEST-ORDER-ID")
+                .status(ReservationStatus.COMPLETE)
+                .type(ReservationType.RESERVATION)
+                .reservationDate(LocalDate.now())
+                .reservationTime(LocalTime.now())
+                .reservationNo(1L)
+                .numberPeople(2L)
+                .paymentYN(true)
+                .paymentAmt(10000L)
+                .user(user)
+                .store(menu.getStore())
+                .build();
+
+        LocalDateTime now = LocalDateTime.now();
+        Review review = Review.builder()
+                .title("Great Review")
+                .content("contents")
+                .rating(5)
+                .reservation(reservation)
+                .build();
+        ReflectionTestUtils.setField(review, "createdAt", now);
+        ReflectionTestUtils.setField(review, "updatedAt", now);
+
+        Long likeCount = 10L;
+        List<Object[]> content = new ArrayList<>();
+        content.add(new Object[]{review, likeCount});
+        Page<Object[]> page = new PageImpl<>(content, PageRequest.of(0, 10), 1);
+
+        when(menuRepository.findById(menu.getId())).thenReturn(Optional.of(menu));
+        when(reviewRepository.findAllByMenuWithUserAndLikeCount(eq(menu), any(Pageable.class)))
+                .thenReturn(page);
+
+        // When
+        Page<ReviewResponse.Info> result = reviewService.getMenuReviews(menu.getId(), PageRequest.of(0, 10));
+
+        // Then
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        ReviewResponse.Info reviewInfo = result.getContent().get(0);
+        assertThat(reviewInfo.title()).isEqualTo("Great Review");
+        assertThat(reviewInfo.content()).isEqualTo("contents");
+        assertThat(reviewInfo.rating()).isEqualTo(5);
+        assertThat(reviewInfo.likeCount()).isEqualTo(likeCount);
+
+        verify(menuRepository).findById(menu.getId());
+        verify(reviewRepository).findAllByMenuWithUserAndLikeCount(eq(menu), any(Pageable.class));
+    }
 
 }

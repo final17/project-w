@@ -19,4 +19,6 @@ public interface ReviewService {
     public ReviewResponse.Info deleteReview(Long reviewId, String email);
 
     public Page<ReviewResponse.Info> getUserReviews(String email, Pageable pageable);
+
+    public Page<ReviewResponse.Info> getStoreReviews(Long storeId, Pageable pageable);
     }

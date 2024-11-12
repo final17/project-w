@@ -52,6 +52,17 @@ public class ReviewController {
         return ResponseEntity.ok(reviews);
     }
 
+    // 특정 스토어에 대한 리뷰 목록 조회 API
+    @GetMapping("/store/{storeId}")
+    public ResponseEntity<Page<ReviewResponse.Info>> getStoreReviews(
+            @PathVariable Long storeId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<ReviewResponse.Info> reviews = reviewService.getStoreReviews(storeId, pageable);
+        return ResponseEntity.ok(reviews);
+    }
+
     // 리뷰 수정 API
     @PutMapping(value = "/{reviewId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ReviewResponse.Info> updateReview(

@@ -12,6 +12,7 @@ import com.projectw.domain.review.dto.ReviewResponse;
 import com.projectw.domain.review.entity.Review;
 import com.projectw.domain.review.entity.ReviewImage;
 import com.projectw.domain.review.repository.ReviewRepository;
+import com.projectw.domain.store.entity.Store;
 import com.projectw.domain.store.repository.StoreRepository;
 import com.projectw.domain.user.entity.User;
 import com.projectw.domain.user.repository.UserRepository;
@@ -94,6 +95,27 @@ public class ReviewServiceImpl implements ReviewService {
                 .orElseThrow(() -> new IllegalArgumentException("메뉴를 찾을 수 없습니다."));
 
         Page<Object[]> reviewsWithCount = reviewRepository.findAllByMenuWithUserAndLikeCount(menu, pageable);
+
+        return reviewsWithCount.map(objects -> {
+            Review review = (Review) objects[0];
+            Long likeCount = (Long) objects[1];
+            User user = review.getUser();
+
+            // 이미지 URL 리스트 생성
+            List<String> imageUrls = review.getImages().stream()
+                    .map(ReviewImage::getImageUrl)
+                    .toList();
+
+            return new ReviewResponse.Info(review, user, imageUrls, likeCount);
+        });
+    }
+
+    @Override
+    public Page<ReviewResponse.Info> getStoreReviews(Long storeId, Pageable pageable) {
+        Store store = storeRepository.findById(storeId)
+                .orElseThrow(() -> new IllegalArgumentException("스토어를 찾을 수 없습니다."));
+
+        Page<Object[]> reviewsWithCount = reviewRepository.findAllByStoreWithUserAndLikeCount(store, pageable);
 
         return reviewsWithCount.map(objects -> {
             Review review = (Review) objects[0];
