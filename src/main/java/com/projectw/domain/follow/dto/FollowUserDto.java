@@ -11,5 +11,8 @@ public sealed interface FollowUserDto permits FollowUserDto.Basic {
         public Basic(User user) {
             this(user.getId(), user.getNickname());
         }
+        public Long getId() {
+            return userId;
+        }
     }
 }
