@@ -146,10 +146,10 @@ public class StoreUserServiceImpl implements StoreUserService {
 
     @Override
     public Page<StoreResponse.Like> getLikedStoresOfFollowedUsers(AuthUser authUser, Pageable pageable) {
-        List<FollowUserDto> followedUsers = followService.getFollowingList(authUser);
+        List<FollowUserDto.Basic> followedUsers = followService.getFollowingList(authUser);
 
         List<Long> followedUserIds = followedUsers.stream()
-                .map(FollowUserDto::getUserId)
+                .map(FollowUserDto.Basic::userId)
                 .collect(Collectors.toList());
 
         if (followedUserIds.isEmpty()) {

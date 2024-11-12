@@ -1,16 +1,13 @@
 package com.projectw.domain.like.controller;
 
 import com.projectw.common.dto.SuccessResponse;
-import com.projectw.domain.like.dto.Response.LikeResponseDto;
+import com.projectw.domain.like.dto.LikeResponseDto;
 import com.projectw.domain.like.service.LikeService;
 import com.projectw.security.AuthUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v2")
@@ -19,27 +16,21 @@ public class LikeController {
     private final LikeService likeService;
 
     @PatchMapping("/reviews/{reviewId}/likes")
-    public ResponseEntity<Map<String, Object>> toggleReviewLike(
+    public ResponseEntity<LikeResponseDto.Basic> toggleReviewLike(
             @PathVariable Long reviewId,
             @AuthenticationPrincipal AuthUser user) {
         boolean isLiked = likeService.toggleReviewLike(reviewId, user.getEmail());
         long likeCount = likeService.getLikeCount(reviewId);
-        Map<String, Object> response = new HashMap<>();
-        response.put("liked", isLiked);
-        response.put("likeCount", likeCount);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(new LikeResponseDto.Basic(isLiked, likeCount));
     }
 
     @GetMapping("/reviews/{reviewId}/likes")
-    public ResponseEntity<Map<String, Object>> getReviewLikeStatus(
+    public ResponseEntity<LikeResponseDto.Basic> getReviewLikeStatus(
             @PathVariable Long reviewId,
             @AuthenticationPrincipal AuthUser user) {
         boolean hasLiked = likeService.hasLikedReview(reviewId, user.getEmail());
         long likeCount = likeService.getLikeCount(reviewId);
-        Map<String, Object> response = new HashMap<>();
-        response.put("liked", hasLiked);
-        response.put("likeCount", likeCount);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(new LikeResponseDto.Basic(hasLiked, likeCount));
     }
 
     @PostMapping("/stores/{storeId}/menus/{menuId}/like")
@@ -52,11 +43,11 @@ public class LikeController {
     }
 
     @GetMapping("/stores/{storeId}/menus/{menuId}/like")
-    public ResponseEntity<LikeResponseDto> getMenuLikeStatus(
+    public ResponseEntity<LikeResponseDto.Basic> getMenuLikeStatus(
             @PathVariable Long storeId,
             @PathVariable Long menuId,
             @AuthenticationPrincipal AuthUser authUser) {
-        LikeResponseDto response = likeService.getMenuLikeStatus(storeId, menuId, authUser.getUserId());
+        LikeResponseDto.Basic response = likeService.getMenuLikeStatus(storeId, menuId, authUser.getUserId());
         return ResponseEntity.ok(response);
     }
 }

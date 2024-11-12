@@ -22,7 +22,7 @@ public class AllergyService {
     private final AllergyRepository allergyRepository;
 
     @Cacheable(value = "allergies")
-    public List<AllergyResponseDto> getAllAllergies() {
+    public List<AllergyResponseDto.Basic> getAllAllergies() {
 
         List<Allergy> allergies = allergyRepository.findAll();
 
@@ -36,8 +36,8 @@ public class AllergyService {
                 .collect(Collectors.toList());
     }
 
-    private AllergyResponseDto convertToDto(Allergy allergy) {
-        return new AllergyResponseDto(
+    private AllergyResponseDto.Basic convertToDto(Allergy allergy) {
+        return new AllergyResponseDto.Basic(
                 allergy.getId(),
                 allergy.getName(),
                 allergy.getDescription()
