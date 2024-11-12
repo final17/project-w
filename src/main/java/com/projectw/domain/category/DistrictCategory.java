@@ -53,7 +53,6 @@ public enum DistrictCategory implements HierarchicalCategory {
         GYEONGGI_NAMYANGJU("legal_district", "남양주", "15", GYEONGGI),
         GYEONGGI_OSAN("legal_district", "오산", "16", GYEONGGI),
         GYEONGGI_SIHEUNG("legal_district", "시흥", "17", GYEONGGI),
-        GYEONGGI_GUNPO("legal_district", "군포", "18", GYEONGGI),
         GYEONGGI_HWASEONG("legal_district", "화성", "18", GYEONGGI),
         GYEONGGI_HANAM("legal_district", "하남", "19", GYEONGGI),
         GYEONGGI_ICHEON("legal_district", "이천", "20", GYEONGGI),
@@ -63,6 +62,7 @@ public enum DistrictCategory implements HierarchicalCategory {
         GYEONGGI_PAJU("legal_district", "파주", "24", GYEONGGI),
         GYEONGGI_GAPYEONG("legal_district", "가평", "25", GYEONGGI),
         GYEONGGI_YEONCHEON("legal_district", "연천", "26", GYEONGGI),
+        GYEONGGI_GUNPO("legal_district", "군포", "27", GYEONGGI),
 
     // 세종특별자치시
     SEJONG("district", "세종", "03", ROOT),
