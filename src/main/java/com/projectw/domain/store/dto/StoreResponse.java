@@ -10,6 +10,7 @@ import java.time.LocalTime;
 public sealed interface StoreResponse permits StoreResponse.Info, StoreResponse.Like {
     record Info(
             Long id,
+            String image,
             String title,
             String description,
             CategoryMapperValue districtCategory, // 여기서 null 체크 필요
@@ -30,6 +31,7 @@ public sealed interface StoreResponse permits StoreResponse.Info, StoreResponse.
         public Info(Store saveStore) {
             this(
                     saveStore.getId(),
+                    saveStore.getImage(),
                     saveStore.getTitle(),
                     saveStore.getDescription(),
                     saveStore.getDistrictCategory() != null
