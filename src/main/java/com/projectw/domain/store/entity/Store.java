@@ -126,6 +126,7 @@ public class Store extends Timestamped {
         this.title = storeRequestDto.title();
         this.districtCategory = category;
         this.description = storeRequestDto.description();
+        this.phoneNumber = storeRequestDto.phoneNumber();
         this.openTime = storeRequestDto.openTime();
         this.lastOrder = storeRequestDto.lastOrder();
         this.closeTime = storeRequestDto.closeTime();
