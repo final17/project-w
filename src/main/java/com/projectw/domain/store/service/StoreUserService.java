@@ -17,4 +17,6 @@ public interface StoreUserService {
     StoreResponse.Like likeStore(AuthUser authUser, Long storeId);
 
     Page<StoreResponse.Like> getLikeStore(AuthUser authUser, Pageable pageable);
+
+    Page<StoreResponse.Like> getLikedStoresOfFollowedUsers(AuthUser authUser, Pageable pageable);
 }
