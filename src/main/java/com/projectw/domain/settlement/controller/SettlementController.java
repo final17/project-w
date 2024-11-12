@@ -42,7 +42,7 @@ public class SettlementController {
             @PathVariable Long storeId,
             @ModelAttribute SettlementRequest.Summary summary) {
 
-        return ResponseEntity.ok(SuccessResponse.of(settlementSummaryService.getSettlementSummary(authUser.getUserId() , storeId , summary)));
+        return ResponseEntity.ok(SuccessResponse.of(settlementSummaryService.getSettlementSummary(storeId , summary)));
     }
 
 }

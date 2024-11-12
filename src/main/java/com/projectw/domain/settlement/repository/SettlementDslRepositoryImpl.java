@@ -46,6 +46,7 @@ public class SettlementDslRepositoryImpl implements SettlementDslRepository {
                         startDtEquals(log.startDt()),
                         endDtEquals(log.endDt())
                 )
+                .groupBy(settlement.orderId)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();

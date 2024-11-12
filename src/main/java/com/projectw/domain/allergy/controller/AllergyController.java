@@ -18,8 +18,8 @@ public class AllergyController {
     private final AllergyService allergyService;
 
     @GetMapping("/allergies")
-    public ResponseEntity<List<AllergyResponseDto>> getAllAllergies() {
-        List<AllergyResponseDto> allergies = allergyService.getAllAllergies();
+    public ResponseEntity<List<AllergyResponseDto.Basic>> getAllAllergies() {
+        List<AllergyResponseDto.Basic> allergies = allergyService.getAllAllergies();
         return ResponseEntity.ok(allergies);
     }
 }

@@ -19,7 +19,7 @@ public class SettlementSummaryDslRepositoryImpl implements SettlementSummaryDslR
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<SettlementResponse.Summary> getSettlementSummary(Long userId, Long storeId, SettlementRequest.Summary summary) {
+    public List<SettlementResponse.Summary> getSettlementSummary(Long storeId, SettlementRequest.Summary summary) {
 
         return queryFactory
                 .select(Projections.constructor(SettlementResponse.Summary.class ,
@@ -30,8 +30,7 @@ public class SettlementSummaryDslRepositoryImpl implements SettlementSummaryDslR
                 .from(settlementSummary)
                 .where(
                         settlementSummary.type.eq(summary.summaryType()),
-                        settlementSummary.user.id.eq(userId),
-                        settlementSummary.store.id.eq(storeId),
+                        settlementSummary.storeId.eq(storeId),
                         startDtEquals(summary.startDt()),
                         endDtEquals(summary.endDt())
                 )

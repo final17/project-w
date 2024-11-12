@@ -1,15 +1,18 @@
 package com.projectw.domain.follow.dto;
 
 import com.projectw.domain.user.entity.User;
-import lombok.Getter;
 
-@Getter
-public class FollowUserDto {
-    private Long userId;
-    private String userNickname;
+public sealed interface FollowUserDto permits FollowUserDto.Basic {
 
-    public FollowUserDto(User user) {
-        this.userId = user.getId();
-        this.userNickname = user.getNickname();
+    /**
+     * 기본 팔로우 사용자 정보
+     */
+    record Basic(Long userId, String userNickname) implements FollowUserDto {
+        public Basic(User user) {
+            this(user.getId(), user.getNickname());
+        }
+        public Long getId() {
+            return userId;
+        }
     }
 }

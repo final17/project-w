@@ -7,6 +7,9 @@ import com.projectw.domain.store.dto.StoreResponse;
 import com.projectw.domain.store.service.StoreOwnerService;
 import com.projectw.security.AuthUser;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -89,6 +92,16 @@ public class StoreOwnerController {
         }
     }
 
+    @GetMapping("/my")
+    public ResponseEntity<SuccessResponse<Page<StoreResponse.Info>>> getMyStores(
+            @AuthenticationPrincipal AuthUser authUser,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<StoreResponse.Info> stores = storeOwnerService.getMyStores(authUser, pageable);
+        return ResponseEntity.ok(SuccessResponse.of(stores));
+    }
 
 
     // 예약 조회

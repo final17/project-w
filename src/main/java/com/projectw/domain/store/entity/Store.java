@@ -113,7 +113,6 @@ public class Store extends Timestamped {
         this.view = 0L;
     }
 
-
     public Store putStore(String imageName, StoreRequest.Create storeRequestDto) {
 
         DistrictCategory category = null;
@@ -139,6 +138,33 @@ public class Store extends Timestamped {
         this.latitude = storeRequestDto.latitude();
         this.longitude = storeRequestDto.longitude();
         return this;
+    }
+
+    // 테스트용
+    public Store(Long id, String image, DistrictCategory districtCategory, String title, String description,
+                 LocalTime openTime, LocalTime closeTime, Boolean isNextDay, Long reservationTableCount, Long tableCount,
+                 String phoneNumber, String address, LocalTime lastOrder, LocalTime turnover, User user,
+                 List<Reservation> reservations, Long deposit, Double latitude, Double longitude) {
+        this.id = id; // ID 설정
+        this.image = image;
+        this.districtCategory = districtCategory;
+        this.title = title;
+        this.description = description;
+        this.openTime = openTime;
+        this.closeTime = closeTime;
+        this.isNextDay = isNextDay;
+        this.reservationTableCount = reservationTableCount;
+        this.tableCount = tableCount;
+        this.phoneNumber = phoneNumber;
+        this.address = address;
+        this.lastOrder = lastOrder;
+        this.turnover = turnover;
+        this.user = user;
+        this.reservations = reservations;
+        this.deposit = deposit;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.view = 0L; // 초기 조회수
     }
 
     public void deleteStore() {

@@ -6,5 +6,5 @@ import com.projectw.domain.settlement.dto.SettlementResponse;
 import java.util.List;
 
 public interface SettlementSummaryDslRepository {
-    List<SettlementResponse.Summary> getSettlementSummary(Long userId, Long storeId, SettlementRequest.Summary summary);
+    List<SettlementResponse.Summary> getSettlementSummary(Long storeId, SettlementRequest.Summary summary);
 }

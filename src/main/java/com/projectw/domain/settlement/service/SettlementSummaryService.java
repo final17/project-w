@@ -15,7 +15,7 @@ import java.util.List;
 public class SettlementSummaryService {
     private final SettlementSummaryRepository settlementSummaryRepository;
 
-    public List<SettlementResponse.Summary> getSettlementSummary(Long userId, Long storeId, SettlementRequest.Summary summary) {
-        return settlementSummaryRepository.getSettlementSummary(userId, storeId, summary);
+    public List<SettlementResponse.Summary> getSettlementSummary(Long storeId, SettlementRequest.Summary summary) {
+        return settlementSummaryRepository.getSettlementSummary(storeId, summary);
     }
 }

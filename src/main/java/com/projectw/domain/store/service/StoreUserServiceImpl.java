@@ -1,5 +1,7 @@
 package com.projectw.domain.store.service;
 
+import com.projectw.domain.follow.dto.FollowUserDto;
+import com.projectw.domain.follow.service.FollowService;
 import com.projectw.domain.store.dto.StoreResponse;
 import com.projectw.domain.store.entity.Store;
 import com.projectw.domain.store.entity.StoreLike;
@@ -17,7 +19,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -27,6 +31,7 @@ public class StoreUserServiceImpl implements StoreUserService {
     private final StoreRepository storeRepository;
     private final StoreLikeRepository storeLikeRepository;
     private final UserRepository userRepository;
+    private final FollowService followService;
 
     // redis
     private final RedissonClient redissonClient;
@@ -137,5 +142,22 @@ public class StoreUserServiceImpl implements StoreUserService {
     public Page<StoreResponse.Like> getLikeStore(AuthUser authUser, Pageable pageable) {
         Page<StoreLike> storeLikes = storeLikeRepository.findAllByUserId(authUser.getUserId(), pageable);
         return storeLikes.map(StoreResponse.Like::new);
+    }
+
+    @Override
+    public Page<StoreResponse.Like> getLikedStoresOfFollowedUsers(AuthUser authUser, Pageable pageable) {
+        List<FollowUserDto.Basic> followedUsers = followService.getFollowingList(authUser);
+
+        List<Long> followedUserIds = followedUsers.stream()
+                .map(FollowUserDto.Basic::userId)
+                .collect(Collectors.toList());
+
+        if (followedUserIds.isEmpty()) {
+            return Page.empty();
+        }
+
+        Page<StoreLike> likedStores = storeLikeRepository.findAllByUserIds(followedUserIds, pageable);
+
+        return likedStores.map(StoreResponse.Like::new);
     }
 }

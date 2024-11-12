@@ -3,22 +3,31 @@ package com.projectw.domain.menu.dto.request;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
-@Getter
-@RequiredArgsConstructor
-@AllArgsConstructor
-public class MenuRequestDto {
-    @NotBlank(message = "메뉴 이름은 필수입니다.")
-    private String name;
+public sealed interface MenuRequestDto permits MenuRequestDto.Create, MenuRequestDto.Update {
 
-    @NotNull(message = "가격은 필수입니다.")
-    @Min(value = 1, message = "가격은 1 이상이어야 합니다.")
-    private int price;
+    record Create(
+            @NotBlank(message = "메뉴 이름은 필수입니다.")
+            String name,
 
-    private List<Long> allergyIds;
+            @NotNull(message = "가격은 필수입니다.")
+            @Min(value = 1, message = "가격은 1 이상이어야 합니다.")
+            int price,
+
+            List<Long> allergyIds
+    ) implements MenuRequestDto { }
+
+    record Update(
+            @NotNull(message = "메뉴 ID는 필수입니다.")
+            Long id,
+
+            String name,
+
+            @Min(value = 1, message = "가격은 1 이상이어야 합니다.")
+            Integer price,
+
+            List<Long> allergyIds
+    ) implements MenuRequestDto { }
 }

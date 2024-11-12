@@ -1,9 +1,6 @@
 package com.projectw.domain.chatbot.dto.request;
 
-import lombok.Getter;
+public sealed interface ChatbotRequestDto permits ChatbotRequestDto.Basic {
 
-@Getter
-public class ChatbotRequestDto {
-    private String inquiryType;
-    private String detail;
+    record Basic(String inquiryType, String detail) implements ChatbotRequestDto { }
 }

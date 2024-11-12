@@ -6,9 +6,6 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.util.List;
 
 @Getter
 @Builder
