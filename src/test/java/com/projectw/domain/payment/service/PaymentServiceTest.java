@@ -84,7 +84,7 @@ public class PaymentServiceTest {
     @InjectMocks
     private PaymentService paymentService;
 
-    private static final String PREFIX_ORDER_ID = "ORDER-";
+    private final String PREFIX_ORDER_ID = "ORDER-";
 
     private PaymentRequest.Prepare prepare;
     private AuthUser authUser;
