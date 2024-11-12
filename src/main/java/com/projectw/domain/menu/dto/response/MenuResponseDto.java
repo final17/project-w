@@ -1,20 +1,20 @@
 package com.projectw.domain.menu.dto.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-
 import java.util.Set;
 
-@Getter
-@Builder
-@RequiredArgsConstructor
-@AllArgsConstructor
-public class MenuResponseDto {
-    private Long id;
-    private String name;
-    private int price;
-    private Set<String> allergies;
-    private long viewCount;
+public sealed interface MenuResponseDto permits MenuResponseDto.Detail, MenuResponseDto.Summary {
+
+    record Detail(
+            Long id,
+            String name,
+            int price,
+            Set<String> allergies,
+            long viewCount
+    ) implements MenuResponseDto { }
+
+    record Summary(
+            Long id,
+            String name,
+            int price
+    ) implements MenuResponseDto { }
 }

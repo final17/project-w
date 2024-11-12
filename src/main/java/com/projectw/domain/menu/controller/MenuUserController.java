@@ -23,15 +23,15 @@ public class MenuUserController {
 
     // 모든 유저가 특정 가게의 메뉴 조회
     @GetMapping
-    public ResponseEntity<SuccessResponse<List<MenuResponseDto>>> getMenusByStore(@PathVariable Long storeId) {
-        List<MenuResponseDto> menus = menuService.getMenusByStore(storeId);
+    public ResponseEntity<SuccessResponse<List<MenuResponseDto.Detail>>> getMenusByStore(@PathVariable Long storeId) {
+        List<MenuResponseDto.Detail> menus = menuService.getMenusByStore(storeId);
         return ResponseEntity.ok(SuccessResponse.of(menus));
     }
 
     // 조회수 증가 API
     @GetMapping("/{menuId}/view")
-    public ResponseEntity<SuccessResponse<MenuResponseDto>> viewMenu(@PathVariable Long menuId) {
-        MenuResponseDto response = menuService.viewMenu(menuId);
+    public ResponseEntity<SuccessResponse<MenuResponseDto.Detail>> viewMenu(@PathVariable Long menuId) {
+        MenuResponseDto.Detail response = menuService.viewMenu(menuId);
         return ResponseEntity.ok(SuccessResponse.of(response));
     }
 }
