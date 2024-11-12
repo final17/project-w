@@ -21,6 +21,11 @@ public class AuthController {
 
     private final AuthService authService;
 
+    @PostMapping("/kakao/login")
+    public ResponseEntity<AuthResponse.Login> kakaoLogin(@RequestParam("accessToken") String accessToken) {
+        return ResponseEntity.ok(authService.kakaoLogin(accessToken));
+    }
+
     @PostMapping("/signup")
     public ResponseEntity<SuccessResponse<Signup>> signup(@Valid @RequestBody AuthRequest.Signup authRequest) {
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.signup(authRequest));

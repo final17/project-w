@@ -9,7 +9,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-public sealed interface AuthRequest permits Signup, Login, CheckNickname, CheckEmail {
+public sealed interface AuthRequest permits Signup, Login, CheckNickname, CheckEmail, AuthRequest.KakaoLogin {
     record Login(
         @NotBlank String email,
         @NotBlank String password,
@@ -26,4 +26,8 @@ public sealed interface AuthRequest permits Signup, Login, CheckNickname, CheckE
 
     record CheckNickname(String nickname) implements AuthRequest {}
     record CheckEmail(String email) implements AuthRequest {}
+
+    record KakaoLogin(
+            @NotBlank String accessToken
+    ) implements AuthRequest {}
 }

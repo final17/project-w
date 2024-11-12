@@ -22,3 +22,7 @@ cloud:
 
 front-end:
   url: ${FRONTEND_URL}
+
+kakao:
+  kakao.client-id: ${kakao.client-id}
+  kakao.redirect-uri: ${kakao.redirect-uri}

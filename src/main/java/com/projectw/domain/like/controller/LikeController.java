@@ -1,7 +1,7 @@
 package com.projectw.domain.like.controller;
 
 import com.projectw.common.dto.SuccessResponse;
-import com.projectw.domain.like.dto.Response.LikeResponseDto;
+import com.projectw.domain.like.dto.response.LikeResponseDto;
 import com.projectw.domain.like.service.LikeService;
 import com.projectw.security.AuthUser;
 import lombok.RequiredArgsConstructor;
