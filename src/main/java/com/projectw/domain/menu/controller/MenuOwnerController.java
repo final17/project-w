@@ -22,35 +22,36 @@ public class MenuOwnerController {
         this.menuService = menuService;
     }
 
+    // 메뉴 생성
     @PostMapping
-    public ResponseEntity<SuccessResponse<MenuResponseDto>> createMenu(
+    public ResponseEntity<SuccessResponse<MenuResponseDto.Detail>> createMenu(
             @AuthenticationPrincipal AuthUser authUser,
-            @RequestBody MenuRequestDto menuRequestDto,
+            @RequestBody MenuRequestDto.Create menuRequestDto,
             @PathVariable("storeId") Long storeId) throws IOException {
 
-        MenuResponseDto menuResponseDto = menuService.createMenu(authUser, menuRequestDto, storeId);
-
+        MenuResponseDto.Detail menuResponseDto = menuService.createMenu(authUser, menuRequestDto, storeId);
         return ResponseEntity.ok(SuccessResponse.of(menuResponseDto));
     }
 
+    // 메뉴 수정
     @PutMapping("/{menuId}")
-    public ResponseEntity<SuccessResponse<MenuResponseDto>> updateMenu(
+    public ResponseEntity<SuccessResponse<MenuResponseDto.Detail>> updateMenu(
             @AuthenticationPrincipal AuthUser authUser,
-            @RequestBody MenuRequestDto requestDto,
+            @RequestBody MenuRequestDto.Update requestDto,
             @PathVariable("storeId") Long storeId,
             @PathVariable("menuId") Long menuId) throws IOException {
 
-        MenuResponseDto menuResponseDto = menuService.updateMenu(authUser, requestDto, storeId, menuId);
+        MenuResponseDto.Detail menuResponseDto = menuService.updateMenu(authUser, requestDto, storeId, menuId);
         return ResponseEntity.ok(SuccessResponse.of(menuResponseDto));
     }
 
     // 오너가 자신의 가게 메뉴 조회
     @GetMapping
-    public ResponseEntity<SuccessResponse<List<MenuResponseDto>>> getOwnerMenus(
+    public ResponseEntity<SuccessResponse<List<MenuResponseDto.Detail>>> getOwnerMenus(
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable("storeId") Long storeId) {
 
-        List<MenuResponseDto> menus = menuService.getOwnerMenus(authUser, storeId);
+        List<MenuResponseDto.Detail> menus = menuService.getOwnerMenus(authUser, storeId);
         return ResponseEntity.ok(SuccessResponse.of(menus));
     }
 

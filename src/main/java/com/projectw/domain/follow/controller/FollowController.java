@@ -23,7 +23,9 @@ public class FollowController {
     private final FollowService followService;
     private final StoreUserServiceImpl storeUserService;
 
-    // 팔로우 추가/취소 메서드
+    /**
+     * 팔로우 추가/취소 메서드 (토글 방식)
+     */
     @PostMapping("/{targetUserId}")
     public ResponseEntity<FollowResponseDto> followOrUnfollow(
             @AuthenticationPrincipal AuthUser authUser,
@@ -32,25 +34,33 @@ public class FollowController {
         return ResponseEntity.ok(responseDto);
     }
 
-    // 팔로잉 목록 조회 (FollowUserDto 사용)
+    /**
+     * 팔로잉 목록 조회
+     */
     @GetMapping("/following")
-    public ResponseEntity<List<FollowUserDto>> getFollowingList(@AuthenticationPrincipal AuthUser authUser) {
-        List<FollowUserDto> followingList = followService.getFollowingList(authUser);
+    public ResponseEntity<List<FollowUserDto.Basic>> getFollowingList(@AuthenticationPrincipal AuthUser authUser) {
+        List<FollowUserDto.Basic> followingList = followService.getFollowingList(authUser);
         return ResponseEntity.ok(followingList);
     }
 
-    // 팔로워 목록 조회 (FollowUserDto 사용)
+    /**
+     * 팔로워 목록 조회
+     */
     @GetMapping("/followers")
-    public ResponseEntity<List<FollowUserDto>> getFollowerList(@AuthenticationPrincipal AuthUser authUser) {
-        List<FollowUserDto> followerList = followService.getFollowerList(authUser);
+    public ResponseEntity<List<FollowUserDto.Basic>> getFollowerList(@AuthenticationPrincipal AuthUser authUser) {
+        List<FollowUserDto.Basic> followerList = followService.getFollowerList(authUser);
         return ResponseEntity.ok(followerList);
     }
 
+    /**
+     * 팔로우한 사용자가 좋아요한 가게 조회
+     */
     @GetMapping("/followed/liked")
-    public Page<StoreResponse.Like> getLikedStoresOfFollowedUsers(
-            AuthUser authUser,
+    public ResponseEntity<Page<StoreResponse.Like>> getLikedStoresOfFollowedUsers(
+            @AuthenticationPrincipal AuthUser authUser,
             Pageable pageable
     ) {
-        return storeUserService.getLikedStoresOfFollowedUsers(authUser, pageable);
+        Page<StoreResponse.Like> likedStores = storeUserService.getLikedStoresOfFollowedUsers(authUser, pageable);
+        return ResponseEntity.ok(likedStores);
     }
 }

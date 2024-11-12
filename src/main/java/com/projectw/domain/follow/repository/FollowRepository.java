@@ -20,5 +20,5 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
     List<Follow> findByFollower(User follower); // 사용자가 팔로우한 사용자 목록 조회
     List<Follow> findByFollowing(User following); // 사용자를 팔로잉하는 사용자 목록 조회
     @Query("SELECT sl FROM StoreLike sl WHERE sl.user.id IN :userIds")
-    Page<StoreLike> findAllByUserIds(@Param("userIds") List<Long> userIds, Pageable pageable);
+    Page<StoreLike> findStoreLikesByUserIds(List<Long> userIds, Pageable pageable);
 }
