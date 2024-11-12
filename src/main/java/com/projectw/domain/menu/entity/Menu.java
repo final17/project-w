@@ -45,6 +45,15 @@ public class Menu {
         this.allergies = allergies;
     }
 
+    public Menu(Long id, String name, int price, Store store, Set<Allergy> allergies) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.store = store;
+        this.allergies = allergies;
+        this.viewCount = 0;
+    }
+
     // 메뉴 업데이트 메서드
     public void updateMenu(String name, int price, Set<Allergy> allergies) {
         this.name = name;
