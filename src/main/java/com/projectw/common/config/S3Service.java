@@ -18,6 +18,8 @@ public class S3Service {
 
     @Value("${cloud.aws.s3.bucket-name}")
     private String bucketName;
+    @Value("${CLOUD_FRONT_DOMAIN}")
+    private String cloudFrontDomain;
 
     public S3Service(AmazonS3 amazonS3) {
         this.amazonS3 = amazonS3;
@@ -53,7 +55,7 @@ public class S3Service {
         }
 
         // 업로드된 파일의 URL 반환
-        return amazonS3.getUrl(bucketName, fileName).toString();
+        return cloudFrontDomain + fileName;
     }
 
     // 파일 삭제
