@@ -86,6 +86,13 @@ public class MenuService {
                 .stream().collect(Collectors.toSet());
 
         Menu menu = new Menu(requestDto.name(), requestDto.price(), store, allergies);
+
+        // 이미지 처리
+        if (requestDto.image() != null && !requestDto.image().isEmpty()) {
+            String imageUrl = s3Service.uploadFile(requestDto.image());
+            menu.updateImageUrl(imageUrl);
+        }
+
         Menu savedMenu = menuRepository.save(menu);
 
         updateToElasticsearch(store, authUser);
@@ -106,6 +113,18 @@ public class MenuService {
                 .stream().collect(Collectors.toSet());
 
         menu.updateMenu(requestDto.name(), requestDto.price(), allergies);
+
+        // 이미지 처리
+        if (requestDto.image() != null && !requestDto.image().isEmpty()) {
+            // 기존 이미지가 있다면 삭제
+            if (menu.getImageUrl() != null) {
+                String oldImageFileName = menu.getImageUrl().substring(menu.getImageUrl().lastIndexOf("/") + 1);
+                s3Service.deleteFile(oldImageFileName);
+            }
+            String imageUrl = s3Service.uploadFile(requestDto.image());
+            menu.updateImageUrl(imageUrl);
+        }
+
         Menu updatedMenu = menuRepository.save(menu);
 
         updateToElasticsearch(store, authUser);
@@ -172,7 +191,8 @@ public class MenuService {
                 menu.getName(),
                 menu.getPrice(),
                 menu.getAllergies().stream().map(Allergy::getName).collect(Collectors.toSet()),
-                menu.getViewCount()
+                menu.getViewCount(),
+                menu.getImageUrl()
         );
     }
 

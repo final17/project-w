@@ -19,6 +19,7 @@ public class Menu {
 
     private String name; // 메뉴 이름
     private int price; // 메뉴 가격
+    private String imageUrl;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "store_id")
@@ -55,10 +56,14 @@ public class Menu {
     }
 
     // 메뉴 업데이트 메서드
-    public void updateMenu(String name, int price, Set<Allergy> allergies) {
-        this.name = name;
-        this.price = price;
-        this.allergies = allergies;
+    public void updateMenu(String name, Integer price, Set<Allergy> allergies) {
+        if (name != null) this.name = name;
+        if (price != null) this.price = price;
+        if (allergies != null) this.allergies = allergies;
+    }
+
+    public void updateImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 
     // 메뉴 삭제 메서드
