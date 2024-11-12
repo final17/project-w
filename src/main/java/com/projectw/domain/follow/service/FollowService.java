@@ -128,8 +128,12 @@ public class FollowService {
         checkUserAccess(authUser);
 
         User following = findUserById(authUser.getUserId());
+        logger.debug("팔로워 목록을 조회 중입니다: {}", following);
 
-        return followRepository.findByFollowing(following).stream()
+        List<Follow> follows = followRepository.findByFollowing(following);
+        logger.debug("조회된 팔로우 데이터: {}", follows);
+
+        return follows.stream()
                 .map(follow -> new FollowUserDto.Basic(follow.getFollower()))
                 .collect(Collectors.toList());
     }
