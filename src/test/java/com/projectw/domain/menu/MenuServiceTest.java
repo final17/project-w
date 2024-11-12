@@ -1,4 +1,4 @@
-package com.projectw.domain.menu.service;
+package com.projectw.domain.menu;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import com.projectw.common.enums.ResponseCode;
@@ -10,6 +10,7 @@ import com.projectw.domain.menu.dto.request.MenuRequestDto;
 import com.projectw.domain.menu.dto.response.MenuResponseDto;
 import com.projectw.domain.menu.entity.Menu;
 import com.projectw.domain.menu.repository.MenuRepository;
+import com.projectw.domain.menu.service.MenuService;
 import com.projectw.domain.store.entity.Store;
 import com.projectw.domain.store.repository.StoreRepository;
 import com.projectw.domain.user.entity.User;
