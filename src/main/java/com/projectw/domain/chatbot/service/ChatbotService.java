@@ -13,25 +13,28 @@ public class ChatbotService {
     private static final String EMPTY_DETAIL_MESSAGE = "문의 내용을 입력해주세요.";
 
     public ChatbotResponseDto processInquiry(ChatbotRequestDto chatbotRequestDto) {
-        if (!isValidRequest(chatbotRequestDto)) {
-            return new ChatbotResponseDto(EMPTY_DETAIL_MESSAGE);
+        if (!(chatbotRequestDto instanceof ChatbotRequestDto.Basic request)) {
+            return new ChatbotResponseDto.Basic(EMPTY_DETAIL_MESSAGE);
+        }
+
+        if (!isValidRequest(request)) {
+            return new ChatbotResponseDto.Basic(EMPTY_DETAIL_MESSAGE);
         }
 
         InquiryType inquiryType;
         try {
-            inquiryType = InquiryType.valueOf(chatbotRequestDto.getInquiryType());
+            inquiryType = InquiryType.valueOf(request.inquiryType());
         } catch (IllegalArgumentException e) {
-            return new ChatbotResponseDto(INVALID_INQUIRY_TYPE_MESSAGE);
+            return new ChatbotResponseDto.Basic(INVALID_INQUIRY_TYPE_MESSAGE);
         }
 
-        String responseMessage = inquiryType.handleInquiry(chatbotRequestDto.getDetail());
-        return new ChatbotResponseDto(responseMessage);
+        String responseMessage = inquiryType.handleInquiry(request.detail());
+        return new ChatbotResponseDto.Basic(responseMessage);
     }
 
-    // 요청 유효성 검사 메서드
-    private boolean isValidRequest(ChatbotRequestDto chatbotRequestDto) {
-        return chatbotRequestDto != null
-                && StringUtils.hasText(chatbotRequestDto.getInquiryType())
-                && StringUtils.hasText(chatbotRequestDto.getDetail());
+    private boolean isValidRequest(ChatbotRequestDto.Basic request) {
+        return request != null
+                && StringUtils.hasText(request.inquiryType())
+                && StringUtils.hasText(request.detail());
     }
 }

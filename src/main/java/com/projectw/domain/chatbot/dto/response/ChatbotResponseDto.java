@@ -1,12 +1,6 @@
 package com.projectw.domain.chatbot.dto.response;
 
-import lombok.Getter;
+public sealed interface ChatbotResponseDto permits ChatbotResponseDto.Basic {
 
-@Getter
-public class ChatbotResponseDto {
-    private String responseMessage;
-
-    public ChatbotResponseDto(String responseMessage) {
-        this.responseMessage = responseMessage;
-    }
+    record Basic(String responseMessage) implements ChatbotResponseDto { }
 }
