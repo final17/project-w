@@ -1,6 +1,5 @@
 package com.projectw.domain.payment.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.projectw.common.enums.ResponseCode;
@@ -38,7 +37,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.servlet.view.RedirectView;
@@ -401,10 +399,6 @@ public class PaymentServiceTest {
 
         given(tossPaymentsService.confirm(any() , any() , any())).willReturn(response);
 
-        Method method = PaymentService.class.getDeclaredMethod("confirmPayment", JsonNode.class);
-        method.setAccessible(true);  // private 메서드에 접근 가능하도록 설정
-        method.invoke(paymentService, jsonNode);
-
         doNothing().when(eventPublisher).publishEvent(any(ReservationPaymentCompEvent.class));
 
         // when
@@ -432,10 +426,6 @@ public class PaymentServiceTest {
         String failCode = "400";
         String failMessage = "에러";
 
-        Method method = PaymentService.class.getDeclaredMethod("failPayment", String.class , String.class , String.class);
-        method.setAccessible(true);  // private 메서드에 접근 가능하도록 설정
-        method.invoke(paymentService, susscess.orderId() , failCode , failMessage);
-
         // when
         RedirectView redirectView = paymentService.success(susscess);
 
@@ -457,10 +447,6 @@ public class PaymentServiceTest {
 
     @Test
     public void fail_정상동작() throws Exception {
-        // given
-        Method method = PaymentService.class.getDeclaredMethod("failPayment", String.class , String.class , String.class);
-        method.setAccessible(true);  // private 메서드에 접근 가능하도록 설정
-        method.invoke(paymentService, susscess.orderId() , fail.code() , fail.message());
 
         // when
         RedirectView redirectView = paymentService.fail(fail);
