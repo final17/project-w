@@ -56,11 +56,13 @@ public class FollowController {
      * 팔로우한 사용자가 좋아요한 가게 조회
      */
     @GetMapping("/followed/liked")
-    public ResponseEntity<Page<StoreResponse.Like>> getLikedStoresOfFollowedUsers(
+    public ResponseEntity<List<StoreResponse.Like>> getLikedStoresOfFollowedUsers(
             @AuthenticationPrincipal AuthUser authUser,
             Pageable pageable
     ) {
-        Page<StoreResponse.Like> likedStores = storeUserService.getLikedStoresOfFollowedUsers(authUser, pageable);
+        List<StoreResponse.Like> likedStores = storeUserService
+                .getLikedStoresOfFollowedUsers(authUser, pageable)
+                .getContent();
         return ResponseEntity.ok(likedStores);
     }
 }
