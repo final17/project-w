@@ -18,9 +18,9 @@ spring:
         show_sql: true
         use_sql_comments: true
   elasticsearch:
-    username: elastic
-    password: changeme
-    uris: "http://localhost:9200"
+    username: ${ELASTIC_SEARCH_ID}
+    password: ${ELASTIC_SEARCH_PASSWORD}
+    uris: ${ELASTIC_SEARCH_URL}
   sql:
     init:
       mode: always
