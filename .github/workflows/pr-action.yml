@@ -8,6 +8,29 @@ on:
 jobs:
  test:
    runs-on: ubuntu-latest
+   env:
+     DB_URL: ${{ secrets.DB_URL }}
+     DB_USERNAME: ${{ secrets.DB_USERNAME }}
+     DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+     JWT_SECRET_TOKEN: ${{ secrets.JWT_SECRET_TOKEN }}
+     ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+     HOST_IP: ${{ secrets.HOST_IP }}
+     DEFAULT_SLACK_WEBHOOK_URL: ${{ secrets.DEFAULT_SLACK_WEBHOOK_URL }}
+     REDIS_HEALTH_SLACK_WEBHOOK_URL: ${{ secrets.REDIS_HEALTH_SLACK_WEBHOOK_URL }}
+     DB_DIR: ${{ secrets.DB_DIR }}
+     AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+     AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
+     AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+     AWS_REGION: ${{ secrets.AWS_REGION }}
+     FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
+     SERVER_PORT: ${{ secrets.SERVER_PORT }}
+     TOSS_PAY_TEST_CLIENT_KEY: ${{ secrets.TOSS_PAY_TEST_CLIENT_KEY }}
+     TOSS_PAY_TEST_SECRET_KEY: ${{ secrets.TOSS_PAY_TEST_SECRET_KEY }}
+     TOSS_PAY_TEST_SECURITY_KEY: ${{ secrets.TOSS_PAY_TEST_SECURITY_KEY }}
+     CLOUD_FRONT_DOMAIN: ${{ secrets.CLOUD_FRONT_DOMAIN }}
+     ELASTIC_SEARCH_ID: ${{ secrets.ELASTIC_SEARCH_ID }}
+     ELASTIC_SEARCH_PASSWORD: ${{ secrets.ELASTIC_SEARCH_PASSWORD }}
+     ELASTIC_SEARCH_URL: ${{ secrets.ELASTIC_SEARCH_URL }}
    permissions:
      pull-requests: write
    steps:
