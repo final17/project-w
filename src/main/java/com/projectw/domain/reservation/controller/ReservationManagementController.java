@@ -55,8 +55,8 @@ public class ReservationManagementController {
     @GetMapping
     public ResponseEntity<SuccessResponse<Page<ReserveResponse.Infos>>> getOnwerReservations(
             @AuthenticationPrincipal AuthUser authUser ,
-            @ModelAttribute ReserveRequest.Parameter parameter) {
-        return ResponseEntity.ok(SuccessResponse.of(reservationManagementService.getOnwerReservations(authUser.getUserId() , parameter)));
+            @ModelAttribute ReserveRequest.OwnerParameter ownerParameter) {
+        return ResponseEntity.ok(SuccessResponse.of(reservationManagementService.getOnwerReservations(authUser.getUserId() , ownerParameter)));
     }
 
 }
