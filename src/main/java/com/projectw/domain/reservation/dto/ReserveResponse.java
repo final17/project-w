@@ -14,6 +14,8 @@ public sealed interface ReserveResponse permits ReserveResponse.Infos , ReserveR
             Long reserveId,
             Long reservationNo,
             Long numberPeople,
+            Long paymentAmount,
+            boolean paymentYN,
             LocalDate reservationDate,
             LocalTime reservationTime,
             ReservationType type,
