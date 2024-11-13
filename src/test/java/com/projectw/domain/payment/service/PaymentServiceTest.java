@@ -50,6 +50,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -400,12 +401,11 @@ public class PaymentServiceTest {
         given(tossPaymentsService.confirm(any() , any() , any())).willReturn(response);
 
         doNothing().when(eventPublisher).publishEvent(any(ReservationPaymentCompEvent.class));
-
         // when
         RedirectView redirectView = paymentService.success(susscess);
 
         // then
-        assertEquals(String.format("null/payment/success?paymentKey=%s&orderId=%s&amount=%d" , susscess.paymentKey() , susscess.orderId() , susscess.amount()) , redirectView.getUrl());
+        assertThat(redirectView.getUrl()).isEqualTo("null/");
     }
 
     @Test
@@ -416,6 +416,10 @@ public class PaymentServiceTest {
                 .amount(susscess.amount())
                 .status(Status.PENDING)
                 .build();
+
+        Store store = new Store();
+        ReflectionTestUtils.setField(store, "id", 1L);
+        ReflectionTestUtils.setField(payment, "store", store);
 
         given(paymentRepository.findByOrderIdAndStatus(any() , any())).willReturn(Optional.of(payment));
 
@@ -428,9 +432,7 @@ public class PaymentServiceTest {
 
         // when
         RedirectView redirectView = paymentService.success(susscess);
-
-        // then
-        assertEquals(String.format("null/payment/fail?code=%s&message='%s'" , failCode , failMessage) , redirectView.getUrl());
+        assertThat(redirectView.getUrl()).isEqualTo("null/stores/1");
     }
 
     @Test
@@ -452,7 +454,7 @@ public class PaymentServiceTest {
         RedirectView redirectView = paymentService.fail(fail);
 
         // then
-        assertEquals(String.format("null/payment/fail?code=%s&message='%s'" , fail.code() , fail.message()) , redirectView.getUrl());
+        assertThat(redirectView.getUrl()).isEqualTo("null/");
     }
 
     @Test
