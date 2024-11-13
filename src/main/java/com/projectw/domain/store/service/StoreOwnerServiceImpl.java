@@ -18,6 +18,8 @@ import com.projectw.domain.user.repository.UserRepository;
 import com.projectw.security.AuthUser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -200,6 +202,17 @@ public class StoreOwnerServiceImpl implements StoreOwnerService{
             log.error("엘라스틱 서치 인덱싱 실패: {}", e.getMessage());
             throw new RuntimeException("");
         }
+    }
+
+      // StoreOwnerServiceImpl 클래스
+    @Override
+    @Transactional(readOnly = true)
+    public Page<StoreResponse.Info> getMyStores(AuthUser authUser, Pageable pageable) {
+        User user = userRepository.findById(authUser.getUserId())
+                .orElseThrow(() -> new AccessDeniedException(INVALID_USER_AUTHORITY));
+
+        Page<Store> stores = storeRepository.findAllByUserId(user.getId(), pageable);
+        return stores.map(StoreResponse.Info::new);
     }
 
 }

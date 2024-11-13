@@ -1,6 +1,7 @@
 package com.projectw.domain.menu.service;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import com.projectw.common.config.S3Service;
 import com.projectw.common.enums.ResponseCode;
 import com.projectw.common.enums.UserRole;
 import com.projectw.common.exceptions.AccessDeniedException;
@@ -11,6 +12,8 @@ import com.projectw.domain.menu.dto.request.MenuRequestDto;
 import com.projectw.domain.menu.dto.response.MenuResponseDto;
 import com.projectw.domain.menu.entity.Menu;
 import com.projectw.domain.menu.repository.MenuRepository;
+import com.projectw.domain.review.entity.Review;
+import com.projectw.domain.review.entity.ReviewImage;
 import com.projectw.domain.search.StoreDoc;
 import com.projectw.domain.store.entity.Store;
 import com.projectw.domain.store.repository.StoreRepository;
@@ -22,6 +25,7 @@ import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
@@ -40,6 +44,7 @@ public class MenuService {
     private final AllergyRepository allergyRepository;
     private final RedissonClient redissonClient;
     private final ElasticsearchClient elasticsearchClient;
+    private final S3Service s3Service;
 
     // 공통된 락 처리 메서드
     private <T> T executeWithLock(String lockKey, Supplier<T> action) {
@@ -187,6 +192,20 @@ public class MenuService {
                     .doc(doc), StoreDoc.class);
         } catch (IOException e) {
             log.error("StoreId: {} 엘라스틱 서치 업데이트 실패: {}", store.getId(), e.getMessage());
+        }
+    }
+
+    @Transactional
+    public void processImages(List<MultipartFile> images, Review review) {
+        if (images == null || images.isEmpty()) return;
+
+        for (MultipartFile image : images) {
+            String imageUrl = s3Service.uploadFile(image);
+            ReviewImage reviewImage = ReviewImage.builder()
+                    .imageUrl(imageUrl)
+                    .review(review)
+                    .build();
+            review.addImage(reviewImage);
         }
     }
 }

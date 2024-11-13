@@ -21,4 +21,7 @@ public interface StoreRepository extends JpaRepository<Store, Long>, StoreDslRep
 
     @Query("SELECT s FROM Store s WHERE s.title LIKE %:title% ")
     Page<Store> findAllByTitle(Pageable pageable, String title);
+
+    Page<Store> findAllByUserId(Long userId, Pageable pageable);
+
 }
