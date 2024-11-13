@@ -17,6 +17,7 @@ import com.projectw.domain.user.entity.User;
 import com.projectw.security.AuthUser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.redisson.api.RedissonClient;
@@ -34,6 +35,7 @@ import static org.mockito.Mockito.*;
 
 public class MenuServiceTest {
 
+    @InjectMocks
     private MenuService menuService;
 
     @Mock
@@ -54,7 +56,7 @@ public class MenuServiceTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        menuService = new MenuService(menuRepository, storeRepository, allergyRepository, redissonClient, elasticsearchClient);
+//        menuService = new MenuService(menuRepository, storeRepository, allergyRepository, redissonClient, elasticsearchClient);
     }
 
     @Test
