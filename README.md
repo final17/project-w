@@ -37,17 +37,148 @@
 |:--------------------------------------------:|:------------------------------------:|:----------------------------------------:|:-----------------------------------------:|:------------------------------------:|
 | [@ballqs](https://github.com/ballqs) | [@Nameless1004](https://github.com/Nameless1004) | [@SuHyun-git](https://github.com/SuHyun-git) | [@pumaclass](https://github.com/pumaclass) | [@yunseokim119](https://github.com/yunseokim119) |
 
-## 🤝 역할 분담
-* 황호진 : CI/CD , 예약(결제) , ELK
-* 정재호 : Spring Security , JWT 인증/인가 , 유저 , 카테고리 , CI/CD , 웨이팅 , 소나클라우드 
-* 조수현 : 음식점 , 인덱싱 , Redis 캐싱
-* 길용진 : 리뷰 , 주변맛집찾기 , 웹크롤링 , React
-* 김윤서 : 메뉴 , 팔로윙/팔로워 , 찜 , 간단한 챗봇 , 인덱싱
-  <br>
 
 ## 🚩 기능 구현
 
+<details>
+<summary>유저</summary>
 
+* 회원가입
+* 회원탈퇴
+* 로그인
+* 권한변경
+
+</details>
+
+<details>
+<summary>유저</summary>
+
+* 회원가입
+* 회원탈퇴
+* 로그인
+* 권한변경
+
+</details>
+
+<details>
+<summary>유저</summary>
+
+* 회원가입
+* 회원탈퇴
+* 로그인
+* 권한변경
+
+</details>
+
+<details>
+<summary>유저</summary>
+
+* 회원가입
+* 회원탈퇴
+* 로그인
+* 권한변경
+
+</details>
+
+<details>
+<summary>유저</summary>
+
+* 회원가입
+* 회원탈퇴
+* 로그인
+* 권한변경
+
+</details>
+
+<details>
+<summary>유저</summary>
+
+* 회원가입
+* 회원탈퇴
+* 로그인
+* 권한변경
+
+</details>
+
+<details>
+<summary>유저</summary>
+
+* 회원가입
+* 회원탈퇴
+* 로그인
+* 권한변경
+
+</details>
+
+<details>
+<summary>유저</summary>
+
+* 회원가입
+* 회원탈퇴
+* 로그인
+* 권한변경
+
+</details>
+
+<details>
+<summary>유저</summary>
+
+* 회원가입
+* 회원탈퇴
+* 로그인
+* 권한변경
+
+</details>
+
+<details>
+<summary>유저</summary>
+
+* 회원가입
+* 회원탈퇴
+* 로그인
+* 권한변경
+
+</details>
+
+<details>
+<summary>예약(OWNER)</summary>
+
+* 예약 거절
+* 예약 승인
+* 방문 완료
+* 예약내역 조회
+
+</details>
+
+<details>
+<summary>예약(USER)</summary>
+
+* 예약 취소
+* 메뉴 담기
+* 메뉴 수정
+* 메뉴 삭제
+* 메뉴 조회
+* 예약내역 조회
+
+</details>
+
+<details>
+<summary>결제</summary>
+
+* 결제요청 전 검증
+* 결제승인 성공
+* 결제승인 실패
+* 결제내역 조회
+
+</details>
+
+<details>
+<summary>정산</summary>
+
+* 정산로그 조회
+* 정산집계 조회
+
+</details>
 
 ## ☁ 와이어프레임
 
@@ -62,3 +193,5 @@
 
 
 ## 아키텍쳐
+
+###

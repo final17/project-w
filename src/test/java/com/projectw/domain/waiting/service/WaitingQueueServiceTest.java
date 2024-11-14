@@ -351,29 +351,27 @@ class WaitingQueueServiceTest {
     @Test
     void 웨이팅_대기열에_등록_여부_확인() {
         // given
-        given(redissonClient.getScoredSortedSet(anyString())).willReturn(sortedSetMock);
-        given(sortedSetMock.rank(String.valueOf(user.getUserId()))).willReturn(0);
+        given(storeRepository.findById(store.getId())).willReturn(Optional.of(store));
+        given(waitingHistoryRepository.existsByUserAndStoreAndStatus(any(), any(), any())).willReturn(true);
 
         // when
         WaitingQueueResponse.WaitingInfo waitingInfo = waitingQueueService.checkWaitingStatus(user, store.getId());
 
         // then
         assertThat(waitingInfo.isWaiting()).isTrue();
-        verify(sortedSetMock, times(1)).rank(String.valueOf(user.getUserId()));
     }
 
     @Test
     void 웨이팅_대기열에_미등록_여부_확인() {
         // given
-        given(redissonClient.getScoredSortedSet(anyString())).willReturn(sortedSetMock);
-        given(sortedSetMock.rank(String.valueOf(user.getUserId()))).willReturn(null);
+        given(storeRepository.findById(store.getId())).willReturn(Optional.of(store));
+        given(waitingHistoryRepository.existsByUserAndStoreAndStatus(any(), any(), any())).willReturn(false);
 
         // when
         WaitingQueueResponse.WaitingInfo waitingInfo = waitingQueueService.checkWaitingStatus(user, store.getId());
 
         // then
         assertThat(waitingInfo.isWaiting()).isFalse();
-        verify(sortedSetMock, times(1)).rank(String.valueOf(user.getUserId()));
     }
 
 }
