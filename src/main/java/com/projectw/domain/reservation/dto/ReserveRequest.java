@@ -19,7 +19,8 @@ public sealed interface ReserveRequest permits
         ReserveRequest.AddCart ,
         ReserveRequest.UpdateCart ,
         ReserveRequest.RemoveCart ,
-        ReserveRequest.Parameter {
+        ReserveRequest.Parameter ,
+        ReserveRequest.OwnerParameter {
 
     record InsertReservation(
             @NotBlank(message = "주문번호는 필수입니다.")
@@ -66,6 +67,21 @@ public sealed interface ReserveRequest permits
             Integer size
     ) implements ReserveRequest {
         public Parameter {
+            if (Objects.isNull(page)) page = 1;
+            if (Objects.isNull(size)) size = 10;
+        }
+    }
+
+    record OwnerParameter(
+            Long storeId,
+            ReservationType type,
+            ReservationStatus status,
+            LocalDate startDt,
+            LocalDate endDt,
+            Integer page,
+            Integer size
+    ) implements ReserveRequest {
+        public OwnerParameter {
             if (Objects.isNull(page)) page = 1;
             if (Objects.isNull(size)) size = 10;
         }
