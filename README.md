@@ -82,10 +82,10 @@
 <details>
 <summary style="font-size: 16px; font-weight: bold">🛠 예약 대기열 <span style="background-color: red;">동시성</span> 이슈</summary>
 
-
+---
 <details>
 <summary><strong>⚠️ 문제 발견</strong></summary>
-
+    
 > - **현상**: JMeter로 1,000명의 유저가 동시에 대기열에 등록했을 때, 발권 번호가 중복으로 발생하는 동시성 이슈가 확인되었습니다.
 
 </details>
@@ -122,8 +122,11 @@
 >- **결과**: 처리율이 약 **43.2%** 개선되었고, 응답 시간도 **약 30.8%** 단축되었습니다.
     - 다만, Redis는 메모리 기반이기 때문에 데이터 휘발성 문제를 해결하기 위한 추가적인 처리가 필요합니다.
 </details>
+
+---
 <br/>
 </details>
+
 <br/>
 <details>
 <summary style="font-size: 16px; font-weight: bold">🔍 음식점 검색 기능 속도 향상 </summary>
