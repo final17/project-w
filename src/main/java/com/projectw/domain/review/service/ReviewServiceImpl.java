@@ -65,6 +65,7 @@ public class ReviewServiceImpl implements ReviewService {
                 .content(reviewRequestDto.content())
                 .rating(reviewRequestDto.rating())
                 .reservation(reservation)
+                .menu(menu)
                 .build();
 
         // S3에 이미지를 업로드하고 URL 리스트 생성

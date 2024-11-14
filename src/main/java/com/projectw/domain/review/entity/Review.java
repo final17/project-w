@@ -44,6 +44,10 @@ public class Review extends Timestamped {
     @JoinColumn(name = "reservation_id")
     private Reservation reservation;
 
+    @ManyToOne(fetch = FetchType.LAZY)  // Menu와의 관계 추가
+    @JoinColumn(name = "menu_id")
+    private Menu menu;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
@@ -52,11 +56,12 @@ public class Review extends Timestamped {
     private List<Like> likes = new ArrayList<>();
 
     @Builder
-    public Review(String title, String content, int rating, Reservation reservation) {
+    public Review(String title, String content, int rating, Reservation reservation, Menu menu) {
         this.title = title;
         this.content = content;
         this.rating = rating;
         this.reservation = reservation;
+        this.menu = menu;
         this.user = reservation.getUser();
         this.store = reservation.getStore();
     }
