@@ -107,10 +107,10 @@ public class WaitingQueueService {
         // 완료로 변경
         waitingHistoryService.completeHistory(user, store);
 
+        notificationService.broadcast(getSseKey(storeId, popUserId), 0);
+        notificationService.delete(getSseKey(storeId,popUserId));
         // 웨이팅 서비스에서 레스토랑 가중치 감소
         waitingService.incrementWeight(String.valueOf(storeId), -1.0);
-
-        notificationService.delete(getSseKey(storeId, popUserId));
         redisProducer.send("waiting-poll", new WaitingPoll(score.longValue(), storeId, Long.parseLong(popUserId), LocalDateTime.now()));
         updateAllUsers(storeId);
     }
@@ -132,8 +132,9 @@ public class WaitingQueueService {
         // 웨이팅 서비스에서 레스토랑 가중치 감소
         waitingService.incrementWeight(String.valueOf(storeId), -1.0);
 
-        notificationService.delete(getSseKey(storeId, String.valueOf(authUser.getUserId())));
         updateAllUsers(storeId);
+        notificationService.broadcast(getSseKey(storeId, String.valueOf(authUser.getUserId())), "cancel");
+        notificationService.delete(getSseKey(storeId, String.valueOf(authUser.getUserId())));
     }
 
     /**
@@ -220,11 +221,10 @@ public class WaitingQueueService {
      * @return
      */
     public WaitingQueueResponse.WaitingInfo checkWaitingStatus(AuthUser authUser, long storeId) {
-        RScoredSortedSet<String> sortedSet = redissonClient.getScoredSortedSet(getRedisSortedSetKey(storeId));
-        Integer rank = sortedSet.rank(String.valueOf(authUser.getUserId()));
+        Store store = storeRepository.findById(storeId)
+                .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_STORE));
 
-        // rank가 null이 아니면 웨이팅 대기열에 등록 된 것
-        return new WaitingQueueResponse.WaitingInfo(rank != null);
+        return new WaitingQueueResponse.WaitingInfo(waitingHistoryRepository.existsByUserAndStoreAndStatus(User.fromAuthUser(authUser), store, WaitingStatus.REGISTERED));
     }
 
 }

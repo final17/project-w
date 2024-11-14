@@ -155,7 +155,7 @@ public class PaymentService {
             ReservationPaymentCompEvent reservationPaymentCompEvent = new ReservationPaymentCompEvent(susscess.orderId());
             eventPublisher.publishEvent(reservationPaymentCompEvent);
 
-            redirectView.setUrl(frontendUrl+"/payment/success?paymentKey=" + susscess.paymentKey() + "&orderId=" + susscess.orderId() + "&amount=" + String.valueOf(susscess.amount()));
+            redirectView.setUrl(frontendUrl+"/");
         } else {
             String errCode = jsonNode.get("code").textValue();
             String errMessage = jsonNode.get("message").textValue();
@@ -164,7 +164,7 @@ public class PaymentService {
             // 취소로 변경
             payment.updateStatus(Status.CANCELLED);
 
-            redirectView.setUrl(frontendUrl+"/payment/fail?code="+errCode+"&message='"+errMessage+"'");
+            redirectView.setUrl(frontendUrl+"/stores/"+payment.getStore().getId());
         }
 
         return redirectView;
@@ -176,7 +176,7 @@ public class PaymentService {
     public RedirectView fail(PaymentRequest.Fail fail) {
         failPayment(null , fail.code() , fail.message());
         RedirectView redirectView = new RedirectView();
-        redirectView.setUrl(frontendUrl+"/payment/fail?code="+fail.code()+"&message='"+fail.message()+"'");
+        redirectView.setUrl(frontendUrl+"/");
         return redirectView;
     }
 
