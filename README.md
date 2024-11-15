@@ -61,38 +61,34 @@
 ![macOS](https://img.shields.io/badge/mac%20os-000000?style=for-the-badge&logo=macos&logoColor=F0F0F0)
 ![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)
 
-## 🏠 멤버 구성 및 기능 구현
-|                     황호진                      |                 정재호                  |                   조수현                    |                    길용진                    |                 김윤서                  |
-|:--------------------------------------------:|:------------------------------------:|:----------------------------------------:|:-----------------------------------------:|:------------------------------------:|
-| [@ballqs](https://github.com/ballqs) | [@Nameless1004](https://github.com/Nameless1004) | [@SuHyun-git](https://github.com/SuHyun-git) | [@pumaclass](https://github.com/pumaclass) | [@yunseokim119](https://github.com/yunseokim119) |
 
 ---
 ## KEY Summary
-### 🍁 **트러블 슈팅 및 성능 개선 **
+
+---
+## 트러블 슈팅 및 성능 개선
 
 <details>
 <summary style="font-size: 16px; font-weight: bold">🛠 예약 대기열 <span style="background-color: red;">동시성</span> 이슈</summary>
-
----
 <details>
 <summary><strong>⚠️ 문제 발견</strong></summary>
     
-> - **현상**: JMeter로 1,000명의 유저가 동시에 대기열에 등록했을 때, 발권 번호가 중복으로 발생하는 동시성 이슈가 확인되었습니다.
+- **현상**: JMeter로 1,000명의 유저가 동시에 대기열에 등록했을 때, 발권 번호가 중복으로 발생하는 동시성 이슈가 확인되었습니다.
 
 </details>
 
 <details>
 <summary><strong>🔍 상황 분석</strong></summary>
 
-> - **분석**: 대기열 등록 로직이 발권번호 테이블과 웨이팅 테이블로 구성되어 있으며, 동시에 접근 시 발권번호가 올바르게 증가하지 않고 중복된 번호가 저장되는 문제가 있었습니다.
+- **분석**: 대기열 등록 로직이 발권번호 테이블과 웨이팅 테이블로 구성되어 있으며, 동시에 접근 시 발권번호가 올바르게 증가하지 않고 중복된 번호가 저장되는 문제가 있었습니다.
 
 </details>
 
 <details>
 <summary><strong>📝 1차 시도: <code>synchronized</code> 사용</strong></summary>
 
-> - **방법**: 발권번호 증가 부분에 `synchronized` 키워드를 적용하여 동시성 제어를 시도했습니다.
-> - **결과**: 중복이 줄어들었지만 완전히 해결되지는 않았습니다.
+- **방법**: 발권번호 증가 부분에 `synchronized` 키워드를 적용하여 동시성 제어를 시도했습니다.
+- **결과**: 중복이 줄어들었지만 완전히 해결되지는 않았습니다.
     - `@Transactional`로 인해 `synchronized`가 끝난 후 커밋 시점에서 다른 스레드들이 값을 변경하여 발생한 문제임을 확인했습니다.
 
 </details>
@@ -100,24 +96,23 @@
 <details>
 <summary><strong>🔒 2차 시도: 비관적 락(Pessimistic Lock) 적용</strong></summary>
 
-> - **방법**: 동시성 충돌 가능성이 높은 환경을 고려해, 비관적 락을 사용하여 발권번호 테이블의 중복 문제를 해결했습니다.
-> - **결과**: 중복 문제는 해결되었으나, 높은 트래픽 상황에서 데드락이 발생하여 일부 트랜잭션이 롤백되었습니다.
-    - `show engine innodb status` 명령어로 데드락 로그를 분석한 결과, 동일한 `storeId`와 `waiting_number` 값을 삽입하려는 트랜잭션 간의 충돌로 데드락이 발생한 것을 확인했습니다.
+- **방법**: 동시성 충돌 가능성이 높은 환경을 고려해, 비관적 락을 사용하여 발권번호 테이블의 중복 문제를 해결했습니다.
+- **결과**: 중복 문제는 해결되었으나, 높은 트래픽 상황에서 데드락이 발생하여 일부 트랜잭션이 롤백되었습니다.
+   - `show engine innodb status` 명령어로 데드락 로그를 분석한 결과, 동일한 `storeId`와 `waiting_number` 값을 삽입하려는 트랜잭션 간의 충돌로 데드락이 발생한 것을 확인했습니다.
 
 </details>
 
 <details>
 <summary><strong>💡 3차 시도: Redis로 전환</strong></summary>
 
-> - **방법**: RDB 대신 **Redis**를 사용하여 싱글 스레드 기반으로 순차적 처리를 유도했습니다. Redis는 메모리 기반이므로 Lock 없이도 효율적으로 동시성을 관리할 수 있었습니다.
->- **결과**: 처리율이 약 **43.2%** 개선되었고, 응답 시간도 **약 30.8%** 단축되었습니다.
-    - 다만, Redis는 메모리 기반이기 때문에 데이터 휘발성 문제를 해결하기 위한 추가적인 처리가 필요합니다.
+- **방법**: RDB 대신 **Redis**를 사용하여 싱글 스레드 기반으로 순차적 처리를 유도했습니다. Redis는 메모리 기반이므로 Lock 없이도 효율적으로 동시성을 관리할 수 있었습니다.
+- **결과**: 처리율이 약 **43.2%** 개선되었고, 응답 시간도 **약 30.8%** 단축되었습니다.
+    - 또한, Redis의 데이터 휘발성 문제를 해결하기 위한 추가적인 처리를 고민하였습니다.
+      - 레디스 클러스터 구성 및 AOF 옵션 추가
+      - 레디스 서버 다운 시 슬랙 알림 기능
 </details>
-
----
 <br/>
 </details>
-
 <br/>
 <details>
 <summary style="font-size: 16px; font-weight: bold">🔍 음식점 검색 기능 속도 향상 </summary>
@@ -153,8 +148,6 @@
    </details>
 4. **결과**
    - 검색 속도가 1048.90ms에서 4.32ms로 향상되었다. 
-   
-   
 
 </details>
 <br/>
@@ -241,15 +234,17 @@
 
 </details>
 
+---
+
 ## 인프라 아키텍처 & 적용 기술
 
 ### 아키텍처 다이어그램
-![image](https://github.com/user-attachments/assets/1e48d4bb-690c-44ff-85b1-e9bffaf198d9)
+![image](https://github.com/user-attachments/assets/b0234b41-039d-4489-b8be-f7c1e08124e0)
 
 ---
 
 <details>
-<summary style="font-size: 16px;"><b>📦 적용 기술 상세보기</b></summary>
+<summary style="font-size: 24px;"><b>📦 적용 기술 상세보기</b></summary>
 
 ### 💾 **데이터베이스 및 캐싱**
 
@@ -524,14 +519,15 @@
    - **사용 이유**: 코드 푸시에 따른 자동화된 코드 품질 검사와 빌드, 테스트, 배포 과정을 통해 개발 속도와 품질을 동시에 유지.
 
 4. **ELKB**
-   - **적용 위치**: AWS EC2에 분산 로그 수집 환경
+   - **적용 위치**: 통합 검색, AWS EC2에 모니터링 환경 구축
    - **사용 이유**: 통합 로깅과 모니터링을 위한 플랫폼으로 시스템 로그 수집 및 분석을 통해 빠른 문제 탐지 및 대응. Elasticsearch를 통한 데이터 인덱싱 및 검색, Logstash로 다양한 로그 데이터를 수집 및 변환, Kibana 대시보드를 통한 시각화, Beats로 서버에서의 로그와 메트릭 경량 수집을 통해 시스템의 실시간 상태를 효과적으로 파악.
 
 </details>
 
+---
 ## 주요 기능
 
-### 🍁 **결제 API 연동**
+### 결제 API 연동
 - 외부 PG사와 결제 API를 연동하여 결제 정보를 처리하고, 결과를 DB에 저장함으로써 결제 정보를 추적
         <details>
         <summary>프로세스 흐름</summary>
@@ -539,161 +535,523 @@
         </details>
 - Spring의 REST API와 트랜잭션 이벤트 리스너를 활용하여 결제 API와의 연동을 효율적으로 처리
 
----
-
-### 🍁 **정산 Spring Batch**
+### 정산 Spring Batch
 - 실시간 처리 대신, 시스템 부하가 적은 시간대에 배치 방식으로 정산을 수행하며, 별도의 서버 환경을 활용하여 부하를 최소화.
   - **프로세스 흐름**: `결제 완료 데이터 조회` → `수수료 계산` → `정산 결과 저장`.
 - 스프링 배치와 스케줄러를 활용하여 정산 작업을 자동화하고, 배치가 시스템 부하가 적은 시간에 실행되도록 설정
-
+- 관련 링크 : https://github.com/final17/batch
+---
 ## 기술적 고도화
 
-<details>
-<summary><b>🍁 분산락 Redisson 도입으로 CPU 점유율 2배 개선</b></summary>
 
-### 왜 동시성 제어 시 여러 선택지가 있는데, 분산락을 사용했을까요?
+<details>
+<summary style="font-size: 16px">📝예약부터 결제, 그리고 정산까지: 효율적인 프로세스 구축 여정</summary>
+<details>
+<summary style="font-size: 16px"><strong>💳 결제 API 연동</strong></summary>
+
+<details>
+<summary style="font-size: 14px"><strong>트러블 슈팅</strong></summary>
+
+### [문제 인식]
+
+예약 CRUD 작업 진행 후 결제를 처리하기 위해 토스페이먼트 API를 연동하면서 개발을 진행하였고
+결제 시스템을 개발하는 과정에서 토스페이를 통한 결제 API를 구현하는 중에 데이터 파싱 문제에 직면하게 되었습니다.
+API로 응답받은 데이터가 작성한 형식과 다르게 반환되었고 이를 적절히 처리하지 못하는 상황이 발생했습니다.
+이로 인해 결제 정보가 저장되지 않은 문제가 생겼습니다.
+
+### [해결 방안]
+
+API의 응답 데이터 구조를 다시 파악하기 위해 API 문서를 면밀히 살펴보고 문서에서 제공하는 데이터 형식에 맞춰서
+필요한 필드들을 추출하여 검증하고 API 응답을 정확히 처리할 수 있도록 했습니다.
+
+### [해결 완료]
+
+테이블 엔티티의 구조를 재검토하여 각 필드가 데이터 타입과 일치하는지 확인했습니다.
+이를 바탕으로 실제 결제와 결제 취소 기능을 통해 흐름을 점검했습니다.
+또한 제이미터를 통해 최대한 많이 API를 호출해보며 문제가 없는지 검증했습니다.
+이 모든 과정을 통해 최종적으로 결제 시스템의 안정성과 신뢰성을 확보할 수 있었습니다.
+
+</details>
+
+<details>
+<summary style="font-size: 14px"><strong>결제 테스트</strong></summary>
+
+### 결제 흐름
+
+<img src="https://github.com/user-attachments/assets/e25e3f8e-bda9-46b5-9ba0-d546afbfab47"/>
 
 ---
 
+### Jmeter 테스트 결과
+
+테스트 해야하는 부분은 <span style="color : red;">결제 요청 전 검증</span>부분으로 판단했고 해당 부분에 Jmeter를 걸어서 테스트를 진행해보았습니다.
+
+<img src="https://github.com/user-attachments/assets/a3029ed1-9c3e-4642-aaaa-404eeda7ec09"/>
+
+| 테스트 내용               | 샘플 수 | 평균 응답 시간 (ms) | 최소 응답 시간 (ms) | 최대 응답 시간 (ms) | 오류율 (%) | 처리량 (req/sec) |
+|----------------------|---------|---------------------|---------------------|---------------------|------------|------------------|
+| 기본                   | 2140    | 502                 | 17                  | 1689                | 4.67       | 189.9            |
+| RedissonLock         | 1844    | 1831                | 18                  | 2318                | 5.42       | 53.8             |
+| Async                | 1968    | 518                 | 8                   | 1046                | 5.08       | 183.6            |
+| RedissonLock + Async | 1852    | 1669                | 16                  | 3743                | 5.40       | 58.9             |
+
+---
+
+<div style="font-size: 14px">여러 테스트로 확인해본 결과 <span style="color : red;">기본 방식</span>이 더 빠르고 데이터도 안정적으로 들어가는것을 확인했습니다.</div>
+
+</details>
+
+</details>
+<details>
+<summary style="font-size:16px"><strong>⚙️ 정산 처리 자동화</strong></summary>
+
+<img src="https://github.com/user-attachments/assets/c302cc4f-c238-4158-9808-6badbb27b16a"/>
+
+관련 링크 : https://github.com/final17/batch
+
+</details>
+<details>
+<summary><strong>🔧 성능 개선 및 안정화</strong></summary>
+    기능 설명: 트랜잭션 이벤트 리스너로 결제 및 정산 과정에서 발생할 수 있는 오류를 모니터링하고 실시간으로 조치.
+    성과: 트랜잭션 오류 발생률 15% 감소, 데이터 처리 시 평균 CPU 사용량 20% 절감.
+    기술: Spring Framework의 트랜잭션 이벤트 리스너, 모니터링 시스템.
+</details>
+</details>
+<br/>
+
+<details><summary style="font-size: 16px; font-weight: bold">🔍 음식점 검색 기능 속도 향상 </summary>
+
+**배경**
+- 100만건 정도의 큰 데이터를 LIKE를 통해 검색
+**문제**
+- 검색 속도가 1초 정도로 느려 검색 속도 향상이 필요함
+
+<details><summary>🧾 의사 결정 </summary>
+
+<details><summary> 검색을 고도화 시키는 방법 </summary>
+
+1. 페이지네이션: 검색 결과가 많은 경우 한 번에 모든 데이터를 가져오기 않고, 페이지네이션을 적용하여 필요한 부분만 조회하도록 할 수 있습니다.
+2. JPA 쿼리 최적화 및 Indexing: 데이터베이스 테이블에 인덱스를 설정하여 검색 속도를 높일 수 있습니다.
+3. Redis 캐싱 적용: 자주 조회하는 음식점 데이터를 Redis에 캐싱하여 데이터베이스 조회 빈도를 줄일 수 있습니다.
+
+이중에서 페이지네이션은 적용을 완료하였고, Indexing을 하는 것이 적합하다고 생각을 하여 Indexing을 적용하였습니다. 그 후에 Redis 캐싱을 적용하였습니다.
+</details>
+
+<details><summary> 인덱스 종류 </summary>
+
+1. 단일 인덱스(Single Index): 하나의 컬럼에 인덱스를 설정하여 해당 컬럼에 대한 검색을 최적화 합니다.
+2. 복합 인덱스(Composite Index): 여러 컬럼을 조합하여 인덱스를 생성하는 방석으로, 특정 조합에 대한 최적의 성능을 제공
+3. 유니크 인덱스(Unique Index): 중복이 허용되지 않도록 하는 인덱스
+4. 전문검색 인덱스(Full-Text Index): 텍스트 기반의 검색을 최적화 하기 위한 인덱스
+
+이중에서 Full-Text Inex가 텍스트 기반의 검색으로 적합하다고 생각하여 적용하였습니다.
+
+</details>
+
+<details><summary> 해결 순서 </summary>
+
+1. Full-Text Index 적용
+* Full-Text Index를 사용하면 키워드 검색을 지원하지 않습니다.("검색어"만 검색이 가능하고 "%검색어", "검색어%", "%검색어%")
+2. Full-Text Index에서 N-Gram을 사용하기
+* Full-Text는 위와 같은 문제가 발생하여 N-Gram을 사용하였습니다. N-Gram을 사용하면 위에서 발생한 문제를 해결할 수 있었습니다.
+* ![image](https://github.com/user-attachments/assets/3403990d-4d17-4666-b320-683761dbce14)
+* 하지만 Like만 사용한 결과와 Full-Text Index N-Gram을 사용한 결과를 확인해보면 "소라", "도깨비"를 검색하면 빠르고, "식당"은 둘이 속도가 비슷하고, "찌개", "국밥"은 N-Gram방식이 느린 것을 확인할 수 있었습니다.
+* N-Gram이 느린 이유는 N-Gram은 특정 검색 시 세밀한 일치 검색을 가능하게 하지만 더 느려질 수 있기 때문이었습니다.
+* 정화도는 향상되었지만 속도가 많이 느려지기 때문에 적합하지 않다고 생각하였습니다.
+3. Single Index 걸어보기
+* 처음으로 돌아가 가장 기본적인 index인 Single Index를 걸어보았습니다
+* 인덱싱 적용 범위
+  * EXPLAIN SELECT * FROM store WHERE business_name LIKE '%도깨비%';
+  * ![image](https://github.com/user-attachments/assets/5cf2cf95-cd3e-4a22-b883-321ff7ef07a2)
+  * EXPLAIN SELECT * FROM store WHERE business_name LIKE '도깨비%';
+  * ![image](https://github.com/user-attachments/assets/26efeff3-c0ec-46db-a4e5-8d94e0081094)
+  * EXPLAIN SELECT * FROM store WHERE business_name LIKE '%도깨비';
+  * ![image](https://github.com/user-attachments/assets/8023c79a-750b-4cfd-91b9-386963c650ff)
+* 인덱싱 없이 LIKE만 사용하여 검색했을 때
+* ![image](https://github.com/user-attachments/assets/11a4b11c-b140-4418-b50d-cf3190ecf12d)
+* 인덱싱 사용했을 때
+* ![image](https://github.com/user-attachments/assets/9544af92-503a-42bf-bc87-ecd71d108621)
+4. Redis 캐싱 사용하기
+* 음식점 데이터는 자주 조회되고, 변경이 적고 읽기 비율이 높은 데이터라고 생각하여 Redis 캐싱 대상에 적합하다고 생각하였습니다.
+* 처음 페이징 처리된 데이터를 redis에 넣으려고 하자 에러가 나오면서 넣을 수 없었습니다.
+* ![image](https://github.com/user-attachments/assets/39fc68be-c546-4270-b08f-f2ad0df8ef04)
+* 그래서 페이징 처리된 데이터를 dto를 새로 만들어서 해결하였습니다.
+* Redis 결과
+  * 캐싱을 처리하기 전
+  * ![image](https://github.com/user-attachments/assets/3eef3793-ab3b-4e43-a5be-6405dffa75f9)
+  * 캐싱 처리 후
+  * ![image](https://github.com/user-attachments/assets/c0d25d43-a3f4-4ccc-b745-20716a10fc9e)
+* 속도가 <span style="color:red;">1048.90ms → 4.32ms</span>로 빨라진 것을 확인 할 수 있습니다.
+
+
+</details>
+</details>
+</details>
+<br/>
+<details>
+<summary style="font-size: 16px; font-weight: bold">⚙️ 조회수, 좋아요 분산락 적용</summary>
+
+#### 왜 동시성 제어 시 여러 선택지가 있는데, 분산락을 사용했을까?
+- 분산 시스템 환경에서의 데이터 일관성 보장, 성능, 그리고 확장성 측면에서 가장 적합한 솔루션이기 때문
+---
 #### 낙관적 락과 비관적 락의 선택지
-
-분산락을 채택하기 이전에는 비관적 락으로 동시성 제어를 선택했습니다.
-
 - **비관적 락**  
-  비관적 락으로 데이터를 조회하면 해당 트랜잭션이 끝나기 전까지는 데이터에 대한 Insert 작업이 불가능합니다.
-    - 단점: 트래픽이 많은 경우 성능 저하 발생 및 타임아웃 문제.
+  트랜잭션 내에서 행 단위로 락을 걸어 데이터를 보호.
+  장점: 데이터베이스 레벨에서 강력한 동시성 제어 가능.
+  추가 도구 없이 데이터베이스 기능만으로 구현 가능.
+  단점: 락이 데이터베이스에 직접 걸리므로, 트랜잭션이 오래 지속되면 데이터베이스의 성능이 저하됨.
+  분산 환경(멀티 인스턴스)에서는 사용할 수 없음.
+  락 경합이 심하면 데드락 발생 가능
 
 - **낙관적 락**  
-  낙관적 락은 충돌 발생 시 롤백 처리를 요구하며, 충돌 비용이 높습니다.
-    - 단점: CPU 점유율이 상승하고, 예상치 못한 오류 발생 가능.
+  데이터를 읽은 후 업데이트 시점에 데이터의 버전을 확인하여 동시성 충돌을 감지. 
+- 장점: 락을 걸지 않으므로 성능이 뛰어남.
+  충돌 발생이 적은 환경에서 적합. 
+- 단점: 충돌이 빈번한 경우 성능이 저하됨(여러 번 재시도 필요).
+  충돌 감지 후 롤백 및 재시도 로직이 복잡해질 수 있음.
+  분산 환경에서 사용하려면 추가적인 구현 필요.
 
 ---
 
 #### Redis로 분산락을 채택한 이유
-<h1 style="font-size: 50px">김윤서</h1>
-1. **Lettuce의 문제점**  
-   Lettuce는 스핀락 방식을 사용하여 락이 풀릴 때까지 계속 Redis에 요청을 보냅니다.
-    - 결과적으로 Redis CPU 점유율이 높아지는 문제가 발생.
-
-2. **Redisson의 장점**  
-   Redisson은 Pub-Sub 구조로 락이 종료될 때 이벤트를 발행하며, 락 요청을 효율적으로 처리합니다.
-    - 결과적으로 Redis CPU 점유율이 낮아집니다.
-
----
-
-### 적용 후
-
-- **CPU 점유율:** 기존 60% → 30% 감소
-- **TPS:** 기존 1400 → 2500으로 향상
-
+- **분산 환경 지원**: 멀티 노드/멀티 인스턴스에서도 동작.
+- **성능**: 메모리 기반 Redis를 사용하여 락 처리 속도가 빠름.
+- **데드락 방지**: 자동 TTL로 데드락 가능성을 제거.
+- **확장성**: 클러스터 구성을 통해 높은 확장성과 가용성 제공.
+- **유연성**: 단일 리소스나 특정 작업 단위로 락 관리가 가능.
 </details>
 
 <br/>
 <details>
-<summary style="font-size: 16px"><b>🔍 Elastic search 검색 정확도 향상</b></summary>
+<summary style="font-size: 16px"><b>🔍 Elastic search 통합 검색</b></summary>
+
+# 통합 검색 구현
+## DB LIKE 검색
+
+### 구현 아이디어
+DB에서 `LIKE` 연산을 통해 키워드 검색을 수행해 보았습니다.
+
+### 조건 및 결과
+- 데이터 개수: 100만 건
+- 검색 컬럼: 사업명, 사업형태, 주소, 도로명 주소, 메뉴
+- 결과: 약 15초 소요
+  ![image](https://github.com/user-attachments/assets/b871da24-9e08-4ce0-a66f-c15afbb6a32f)
+
+## 인덱스 적용
+### 개선 아이디어
+DB 컬럼에 인덱스를 추가해 성능을 개선해보려 했으나, `LIKE` 연산에서 `%키워드%`와 같이 시작과 끝을 와일드카드로 둘러싸면 인덱스가 무용지물이 되는 것을 확인했습니다.
+
+### 결과
+* `%키워드%`를 사용한 경우 성능 개선 효과가 없었으며, `키워드%`로 시작하는 경우에만 인덱스를 사용할 수 있었습니다.
+  ![image](https://github.com/user-attachments/assets/70114b02-c0d0-4d70-9339-af587afeb803)
+  ![image](https://github.com/user-attachments/assets/1f09eb2e-f85c-451b-8c99-6f52911f0710)
+
+
+* `%키워드%` EXPLAIN
+  ![image](https://github.com/user-attachments/assets/ebfac40e-0179-4f57-91c9-9cd826e7169e)
+
+
+* `키워드%` EXPLAIN
+  ![image](https://github.com/user-attachments/assets/a0215a51-da22-440f-ba64-054864f41d25)
+
+## MySQL Full-Text Search
+MySQL의 `Full-Text Search`를 사용해 검색을 구현해 보았습니다.
+
+```java
+    @Query(value = "SELECT * FROM store WHERE MATCH(business_name, full_location_address, full_road_name_address, business_type) AGAINST(:keyword IN NATURAL LANGUAGE MODE)", nativeQuery = true)
+    List<Store> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
+```
+### 결과
+검색 성능이 개선되었으나, 원하는 검색 결과가 정확하게 나오지 않아 통합 검색으로는 부적합하다고 판단했습니다.
+![image](https://github.com/user-attachments/assets/3b5c447e-78be-448f-993e-cf25e7841dfc)
+![image](https://github.com/user-attachments/assets/f68fd8da-f724-4d5d-9339-13511446c780)
+
+## Elasticsearch 도입
+DB에서의 검색 대신 Elasticsearch를 사용하기로 했습니다.
+Elasticsearch를 도입한 이유는 다음과 같습니다.
+1. 기존 DB 검색의 한계
+   - 성능: SQL의 LIKE 검색은 `%키워드%` 구조인 경우 인덱스를 활용할 수 없어 데이터가 많을수록 속도가 느려집니다.
+   - **제한된 검색 기능:** Full-Text Search는 사용자 의도를 세밀하게 반영하기 어려워 복합 조건 처리와 검색 정확도에 한계가 있습니다.
+2. Elasticsearch의 장점
+- **성능:** 역색인 구조로 검색 속도가 매우 빠릅니다.
+- **정교한 검색:** 형태소 분석기(Nori)를 통해 한국어 검색 최적화 및 필드별 가중치 설정으로 검색 결과의 품질 높습니다.
+- **유연한 검색:** Fuzzy 검색, 부분 매칭, 복합 쿼리 등을 지원해 다양한 사용자 요구를 충족할 수 있습니다.
+- **확장성과 실시간성:** 실시간 색인과 수평 확장으로 데이터 증가에도 안정적인 성능을 유지할 수 있습니다.
+
+### 테스트
+* 간단히 `multi_match` 쿼리를 통해 필드별 가중치를 주어 검색했을 때, 100만건의 데이터에서 30ms 내에 검색 결과를 얻을 수 있었지만, `서울 초밥` 검색 시 관련이 없어보이는 가게가 검색 결과 상위에 나오는 문제를 발견했습니다.
+  ![image](https://github.com/user-attachments/assets/0f676f20-8f35-4b2a-933f-52961ac6fe52)
+
+# 검색 정확도 개선
+## 문제
+사용자가 `서울시 은평구 초밥집`을 검색하면, 기대하는 결과는 서울 은평구에 위치한 초밥집입니다. 그러나 기존 `multi_match` 쿼리는 다음과 같은 한계가 있습니다.
+1. 키워드를 토큰화하여 가게명, 주소, 메뉴 등의 필드에서 일부라도 매칭되는 경우 결과로 반환됩니다.
+2. 이로 인해 **서울이 아닌 다른 지역의 초밥집**이 높은 점수를 받아 상위에 노출될 수 있습니다.
+
+예를 들어:
+- 기대하는 결과: **서울 은평구 초밥집**
+- 실제 결과: 서울이 아닌 다른 지역 초밥집이 상위에 나오는 문제
+
+### 해결 방향
+문제를 해결하기 위해 **bool** 쿼리를 사용하여 검색 쿼리를 개선하기로 결정했습니다.
+### 선택지
+1. **키워드 분석 후 필드별로 가중치를 다르게 설정**
+    - 가중치를 조정해 원하는 결과를 도출하려 했으나, 입력된 **도시와 구**가 반드시 포함된다는 보장이 없습니다.
+
+2. **bool 쿼리를 사용해 필수 조건 적용**
+    - 키워드를 분석하여 도시와 구, 메뉴를 필터링한 후, 해당 조건을 **must**로 설정해 필수적으로 포함되도록 처리합니다.
+### 결론
+사용자 기대에 부합하는 검색 결과를 보장하기 위해 **bool 쿼리**를 선택했습니다. 이 접근법은 도시, 구, 메뉴와 같은 입력 조건을 반드시 충족시키는 결과를 반환할 수 있습니다.
+## 1차 개선
+**키워드를 분석하여 필터링**한 뒤, 도시, 구, 메뉴 이름을 추출하고 이를 활용하여 검색을 개선했습니다.
+### 구현 방식
+
+1. **도시, 구, 메뉴 필터링**
+    - 키워드에서 도시, 구, 메뉴 정보를 추출.
+    - 추출된 정보를 Elasticsearch의 **bool 쿼리**에서 `must` 조건으로 적용하여 **반드시 포함**되도록 설정.
+
+2. **검색 프로세스**
+    - 추출된 조건(도시, 구, 메뉴)을 기준으로 문서를 필터링.
+        - 이 단계에서 입력된 위치와 메뉴를 만족하는 문서만 남김.
+    - 필터링된 결과에 대해 **가게명과 메뉴 필드**를 `match`로 검색.
+
+3. **조건이 없을 경우**
+    - 만약 입력된 키워드에서 도시, 구, 메뉴 정보가 추출되지 않는다면, 가게명과 메뉴 필드만으로 검색을 수행.
+
+4. **가게명에 우선순위 부여**
+    - 가게명 필드에서 토큰화되지 않은 `keyword` 필드를 사용해 검색.
+    - **boost 값을 부여**하여 메뉴보다 가게명이 더 높은 우선순위를 갖도록 설정.
+
+## 2차 개선
+1차 개선에서는 여러 필드에 대해 쿼리를 요청했습니다. 그러나 이 방식은 검색 필드가 많아질수록 성능에 부정적인 영향을 미칠 가능성이 있었습니다. 이를 개선하기 위해 **Elasticsearch의 `copy_to` 기능**을 활용하여 검색 성능을 최적화했습니다.
+
+### 개선 방안
+1. **검색 텍스트 통합**
+    - 검색에 필요한 텍스트 데이터를 엘라스틱 서치의 `copy_to`를 사용해서 하나의 필드에 통합하여 저장
+- 예를 들어:
+    - 주소: `서울시 은평구`
+    - 가게명: `맛집`
+    - 메뉴: `햄버거, 피자`
+    - 통합된 필드: `서울시 은평구 맛집 햄버거, 피자`
+
+## 더 나은 검색 경험을 위해
+쿼리를 여러 차례 수정하면서 사용자가 원하는 결과를 얻기 위한 방법을 고민했습니다. 그러나 검색에 대한 구체적인 비즈니스 요구사항이 없어 적절한 방향을 잡기 어려웠습니다. 이에 **캐치테이블**과 같은 서비스의 검색 방식을 분석하여 개선 아이디어를 얻었습니다.
+
+### 분석 내용
+- `소스`를 검색하면 이름에 `소스`가 포함된 가게들이 검색됨.
+
+    ![image](https://github.com/user-attachments/assets/ff15d343-f83f-464f-93b7-5dc824f03122)
+
+- `서울 소스`를 검색하면 서울 지역 필터가 적용되지만, 결과는 `서울 소스`와 관련 없는 가게도 포함됨.
+
+  ![image](https://github.com/user-attachments/assets/c2627af9-7119-4d10-99bc-8907be1c6b38)
+
+
+- `서울 에치세`는 검색되지 않지만, `서울 에치세로소스`와 같이 더 구체적인 입력에는 검색 결과가 나타남.
+
+  ![image](https://github.com/user-attachments/assets/17dde920-b702-4ac9-91bc-f1cedd198d84)
+- `에치세로소스스스`는 검색되지만, `서울없이 에치세로소스스스`는 결과가 나오지 않음.
+
+  ![image](https://github.com/user-attachments/assets/536beaaa-5622-447a-9caf-27a4f4f9d8ad)
+
+  ![image](https://github.com/user-attachments/assets/5442085a-998d-47b3-8d88-1d8fd746c663)
+
+
+- `에치세르소` 는 결과가 안나온다.
+
+  ![image](https://github.com/user-attachments/assets/22befd6f-ccce-4e04-89f2-12e80973a479)
+
+
+
+
+
+- `서울 낙시`는 필터에 서울이 체크가 된다.
+
+  ![image](https://github.com/user-attachments/assets/14756ed9-04a8-48db-959b-97ec9053fd5a)
+
+
+- 실제로 있는 `서울 낙업`을 검색 해보면 서울에 필터 체크가 안된다.
+
+  ![image](https://github.com/user-attachments/assets/d73cbc5b-2c6b-4d3e-83e2-a9f7675e16f3)
+
+
+이러한 분석을 통해 생각한 검색 구현 방식은 다음과 같습니다.
+1. **정확한 매칭 우선**
+    - 사용자가 입력한 키워드를 기준으로 **term** 또는 **prefix** 쿼리를 사용해 정확히 일치하는 가게명을 먼저 검색.
+
+2. **통합 검색 조건**
+    - 만약 정확한 매칭 결과가 없을 경우, 통합 검색으로 진행.
+    - 통합 검색에서는 **copy_to**로 생성한 `full_text` 필드에 쿼리를 실행하여 다양한 필드에서 키워드를 찾음.
+
+3. **카테고리 체크와 필터링**
+    - 검색된 키워드와 일치하는 카테고리가 있으면 이를 확인해 프론트엔드에 전달하여, 웹 페이지에서 해당 카테고리가 선택된 상태로 표시되도록 함.
+    - `Operator`를 **AND**로 설정해 모든 키워드가 일치하는 문서만 반환하도록 처리.
+
+4. **최적화 고려**
+    - 검색 성능을 위해 두 번의 쿼리를 사용하는 방식에 대해 고려 필요.
+
+# 검색 정확도 튜닝
+기존에는 **백엔드에서 키워드를 분석**하여 프론트엔드에 필터링된 카테고리를 넘겨주는 방식을 고려했으나, 이를 **프론트엔드에서 필터 안에서 선택된 카테고리를 기준으로 검색하는 방식**으로 변경했습니다.
+
+## 현재 검색 로직
+
+1. **가게 이름 검색**
+    - `bool` 쿼리에서 `must`와 `prefix` 쿼리를 사용해 가게 이름을 먼저 검색.
+
+2. **카테고리 필터 적용**
+    - 사용자가 요청에 카테고리 필터를 포함했다면, `district_category.keyword` 필드에 대해 `terms` 쿼리를 사용해 카테고리가 하나라도 일치하는 결과만 반환하도록 설정.
+
+3. **검색 결과 확인**
+    - 검색 결과가 있다면 해당 결과를 그대로 반환.
+
+4. **검색 결과가 없을 경우 통합 검색 수행**
+    - `bool` 쿼리를 이용해 `full_text` 필드를 대상으로 검색하며, `AND` 연산자를 사용해 키워드가 모두 포함된 결과를 반환.
+    - `filter` 부분은 기존과 동일하게 유지해 카테고리 조건이 적용된 결과를 반환.
+
+## 최적화와 개선
+여러 필드를 각각 두 번의 쿼리로 검색할 필요가 없다는 점을 고려하여, **가게명으로만 먼저 검색**하는 부분을 제거하고 **바로 통합 검색을 수행**하는 방식으로 최적화했습니다.
+
+### 튜닝 테스트
+`서울복집`을 검색하며 통합 검색 방식으로의 전환 후 결과를 확인했고, 검색 정확도와 성능이 개선되는 것을 확인했습니다.
+
+## 1차 테스트 및 개선
+
+### 테스트 케이스 1
+
+1. **`서울복집`** 검색 시 기대하는 결과는 서울 지역의 복집들이 최상위에 노출되는 것입니다.
+2. **`경상남도 서울복집`** 검색 시 기대하는 결과는 경상남도 지역의 서울복집이 상위에 노출되는 것입니다.
+
+### 기존 쿼리
+
+```java
+boolBuilder.must(m -> m.match(x -> x.field("full_text").query(search.keyword()).operator(Operator.And))).boost(4f);
+```
+* `서울복집` 검색 결과: 기대하는 결과가 나오지 않음.
+  ![image](https://github.com/user-attachments/assets/6d67e1ba-343a-47f1-9b01-d91e00bc758b)
+
+* `경상남도 서울복집` 검색 결과: 기대하는 결과가 나옴.
+  ![image](https://github.com/user-attachments/assets/5f47f6b4-e1d8-4a0f-b0d4-c8b1e320fee6)
+
+### 문제점 및 개선 방향
+* 첫 번째 테스트에서 서울복집이 상위에 나오지 않는 문제가 있어, **가게 이름 필드에 가중치**를 부여하여 `should` 조건을 추가했습니다.
+### 개선된 쿼리
+```java
+boolBuilder.must(m -> m.match(x -> x.field("full_text").query(search.keyword()).operator(Operator.And))).boost(2f)
+          .should(m -> m.match(x -> x.field("title").query(search.keyword()).boost(4f)));
+```
+* `서울복집`과 `경상남도 서울복집` 검색 결과 모두 기대하는대로 나옴.
+  ![image](https://github.com/user-attachments/assets/518c0500-c31b-452a-8eb7-f0db653ec9e2)
+  ![image](https://github.com/user-attachments/assets/9386050b-aa24-478a-9f70-083f79b2e243)
+
+## 2차 테스트 및 개선
+
+### 테스트 케이스 2
+
+1. **`별`** 검색 시 기대하는 결과는 정확히 "별"이라는 가게가 최상위에 표시되는 것입니다.
+2. **`대구 별`** 검색 시 기대하는 결과는 대구 지역에 위치한 "별"이라는 가게가 상위에 표시되는 것입니다.
+
+### 기존 쿼리
+
+```java
+boolBuilder.must(m -> m.match(x -> x.field("full_text").query(search.keyword()).operator(Operator.And))).boost(2f)
+          .should(m -> m.match(x -> x.field("title").query(search.keyword()).boost(4f)));
+```
+* `별` 검색 결과: 기대한 결과와 달리 "별삽별"이라는 가게가 최상위에 표시됨.
+  ![image](https://github.com/user-attachments/assets/8fdae80e-0744-4bf3-9cae-4adcd36c9802)
+
+* `대구 별` 검색 결과: 어느 정도 원하는 결과가 나왔으나, 완벽하지 않음.
+  ![image](https://github.com/user-attachments/assets/fff3481f-8074-49e7-b205-c31d31f85bc8)
+
+### 문제점 및 개선 방향
+* 기존 `should` 조건의 `match` 쿼리를 `term` 쿼리로 변경하여, 가게 이름과 정확히 일치하는 경우를 우선으로 처리
+
+### 개선된 쿼리
+```java
+boolBuilder.must(m -> m.match(x -> x.field("full_text").query(search.keyword()).operator(Operator.And))).boost(2f)
+          .should(m -> m.term(x -> x.field("title").value(search.keyword()).boost(4f)));
+```
+* `별` 검색 결과: 이전과 동일하게 기대한 결과와 일치하지 않음.
+  ![image](https://github.com/user-attachments/assets/ab1d27c6-2b47-40b7-bcbf-ff1413dca8d2)
+
+* `대구 별` 검색 결과: 일부 개선이 있었으나 여전히 기대에 미치지 못함.
+  ![image](https://github.com/user-attachments/assets/b1598033-6c06-420d-8ab7-24845070bfd6)
+
+### 최종 개선 쿼리
+기존 쿼리를 결합하여 다음과 같이 개선
+* 키워드가 **가게명과 정확히 일치**하면 가중치 2를 부여.
+* 키워드가 가게명과 **부분 일치**하면 가중치 1.5를 부여.
+```java
+boolBuilder = new BoolQuery.Builder()
+        .must(m -> m.match(t -> t
+                .field("full_text")
+                .query(search.keyword())
+                .operator(Operator.And)))
+        .should(s -> s.match(t -> t
+                .field("title")
+                .query(search.keyword())
+                .boost(1.5f)))
+        .should(s -> s.term(t -> t
+                .field("title.keyword")
+                .value(search.keyword())
+                .boost(2.0f)));
+```
+## 3차 테스트 및 개선
+
+### 메뉴 검색 기능 추가
+
+기존 검색에서는 가게 이름과 주소를 중심으로 검색 결과를 도출했습니다. 이제 **메뉴 검색** 기능을 추가하며, 메뉴 데이터를 Elasticsearch에 저장하고 검색이 가능하도록 구현했습니다.
 
 ---
-<details>
-<summary><strong>🛠 문제 정의</strong></summary>
 
-> 사용자가 `서울시 은평구 초밥집`을 검색하면, 서울시 은평구에 위치한 초밥 가게를 찾고자 한다고 추정할 수 있습니다. 하지만 현재 Elasticsearch 멀티 매치 쿼리에서는 단순히 키워드를 분리하여 가게명, 주소, 메뉴 중 매칭되는 항목이 있으면 결과로 표시됩니다. 이로 인해 검색 결과가 원하는 위치와 일치하지 않는 다른 지역의 초밥집이 더 높은 점수로 노출되는 문제가 발생했습니다.
-</details>
+### Elasticsearch 업데이트 방식
 
-<details>
-<summary><strong>💡 해결 접근 방식</strong></summary>
+1. **가게 및 메뉴 변경사항에 따른 업데이트**
+    - 가게 생성, 삭제, 수정, 변경 시 Elasticsearch에 즉시 반영.
+    - 메뉴 생성, 수정, 삭제, 변경 시에도 동일하게 즉시 반영.
 
-> 1. **가중치 방식**: 키워드를 분석해 필드마다 가중치를 다르게 적용
-> 2. **bool 쿼리 방식**: 필터링된 키워드를 bool 쿼리로 처리해 도시, 구, 메뉴 필드가 정확히 일치하는 결과를 우선 표시
+2. **현재 데이터 업데이트**
+    - 데이터가 적기 때문에 변경사항 발생 시 바로 업데이트를 수행.
+    - 추후 데이터가 많아지면, 변경사항을 모아 **Bulk Update** 방식으로 전환할 예정.
 
-> 2번 방식을 선택하여, 사용자가 입력한 위치와 메뉴가 일치하는 가게를 우선 표시하도록 설계했습니다.
+3. **`copy_to` 활용**
+    - 메뉴 데이터를 `copy_to`로 `full_text` 필드에 저장하여, 기존 쿼리를 수정하지 않고도 검색이 가능하도록 설정.
 
-</details>
+---
 
+### 저장된 데이터 구조
 
-<details>
-<summary><strong>⚙️ 1차 해결</strong></summary>
+아래와 같은 방식으로 가게 정보와 메뉴 정보가 Elasticsearch에 저장되어 있습니다.
 
-> **키워드 필터링**을 통해 도시, 구, 메뉴를 추출하고 Elasticsearch의 **bool 쿼리**로 필터링합니다.
-> 1. 도시, 구, 메뉴가 **반드시 포함되도록** `must` 조건으로 필터링
->    - 필터링 후 가게명과 메뉴 필드에 `match` 쿼리로 추가 검색
->    - 도시, 구, 메뉴가 없으면 `가게명과 메뉴`만으로 검색
->    - 가게명 필드에는 keyword 필드와 `boost` 값을 적용해 메뉴보다 높은 우선순위 부여
+![image](https://github.com/user-attachments/assets/a8087f61-6764-4a4e-b8ed-5ce794b06c03)
 
-</details>
+---
 
+### 테스트 케이스
 
-<details>
-<summary><strong>⚙️ 2차 해결</strong></summary>
+1. **`아메리카노` 검색**
+    - 메뉴에 "아메리카노"가 포함된 가게가 검색됨.
+    - **결과:** 메뉴 검색이 정상적으로 작동.
+      ![image](https://github.com/user-attachments/assets/ea9c37d6-b358-4ffe-a1a9-8e2a4eeec839)
 
-> **성능 개선**: 여러 필드 쿼리로 인한 성능 저하를 해결하기 위해 **copy_to**를 사용하여 필요한 텍스트를 하나의 필드에 저장.
-> 
-> 예시) 주소가 `서울시 은평구`, 가게명 `맛집`, 메뉴 `햄버거, 피자`라면 `서울시 은평구 맛집 햄버거, 피자`로 저장.
+2. **`아이스 아메리카노` 검색**
+    - 메뉴에 "아이스 아메리카노"가 포함된 가게가 검색됨.
+    - **결과:** 메뉴 검색이 복합 키워드에서도 정상적으로 작동.
+      ![image](https://github.com/user-attachments/assets/12fca147-0115-405f-89d7-c31926327d73)
 
-</details>
+---
 
+### 결론
 
-<details>
-<summary><strong>🔍 캐치테이블 검색 분석</strong></summary>
-
-> 더 나은 검색 경험을 위해 다른 서비스들의 검색 기능을 분석을 진행하였습니다.
-> 
-> **분석 결과**:
-> - 단일 키워드 검색은 정확히 일치하는 가게명을 우선으로 검색 (term 또는 prefix 방식 추정)
->   - 일치하는 가게가 없을 경우, copy_to된 full-text 필드에 대해 통합 검색 수행
->   - 통합 검색 시 **Operator를 AND**로 설정하여 필터와 일치하는 단어가 포함된 경우 필터를 적용해 프론트에 전달
-> 
-> 그러나 단일 검색에 두 번의 쿼리 요청이 필요하다는 점을 고려할 필요가 있었습니다.
-
-</details>
-
-<details>
-<summary><strong>🔧 검색 정확도 튜닝</strong></summary>
-
-> **현재 검색 로직**
-> 1. 가게 이름을 `must / prefix` 쿼리로 검색
->       - 카테고리 필터가 있으면 `district_category.keyword`에 `terms` 쿼리를 사용해 하나라도 일치하는 결과만 반환
->      - 검색 결과가 없다면 통합검색 실행
->      - 통합검색은 bool 쿼리를 사용하고 `filter`와 `full_text` 필드 검색에 `AND` 연산자 적용
-> 쿼리를 단순화하여 가게명 검색 단계를 생략하고 바로 통합 검색으로 변경했습니다.
-
-</details>
-
-<details>
-<summary><strong>🔍 테스트 케이스: 서울복집 검색</strong></summary>
-
-> - **쿼리 예시**
->
->    ```java
->    boolBuilder.must(m -> m.match(x -> x.field("full_text").query(search.keyword()).operator(Operator.And))).boost(4f);
->   ```
-> - **결과**
->      - `서울복집` 검색 시 서울 지역의 복집 가게가 상위에 노출됨
->      - `경상남도 서울복집` 검색 시 경상남도 지역의 복집 가게가 정확히 노출됨
-> 
-> 첫 번째 결과에서 원하는 서울복집이 상위로 나오지 않아 개선이 필요했습니다.
-
-</details>
-
-
-<details>
-<summary><strong>✅ 최종 쿼리 개선</strong></summary>
-
-> 1. `must` 조건에 `full_text` 필드, `should` 조건에 `title` 필드로 `match` 쿼리 사용
-> 2. `title.keyword` 필드에는 `term` 쿼리를 적용해 가게명이 정확히 일치하는 경우 가중치를 2로 설정
-> ```java
-> boolBuilder = new BoolQuery.Builder()
->        .must(m -> m.match(t -> t.field("full_text").query(search.keyword()).operator(Operator.And)))
->        .should(s -> s.match(t -> t.field("title").query(search.keyword()).boost(1.5f)))
->        .should(s -> s.term(t -> t.field("title.keyword").value(search.keyword()).boost(2.0f)))
->        .minimumShouldMatch("1");
-
-</details>
+- 메뉴 데이터를 Elasticsearch에 저장하면서 기존 검색 쿼리를 수정하지 않아도 `full_text` 필드에서 메뉴 검색이 가능해졌습니다.
+- 검색 결과가 정확하게 반환되는 것을 확인했습니다.
+- 현재는 데이터가 적어 가게 및 메뉴에 대해 update가 있으면 즉시, 엘라스틱 서치에 crud 요청을 보내지만, 추후에 쌓인 데이터가 많아진다면 **Bulk Update** 방식으로의 전환을 고려 중입니다.
 
 ---
 </details>
 
 <br/>
 
+---
 ## 역할 분담 및 협업 방식
 
 ### **Detail Role**
@@ -705,27 +1063,29 @@
 | 조수현  | 팀원  | ▶ **Store CRUD**<br> - 음식점 CRUD<br> ▶ **AWS S3 버킷에 이미지 업로드**<br> - 음식점 사진을 S3에 업로드 후 클라우드 프론트로 이미지 조회<br> ▶ **Redisson 분산락**<br> - 음식점 조회수 증가, 좋아요 부분에 분산락 적용<br> ▶ **음식점 좋아요 index**<br> - 음식점 좋아요 테이블에서 유저 아이디로 찾아올 때 인덱스 처리<br> ▶ **음식점 이름 검색**<br> - 음식점 이름 검색에 인덱스, Redis 캐시를 이용해서 검색 속도 향상<br> ▶ **CI / CD**<br> - 젠킨스 CI CD 파이프라인 구축                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | [🍁https://github.com/SuHyun-git]                           |
 | 김윤서  | 팀원  | ▶ **Menu**<br> - 메뉴 CRUD<br> - 메뉴 좋아요, 조회 시 Redis Rlock을 통한 동시성 제어<br> ▶ **Follow**<br> - 팔로잉/팔로워 기능<br> - 팔로우 한 사용자의 가게 좋아요 목록 조회<br> - 팔로워/팔로잉 조회 캐싱 처리<br> ▶ **Chatbot**<br> - 챗봇 기능<br> ▶ **Allergy**<br> - 메뉴 생성/수정 시 알레르기 추가<br> - 모든 알레르기 조회 시 캐싱 처리<br> ▶ **Waiting**<br> - Redis 가중치를 통해 웨이팅 실시간 순위 조회<br> ▶ **소셜 로그인(카카오)**                                                                                                                                                                                                                                                                                                                                                                                                           | [🍁https://github.com/yunseokim119] |
 | 길용진  | 팀원  | ▶ **Review**<br> - 메뉴 리뷰 CRUD<br> - 리뷰 좋아요<br> - 이미지 AWS S3버킷에 업로드<br> ▶ **크롤링**<br> - 블로그/뉴스 크롤링<br> - 음식점 이름 키워드 변환 후 + 맛집, 지역 추가하여 키워드화<br> - 프록시 ip 획득 후 크롤러 개발<br> ▶ **REACT활용 프론트엔드 제작**<br> - 모든 기능 기초 기반 제작                                                                                                                                                                                                                                                                                                                                                                                                           | [🍁https://github.com/pumaclass/]   |
----
 
-### **Ground Rule**
+## Ground Rule
 
-🍁 **문제 발생 시 즉시 공유**
+1. **문제 발생 시 즉시 공유**
 - 문제가 발생하면 팀원들에게 빠르게 상황을 공유하여 협력 해결.
 
-🍁 **일정 무조건 지키기**
+2. **일정 무조건 지키기**
 - 일정 변동 시 슬랙 공유 및 주말 활용할 것.
 
-🍁 **사소한 것도 질문하기**
+3. **사소한 것도 질문하기**
 - 궁금한 점이나 막힌 부분은 사소한 것이라도 즉시 물어보고 해결.
 
-🍁 **스크럼에서 트러블 슈팅 및 구현 사항 설명**
+4. **스크럼에서 트러블 슈팅 및 구현 사항 설명**
 - 매일 스크럼 시간에 구현 진행 상황과 문제 해결 과정을 공유.
 
-🍁 **1Day, 1Code Review, 1PR 원칙**
+5. **1Day, 1Code Review, 1PR 원칙**
 - 하루에 하나 이상의 구현한 코드 리뷰 및 PR 생성.
 
-🍁 **1PR 당 1인 이상 확인 후 머지**
+6. **1PR 당 1인 이상 확인 후 머지**
 - 각 PR에 대해 최소 1명 이상의 승인을 통해 코드 품질을 개선.
+
+---
+
 ## 성과 및 회고
 
 ### 잘된 점
@@ -736,8 +1096,6 @@
 - **효율적인 협업**
     - 팀원 간 역할 분담이 명확했으며, GitHub Actions를 활용한 CI/CD 구축으로 개발-배포 주기를 단축.
     - 매일 스크럼을 통해 문제를 빠르게 공유하고, 적극적으로 해결.
-
----
 
 ### 아쉬운 점
 - **프로젝트 초기 설계 부족**
