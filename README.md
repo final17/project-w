@@ -65,9 +65,6 @@
 ---
 ## KEY Summary
 
----
-## 트러블 슈팅 및 성능 개선
-
 <details>
 <summary style="font-size: 16px; font-weight: bold">🛠 예약 대기열 <span style="background-color: red;">동시성</span> 이슈</summary>
 <details>
@@ -231,6 +228,7 @@
    - **카멜문법 -> 스네이크문법 변환 해결 방법**
        - CamelCaseToUnderscoresNamingStrategy 추가 설정
        - SpringImplicitNamingStrategy 추가 설정
+4. **관련 링크** : https://github.com/final17/batch
 
 </details>
 
@@ -540,7 +538,15 @@
   - **프로세스 흐름**: `결제 완료 데이터 조회` → `수수료 계산` → `정산 결과 저장`.
 - 스프링 배치와 스케줄러를 활용하여 정산 작업을 자동화하고, 배치가 시스템 부하가 적은 시간에 실행되도록 설정
 - 관련 링크 : https://github.com/final17/batch
+
+### 챗봇 기능
+- 고객이 보내는 문의 유형(예약문의,결제문의,회원문의,기타문의)에 따라 적절한 답변을 자동으로 제공
+- 문의 유형과 세부 항목을 Enum과 전략 패턴을 활용해 각 문의 유형을 Enum으로 정의하고, 이를 기반으로 각각의 로직을 별도의 전략 클래스로 분리
+  - **확장성**: Enum에 새로운 문의 유형을 추가하고, 전략 클래스를 추가하는 방식으로 확장할 수 있어 코드가 비대해지는 것을 방지할 수 있음.
+  - **유연성**: 새로운 로직이나 케이스 추가 시 기존 코드 변경 없이 클래스와 Enum만 추가하여 기능을 확장할 수 있음.
 ---
+
+
 ## 기술적 고도화
 
 
@@ -609,12 +615,6 @@ API의 응답 데이터 구조를 다시 파악하기 위해 API 문서를 면�
 
 관련 링크 : https://github.com/final17/batch
 
-</details>
-<details>
-<summary><strong>🔧 성능 개선 및 안정화</strong></summary>
-    기능 설명: 트랜잭션 이벤트 리스너로 결제 및 정산 과정에서 발생할 수 있는 오류를 모니터링하고 실시간으로 조치.
-    성과: 트랜잭션 오류 발생률 15% 감소, 데이터 처리 시 평균 CPU 사용량 20% 절감.
-    기술: Spring Framework의 트랜잭션 이벤트 리스너, 모니터링 시스템.
 </details>
 </details>
 <br/>
