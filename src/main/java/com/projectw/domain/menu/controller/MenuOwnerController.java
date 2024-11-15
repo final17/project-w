@@ -24,10 +24,10 @@ public class MenuOwnerController {
     }
 
     // 메뉴 생성
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<SuccessResponse<MenuResponseDto.Detail>> createMenu(
             @AuthenticationPrincipal AuthUser authUser,
-            @RequestBody MenuRequestDto.Create menuRequestDto,
+            @ModelAttribute MenuRequestDto.Create menuRequestDto,
             @PathVariable("storeId") Long storeId) throws IOException {
 
         MenuResponseDto.Detail menuResponseDto = menuService.createMenu(authUser, menuRequestDto, storeId);
@@ -35,10 +35,10 @@ public class MenuOwnerController {
     }
 
     // 메뉴 수정
-    @PutMapping("/{menuId}")
+    @PutMapping(value = "/{menuId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<SuccessResponse<MenuResponseDto.Detail>> updateMenu(
             @AuthenticationPrincipal AuthUser authUser,
-            @RequestBody MenuRequestDto.Update requestDto,
+            @ModelAttribute MenuRequestDto.Update requestDto,
             @PathVariable("storeId") Long storeId,
             @PathVariable("menuId") Long menuId) throws IOException {
 
