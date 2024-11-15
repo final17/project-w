@@ -1,5 +1,6 @@
 package com.projectw.domain.reservation.service;
 
+import com.projectw.common.annotations.RedisListener;
 import com.projectw.common.enums.ResponseCode;
 import com.projectw.common.exceptions.ForbiddenException;
 import com.projectw.common.exceptions.NotFoundException;
@@ -20,8 +21,11 @@ import com.projectw.domain.reservation.enums.ReservationType;
 import com.projectw.domain.reservation.exception.InvalidCartException;
 import com.projectw.domain.reservation.repository.ReservationMenuRepository;
 import com.projectw.domain.reservation.repository.ReservationRepository;
+import com.projectw.domain.store.entity.Store;
 import com.projectw.domain.store.repository.StoreRepository;
+import com.projectw.domain.user.entity.User;
 import com.projectw.domain.user.repository.UserRepository;
+import com.projectw.domain.waiting.dto.WaitingPoll;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RSetMultimap;
@@ -35,8 +39,10 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -260,4 +266,51 @@ public class ReservationService {
         return "store:"+storeId;
     }
 
+    @Transactional
+    @RedisListener(topic = "waiting-poll")
+    public void onWaitingPoll(WaitingPoll waitingPoll){
+        LocalDateTime at = waitingPoll.createdAt();
+        Long userId = waitingPoll.userId();
+        Long storeId = waitingPoll.storeId();
+        Long num = waitingPoll.waitingNum();
+
+        User user = userRepository.findById(userId).orElseThrow(()-> new NotFoundException(ResponseCode.NOT_FOUND_USER));
+        Store store = storeRepository.findById(storeId).orElseThrow(()-> new NotFoundException(ResponseCode.NOT_FOUND_STORE));
+
+        Reservation reservation = Reservation.builder()
+                .orderId(UUID.randomUUID().toString())
+                .status(ReservationStatus.COMPLETE)
+                .type(ReservationType.WAIT)          // 웨이팅 , 예약 중 예약이라는 의미
+                .reservationDate(at.toLocalDate())
+                .reservationTime(at.toLocalTime().truncatedTo(TimeUnit.SECONDS.toChronoUnit()))
+                .numberPeople(1L)
+                .reservationNo(num)
+                .paymentYN(false)
+                .paymentAmt(0L)
+                .user(user)
+                .store(store)
+                .build();
+
+        reservationRepository.save(reservation);
+    }
+
+    @Transactional
+    public List<ReserveResponse.Carts> getReservationMenus(Long userId, Long reservationId) {
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다."));
+
+        if (!reservation.getUser().getId().equals(userId)) {
+            throw new IllegalArgumentException("해당 예약에 대한 권한이 없습니다.");
+        }
+
+        return reservation.getReservationMenus()
+                .stream()
+                .map(menu -> new ReserveResponse.Carts(
+                        menu.getMenu().getId(),  // menuId -> Long
+                        menu.getMenuName(),      // menuName -> String
+                        menu.getMenuPrice(),     // price -> Long
+                        menu.getMenuCnt()        // cnt -> Long
+                ))
+                .collect(Collectors.toList());
+    }
 }
