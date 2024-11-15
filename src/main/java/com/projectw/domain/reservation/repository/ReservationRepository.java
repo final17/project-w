@@ -1,5 +1,6 @@
 package com.projectw.domain.reservation.repository;
 
+import com.projectw.domain.reservation.dto.ReserveResponse;
 import com.projectw.domain.reservation.entity.Reservation;
 import com.projectw.domain.reservation.enums.ReservationStatus;
 import com.projectw.domain.reservation.enums.ReservationType;
@@ -50,4 +51,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long>,
     );
 
     Optional<Reservation> findByOrderId(String orderId);
+
+
 }

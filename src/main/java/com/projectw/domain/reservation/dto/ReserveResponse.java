@@ -11,6 +11,7 @@ public sealed interface ReserveResponse permits ReserveResponse.Infos , ReserveR
             String orderId,
             Long userId,
             Long storeId,
+            Long menuId,
             Long reserveId,
             Long reservationNo,
             Long numberPeople,

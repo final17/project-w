@@ -56,14 +56,14 @@ public class Review extends Timestamped {
     private List<Like> likes = new ArrayList<>();
 
     @Builder
-    public Review(String title, String content, int rating, Reservation reservation, Menu menu) {
+    public Review(String title, String content, int rating, Reservation reservation, Menu menu, User user, Store store) {
         this.title = title;
         this.content = content;
         this.rating = rating;
         this.reservation = reservation;
-        this.menu = menu;
-        this.user = reservation.getUser();
-        this.store = reservation.getStore();
+        this.menu = menu;  // 웨이팅일 경우 null
+        this.user = user;  // 직접 받도록 수정
+        this.store = store;  // 직접 받도록 수정
     }
 
     public void addImage(ReviewImage image) {

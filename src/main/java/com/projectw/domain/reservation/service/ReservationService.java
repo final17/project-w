@@ -293,4 +293,24 @@ public class ReservationService {
 
         reservationRepository.save(reservation);
     }
+
+    @Transactional
+    public List<ReserveResponse.Carts> getReservationMenus(Long userId, Long reservationId) {
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다."));
+
+        if (!reservation.getUser().getId().equals(userId)) {
+            throw new IllegalArgumentException("해당 예약에 대한 권한이 없습니다.");
+        }
+
+        return reservation.getReservationMenus()
+                .stream()
+                .map(menu -> new ReserveResponse.Carts(
+                        menu.getMenu().getId(),  // menuId -> Long
+                        menu.getMenuName(),      // menuName -> String
+                        menu.getMenuPrice(),     // price -> Long
+                        menu.getMenuCnt()        // cnt -> Long
+                ))
+                .collect(Collectors.toList());
+    }
 }

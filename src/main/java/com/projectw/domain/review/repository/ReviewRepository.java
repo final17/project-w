@@ -1,6 +1,9 @@
 package com.projectw.domain.review.repository;
 
 import com.projectw.domain.menu.entity.Menu;
+import com.projectw.domain.reservation.dto.ReserveRequest;
+import com.projectw.domain.reservation.dto.ReserveResponse;
+import com.projectw.domain.reservation.entity.Reservation;
 import com.projectw.domain.review.entity.Review;
 import com.projectw.domain.store.entity.Store;
 import com.projectw.domain.user.entity.User;
@@ -9,6 +12,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
+import java.util.List;
 
 public interface ReviewRepository extends JpaRepository<Review, Long>, ReviewDslRepository{
     @Query("SELECT r, COUNT(l) " +
@@ -41,5 +46,11 @@ public interface ReviewRepository extends JpaRepository<Review, Long>, ReviewDsl
             "GROUP BY r " +
             "ORDER BY r.createdAt DESC")
     Page<Object[]> findAllByStoreWithUserAndLikeCount(@Param("store") Store store, Pageable pageable);
+
+    boolean existsByUserAndStore(
+            @Param("user") User user,
+            @Param("store") Store store
+    );
+
 
 }
