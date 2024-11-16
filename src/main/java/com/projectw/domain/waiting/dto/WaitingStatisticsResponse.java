@@ -3,12 +3,26 @@ package com.projectw.domain.waiting.dto;
 import com.projectw.domain.waiting.entity.DailyWaitingStatistics;
 import com.projectw.domain.waiting.entity.HourlyWaitingStatistics;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 public sealed interface WaitingStatisticsResponse permits
+        WaitingStatisticsResponse.Monthly,
         WaitingStatisticsResponse.Daily,
         WaitingStatisticsResponse.DailyPage,
         WaitingStatisticsResponse.Hourly {
+
+    record Monthly(
+            long totalWaitingCount,
+            long completedCount,
+            long canceledCount,
+            double completedAverageWaitingTime,
+            double canceledAverageWaitingTime,
+            double cancellationRate,
+            Map<LocalDate, Daily> dailyStatistics
+    )  implements WaitingStatisticsResponse{
+    }
 
     record Daily(
          long totalWaitingCount,

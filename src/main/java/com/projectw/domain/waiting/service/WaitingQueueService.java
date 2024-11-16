@@ -31,6 +31,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class WaitingQueueService {
+
     private final RedissonClient redissonClient;
     private final NotificationService notificationService;
     private final StoreRepository storeRepository;
@@ -41,6 +42,8 @@ public class WaitingQueueService {
     private final WaitingHistoryRepository waitingHistoryRepository;
 
     public SseEmitter connect(AuthUser authUser, long storeId) {
+        if(authUser == null) return null;
+
         RScoredSortedSet<String> sortedSet = redissonClient.getScoredSortedSet(getRedisSortedSetKey(storeId));
         Integer rank = sortedSet.rank(String.valueOf(authUser.getUserId()));
         if(rank == null) {
@@ -158,10 +161,18 @@ public class WaitingQueueService {
         // 마감 메세지 보내기
         Collection<String> values = sortedSet.valueRange(cutline, -1);
         for (String userId : values) {
-            notificationService.broadcast(getSseKey(storeId, userId), "대기열 마감");
+            notificationService.broadcast(getSseKey(storeId, userId), "end");
             notificationService.delete(getSseKey(storeId, userId));
         }
 
+
+        List<Long> users = userRepository.findAllById(values.stream()
+                        .map(Long::parseLong)
+                        .toList())
+                .stream()
+                .map(User::getId).toList();
+
+        waitingHistoryService.cancelHistory(users, store);
         // cutline이 50이면 50 뒤부터 삭제
         sortedSet.removeRangeByRank(cutline, -1);
     }
@@ -187,9 +198,14 @@ public class WaitingQueueService {
         int rank = 1;
         for(ScoredEntry<String> scoredEntry : scoredEntries) {
             ids.add(new WaitingQueueResponse.Info(rank++, Long.parseLong(scoredEntry.getValue())));
+
+            // 상위 10명 까지만
+            if(rank == 11){
+                break;
+            }
         }
 
-        return new WaitingQueueResponse.List(ids.size(), ids);
+        return new WaitingQueueResponse.List(scoredEntries.size(), ids);
     }
 
     /**
