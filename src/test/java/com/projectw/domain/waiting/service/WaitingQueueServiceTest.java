@@ -29,6 +29,7 @@ import org.redisson.client.protocol.ScoredEntry;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -77,6 +78,8 @@ class WaitingQueueServiceTest {
         user = new AuthUser(2L, "email2", UserRole.ROLE_USER);
         store = new Store();
         ReflectionTestUtils.setField(store, "id", 1L);
+        ReflectionTestUtils.setField(store, "openTime", LocalTime.of(0,0,0));
+        ReflectionTestUtils.setField(store, "closeTime", LocalTime.of(23,59,59,999_999_999));
         ReflectionTestUtils.setField(store, "user", User.fromAuthUser(owner));
         sortedSetMock = mock(RScoredSortedSet.class);
         atomicLong = mock(RAtomicLong.class);
@@ -139,6 +142,7 @@ class WaitingQueueServiceTest {
         given(redissonClient.getAtomicLong(anyString())).willReturn(atomicLong);
         given(atomicLong.incrementAndGet()).willReturn(1L);
 
+        store.getCloseTime();
         // when
         WaitingQueueResponse.Info info = waitingQueueService.addUserToQueue(user, 1L);
 
