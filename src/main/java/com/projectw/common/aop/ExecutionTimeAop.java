@@ -33,8 +33,6 @@ public class ExecutionTimeAop {
 
         try {
             return joinPoint.proceed();
-        } catch (Exception e) {
-            throw e;
         } finally {
             long endTime = System.currentTimeMillis();
             long executionTime = endTime - startTime;
@@ -42,20 +40,4 @@ public class ExecutionTimeAop {
             log.info("[{}] executed in {} ms", joinPoint.getSignature().toShortString(), executionTime);
         }
     }
-
-    // @Around("allDomainMethodPointCut()")
-    public Object logExecutionTimeAll(ProceedingJoinPoint joinPoint) throws Throwable {
-        long startTime = System.currentTimeMillis();
-        try {
-            return joinPoint.proceed();
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            long endTime = System.currentTimeMillis();
-            long executionTime = endTime - startTime;
-            // 실행 시간 로그 출력
-            log.info("[{}] executed in {} ms", joinPoint.getSignature().toShortString(), executionTime);
-        }
-    }
-
 }

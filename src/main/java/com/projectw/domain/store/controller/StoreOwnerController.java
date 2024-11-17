@@ -1,15 +1,20 @@
 package com.projectw.domain.store.controller;
 
 import com.projectw.common.dto.SuccessResponse;
-import com.projectw.domain.store.dto.request.StoreRequestDto;
-import com.projectw.domain.store.dto.response.StoreResponseDto;
+import com.projectw.domain.store.dto.StoreRequest;
+import com.projectw.domain.store.dto.StoreResponse;
+
 import com.projectw.domain.store.service.StoreOwnerService;
 import com.projectw.security.AuthUser;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/v1/owner/stores")
@@ -19,33 +24,36 @@ public class StoreOwnerController {
     private final StoreOwnerService storeOwnerService;
 
     // 음식점 생성
-    @PostMapping()
-    public ResponseEntity<SuccessResponse<StoreResponseDto>> createStore(
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<SuccessResponse<StoreResponse.Info>> createStore(
             @AuthenticationPrincipal AuthUser authUser,
-            @Valid @RequestBody StoreRequestDto storeRequestDto
+            @RequestPart(name = "image", required = false) MultipartFile image,
+            @RequestPart StoreRequest.Create storeRequestDto
     ) {
-        StoreResponseDto storeResponseDto = storeOwnerService.createStore(authUser, storeRequestDto);
+        validateCoordinates(storeRequestDto.latitude(), storeRequestDto.longitude());
+        StoreResponse.Info storeResponseDto = storeOwnerService.createStore(authUser, storeRequestDto, image);
         return ResponseEntity.ok(SuccessResponse.of(storeResponseDto));
     }
 
     // 음식점 단건 조회
     @GetMapping("/{storeId}")
-    public ResponseEntity<SuccessResponse<StoreResponseDto>> getOneStore(
+    public ResponseEntity<SuccessResponse<StoreResponse.Info>> getOneStore(
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable("storeId") Long storeId
     ) {
-        StoreResponseDto storeResponseDto = storeOwnerService.getOneStore(authUser, storeId);
+        StoreResponse.Info storeResponseDto = storeOwnerService.getOneStore(authUser, storeId);
         return ResponseEntity.ok(SuccessResponse.of(storeResponseDto));
     }
 
     // 음식점 정보 수정
-    @PutMapping("/{storeId}")
-    public ResponseEntity<SuccessResponse<StoreResponseDto>> putStore(
+    @PutMapping(value = "/{storeId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<SuccessResponse<StoreResponse.Info>> putStore(
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable("storeId") Long storeId,
-            @RequestBody StoreRequestDto storeRequestDto
+            @RequestPart(name = "image", required = false) MultipartFile image,
+            @RequestPart StoreRequest.Create storeRequestDto
     ) {
-        StoreResponseDto storeResponseDto = storeOwnerService.putStore(authUser, storeId, storeRequestDto);
+        StoreResponse.Info storeResponseDto = storeOwnerService.putStore(authUser, storeId, storeRequestDto, image);
         return ResponseEntity.ok(SuccessResponse.of(storeResponseDto));
     }
 
@@ -58,6 +66,43 @@ public class StoreOwnerController {
         storeOwnerService.deleteStore(authUser, storeid);
         return ResponseEntity.ok(SuccessResponse.of(""));
     }
+
+    /**
+     * 음식점 카테고리 변경
+     */
+    @PatchMapping("/{storeId}")
+    public ResponseEntity<SuccessResponse<StoreResponse.Info>> updateCategory(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable long storeId,
+            @RequestBody StoreRequest.Category category
+    ) {
+        StoreResponse.Info info = storeOwnerService.updateCategory(authUser, storeId, category);
+        return ResponseEntity.ok(SuccessResponse.of(info));
+    }
+
+    private void validateCoordinates(Double latitude, Double longitude) {
+        if (latitude == null || longitude == null) {
+            throw new IllegalArgumentException("위도와 경도는 필수 입력값입니다.");
+        }
+        if (latitude < -90 || latitude > 90) {
+            throw new IllegalArgumentException("위도는 -90도에서 90도 사이여야 합니다.");
+        }
+        if (longitude < -180 || longitude > 180) {
+            throw new IllegalArgumentException("경도는 -180도에서 180도 사이여야 합니다.");
+        }
+    }
+
+    @GetMapping("/my")
+    public ResponseEntity<SuccessResponse<Page<StoreResponse.Info>>> getMyStores(
+            @AuthenticationPrincipal AuthUser authUser,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<StoreResponse.Info> stores = storeOwnerService.getMyStores(authUser, pageable);
+        return ResponseEntity.ok(SuccessResponse.of(stores));
+    }
+
 
     // 예약 조회
 

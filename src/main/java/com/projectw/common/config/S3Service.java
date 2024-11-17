@@ -6,6 +6,7 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -17,6 +18,8 @@ public class S3Service {
 
     @Value("${cloud.aws.s3.bucket-name}")
     private String bucketName;
+    @Value("${CLOUD_FRONT_DOMAIN}")
+    private String cloudFrontDomain;
 
     public S3Service(AmazonS3 amazonS3) {
         this.amazonS3 = amazonS3;
@@ -26,7 +29,7 @@ public class S3Service {
     private long maxFileSize;
 
     // S3에 파일 업로드
-    public String uploadFile(MultipartFile file) throws IOException {
+    public String uploadFile(MultipartFile file) {
         // 파일 크기 제한 체크
         if (file.getSize() > maxFileSize) {
             throw new IllegalArgumentException(
@@ -47,14 +50,17 @@ public class S3Service {
             amazonS3.putObject(new PutObjectRequest(bucketName, fileName, file.getInputStream(), metadata));
         } catch (AmazonServiceException e) {
             throw new RuntimeException("S3에 파일 업로드 실패: " + e.getMessage(), e);
+        } catch (IOException e) {
+            throw new RuntimeException("파일 업로드 중 오류 발생");
         }
 
         // 업로드된 파일의 URL 반환
-        return amazonS3.getUrl(bucketName, fileName).toString();
+        return cloudFrontDomain + fileName;
     }
 
     // 파일 삭제
     public void deleteFile(String fileName) {
+        if(!StringUtils.hasText(fileName)) return;
         try {
             amazonS3.deleteObject(bucketName, fileName);
         } catch (AmazonServiceException e) {

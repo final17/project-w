@@ -1,0 +1,37 @@
+spring:
+  config:
+    import: optional:file:.env[.properties]
+  task:
+    execution:
+      pool:
+        core-size: 8
+        max-size: 200
+        queue-capacity: 500
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    defer-datasource-initialization: true
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: true
+        use_sql_comments: true
+  elasticsearch:
+    username: ${ELASTIC_SEARCH_ID}
+    password: ${ELASTIC_SEARCH_PASSWORD}
+    uris: ${ELASTIC_SEARCH_URL}
+    encoded:
+      api:
+        key: c3luRXdaSUItWTk3VFFmT3BMMFI6MW5RTjFGVnBRdFNrQlVfS1NCdzd5Zw==
+  sql:
+    init:
+      mode: always
+redis:
+  cluster:
+    nodes: "${HOST_IP}:7001,${HOST_IP}:7002,${HOST_IP}:7003,${HOST_IP}:7004,${HOST_IP}:7005,${HOST_IP}:7006"

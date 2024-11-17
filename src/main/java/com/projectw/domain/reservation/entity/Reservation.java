@@ -12,7 +12,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Entity
@@ -21,9 +20,12 @@ import java.time.LocalTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Reservation extends Timestamped {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false , unique = true)
+    private String orderId;
 
     @Column(nullable = false)
     @Enumerated(value = EnumType.STRING)
@@ -32,8 +34,6 @@ public class Reservation extends Timestamped {
     @Column(nullable = false)
     @Enumerated(value = EnumType.STRING)
     private ReservationType type; // 예약 , 웨이팅
-
-    private boolean menuYN; // 메뉴 선택 여부
 
     @Column(nullable = false)
     private LocalDate reservationDate;
@@ -47,6 +47,12 @@ public class Reservation extends Timestamped {
     @Column(nullable = false)
     private Long numberPeople;   // 예약인원 , 입장인원
 
+    @Column(nullable = false)
+    private boolean paymentYN;
+
+    @Column(nullable = false)
+    private Long paymentAmt;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -56,19 +62,25 @@ public class Reservation extends Timestamped {
     private Store store;
 
     @Builder
-    public Reservation(ReservationStatus status , ReservationType type , boolean menuYN , LocalDate reservationDate , LocalTime reservationTime , Long reservationNo , Long numberPeople , User user , Store store) {
+    public Reservation(String orderId , ReservationStatus status , ReservationType type , LocalDate reservationDate , LocalTime reservationTime , Long reservationNo , Long numberPeople , boolean paymentYN , Long paymentAmt , User user , Store store) {
+        this.orderId = orderId;
         this.status = status;
         this.type = type;
-        this.menuYN = menuYN;
         this.reservationDate = reservationDate;
         this.reservationTime = reservationTime;
         this.reservationNo = reservationNo;
         this.numberPeople = numberPeople;
+        this.paymentYN = paymentYN;
+        this.paymentAmt = paymentAmt;
         this.user = user;
         this.store = store;
     }
 
     public void updateStatus(ReservationStatus status) {
         this.status = status;
+    }
+
+    public void updatePaymentYN(boolean paymentYN) {
+        this.paymentYN = paymentYN;
     }
 }

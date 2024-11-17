@@ -2,6 +2,7 @@ package com.projectw.domain.waiting.controller;
 
 import com.projectw.common.dto.SuccessResponse;
 import com.projectw.domain.waiting.dto.WaitingQueueResponse;
+import com.projectw.domain.waiting.service.WaitingHistoryService;
 import com.projectw.domain.waiting.service.WaitingQueueService;
 import com.projectw.security.AuthUser;
 import lombok.RequiredArgsConstructor;
@@ -15,12 +16,13 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 public class WaitingQueueUserController {
 
     private final WaitingQueueService waitingQueueService;
+    private final WaitingHistoryService waitingHistoryService;
 
     /**
-     * SSE 연결
+     * 알림을 받기 위해 서버에게 SSE 요청
      */
     @GetMapping("/api/v2/user/stores/{storeId}/waitings/connection")
-    public ResponseEntity<SseEmitter> test1(
+    public ResponseEntity<SseEmitter> connectToServer(
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable long storeId) {
 
@@ -31,7 +33,7 @@ public class WaitingQueueUserController {
      * 대기열에 등록
      */
     @PostMapping("/api/v2/user/stores/{storeId}/waitings")
-    public ResponseEntity<SuccessResponse<WaitingQueueResponse.Info>> test2(
+    public ResponseEntity<SuccessResponse<WaitingQueueResponse.Info>> addToWaitingQueue(
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable long storeId) {
         return ResponseEntity.ok(SuccessResponse.of(waitingQueueService.addUserToQueue(authUser, storeId)));
@@ -48,6 +50,28 @@ public class WaitingQueueUserController {
         waitingQueueService.cancel(user, storeId);
         return ResponseEntity.ok().body(SuccessResponse.of(null));
     }
+
+    /**
+     * 내가 웨이팅 등록한 가게 아이디 목록 조회
+     * @param authUser
+     * @return
+     */
+    @GetMapping("/api/v2/user/waitings/stores")
+    public ResponseEntity<SuccessResponse<WaitingQueueResponse.MyWaitingStoreList>> getRegisteredWaitingStoreIds(@AuthenticationPrincipal AuthUser authUser) {
+        return ResponseEntity.ok(SuccessResponse.of(waitingHistoryService.getRegisteredStoreList(authUser)));
+    }
+
+    /**
+     * 웨이팅 대기열에 등록되어 있는지 확인
+     */
+    @GetMapping("/api/v2/user/stores/{storeId}/waitings")
+    public ResponseEntity<SuccessResponse<WaitingQueueResponse.WaitingInfo>> checkWaitingStatus(
+        @AuthenticationPrincipal AuthUser authUser,
+        @PathVariable long storeId
+    ) {
+        return ResponseEntity.ok(SuccessResponse.of(waitingQueueService.checkWaitingStatus(authUser, storeId)));
+    }
+
 
 
 }

@@ -3,14 +3,11 @@ package com.projectw.domain.reservation.repository;
 
 import com.projectw.domain.reservation.dto.ReserveRequest;
 import com.projectw.domain.reservation.dto.ReserveResponse;
-import com.projectw.domain.reservation.entity.QReservation;
 import com.projectw.domain.reservation.enums.ReservationStatus;
 import com.projectw.domain.reservation.enums.ReservationType;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Wildcard;
-import com.querydsl.jpa.JPAExpressions;
-import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,15 +29,18 @@ public class ReservationDslRepositoryImpl implements ReservationDslRepository{
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public Page<ReserveResponse.Infos> getOwnerReservations(Long userId, ReserveRequest.Parameter parameter, Pageable pageable) {
+    public Page<ReserveResponse.Infos> getOwnerReservations(Long userId, ReserveRequest.OwnerParameter ownerParameter, Pageable pageable) {
 
         List<ReserveResponse.Infos> results = queryFactory
                 .select(Projections.constructor(ReserveResponse.Infos.class ,
+                        reservation.orderId ,
                         user.id.as("userId") ,
                         store.id.as("storeId") ,
                         reservation.id.as("reservationId") ,
                         reservation.reservationNo ,
                         reservation.numberPeople ,
+                        reservation.paymentAmt ,
+                        reservation.paymentYN ,
                         reservation.reservationDate ,
                         reservation.reservationTime ,
                         reservation.type ,
@@ -50,11 +50,13 @@ public class ReservationDslRepositoryImpl implements ReservationDslRepository{
                 .innerJoin(reservation).on(reservation.store.id.eq(store.id))
                 .where(
                         user.id.eq(userId),
-                        typeEquals(parameter.type()),
-                        statusEquals(parameter.status()),
-                        startDtEquals(parameter.startDt()),
-                        endDtEquals(parameter.endDt())
+                        store.id.eq(ownerParameter.storeId()),
+                        typeEquals(ownerParameter.type()),
+                        statusEquals(ownerParameter.status()),
+                        startDtEquals(ownerParameter.startDt()),
+                        endDtEquals(ownerParameter.endDt())
                 )
+                .orderBy(reservation.id.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
@@ -65,10 +67,12 @@ public class ReservationDslRepositoryImpl implements ReservationDslRepository{
                 .innerJoin(store).on(store.user.id.eq(user.id))
                 .innerJoin(reservation).on(reservation.store.id.eq(store.id))
                 .where(
-                        typeEquals(parameter.type()),
-                        statusEquals(parameter.status()),
-                        startDtEquals(parameter.startDt()),
-                        endDtEquals(parameter.endDt())
+                        user.id.eq(userId),
+                        store.id.eq(ownerParameter.storeId()),
+                        typeEquals(ownerParameter.type()),
+                        statusEquals(ownerParameter.status()),
+                        startDtEquals(ownerParameter.startDt()),
+                        endDtEquals(ownerParameter.endDt())
                 ).fetchOne();
 
         return new PageImpl<>(results, pageable, totalCount);
@@ -79,11 +83,14 @@ public class ReservationDslRepositoryImpl implements ReservationDslRepository{
 
         List<ReserveResponse.Infos> results = queryFactory
                 .select(Projections.constructor(ReserveResponse.Infos.class ,
+                        reservation.orderId ,
                         user.id.as("userId") ,
                         store.id.as("storeId") ,
                         reservation.id.as("reservationId") ,
                         reservation.reservationNo ,
                         reservation.numberPeople ,
+                        reservation.paymentAmt ,
+                        reservation.paymentYN ,
                         reservation.reservationDate ,
                         reservation.reservationTime ,
                         reservation.type ,
@@ -98,6 +105,7 @@ public class ReservationDslRepositoryImpl implements ReservationDslRepository{
                         startDtEquals(parameter.startDt()),
                         endDtEquals(parameter.endDt())
                 )
+                .orderBy(reservation.id.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
@@ -108,6 +116,7 @@ public class ReservationDslRepositoryImpl implements ReservationDslRepository{
                 .innerJoin(reservation).on(reservation.user.id.eq(user.id))
                 .innerJoin(reservation.store , store)
                 .where(
+                        user.id.eq(userId),
                         typeEquals(parameter.type()),
                         statusEquals(parameter.status()),
                         startDtEquals(parameter.startDt()),

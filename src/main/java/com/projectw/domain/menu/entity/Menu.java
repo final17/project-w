@@ -1,6 +1,5 @@
 package com.projectw.domain.menu.entity;
 
-
 import com.projectw.domain.allergy.entity.Allergy;
 import com.projectw.domain.store.entity.Store;
 import jakarta.persistence.*;
@@ -36,11 +35,23 @@ public class Menu {
     @Column(nullable = false)
     private Boolean isDeleted = false;
 
+    @Column(name = "view_count", nullable = false)
+    private int viewCount = 0;
+
     public Menu(String name, int price, Store store, Set<Allergy> allergies) {
         this.name = name;
         this.price = price;
         this.store = store;
         this.allergies = allergies;
+    }
+
+    public Menu(Long id, String name, int price, Store store, Set<Allergy> allergies) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.store = store;
+        this.allergies = allergies;
+        this.viewCount = 0;
     }
 
     // 메뉴 업데이트 메서드
@@ -50,7 +61,13 @@ public class Menu {
         this.allergies = allergies;
     }
 
+    // 메뉴 삭제 메서드
     public void deleteMenu() {
         this.isDeleted = true;
+    }
+
+    // 조회수 증가 메서드
+    public void incrementViews() {
+        this.viewCount++;
     }
 }

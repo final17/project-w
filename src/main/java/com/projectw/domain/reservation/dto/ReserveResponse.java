@@ -6,13 +6,16 @@ import com.projectw.domain.reservation.enums.ReservationType;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
-public sealed interface ReserveResponse permits ReserveResponse.Infos, ReserveResponse.Info {
+public sealed interface ReserveResponse permits ReserveResponse.Infos , ReserveResponse.Carts {
     record Infos (
+            String orderId,
             Long userId,
             Long storeId,
             Long reserveId,
             Long reservationNo,
             Long numberPeople,
+            Long paymentAmount,
+            boolean paymentYN,
             LocalDate reservationDate,
             LocalTime reservationTime,
             ReservationType type,
@@ -20,18 +23,11 @@ public sealed interface ReserveResponse permits ReserveResponse.Infos, ReserveRe
     ) implements ReserveResponse {
     }
 
-    record Info (
-            Long userId,
-            Long storeId,
-            Long reserveId,
-            Long reservationNo,
-            Long numberPeople,
-            Long remainReservationCnt,
-            LocalDate reservationDate,
-            LocalTime reservationTime,
-            ReservationType type,
-            ReservationStatus status
+    record Carts (
+            Long menuId,
+            String menuName,
+            Long price,
+            Long cnt
     ) implements ReserveResponse {
-
     }
 }
