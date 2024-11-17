@@ -24,7 +24,7 @@ public class RedisProducer {
 
     public void send(String topic, Object data) {
         try {
-            redissonClient.getTopic(topic).publishAsync(objectMapper.writeValueAsString(data));
+            redissonClient.getTopic(topic).publish(objectMapper.writeValueAsString(data));
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }

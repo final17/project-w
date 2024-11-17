@@ -7,11 +7,16 @@ import com.projectw.common.exceptions.NotFoundException;
 import com.projectw.common.exceptions.UserAlreadyInQueueException;
 import com.projectw.common.utils.RedisProducer;
 import com.projectw.domain.notification.service.NotificationService;
+import com.projectw.domain.reservation.entity.Reservation;
+import com.projectw.domain.reservation.enums.ReservationStatus;
+import com.projectw.domain.reservation.enums.ReservationType;
+import com.projectw.domain.reservation.exception.StoreNotOpenException;
+import com.projectw.domain.reservation.repository.ReservationRepository;
+import com.projectw.domain.reservation.service.ReservationService;
 import com.projectw.domain.store.entity.Store;
 import com.projectw.domain.store.repository.StoreRepository;
 import com.projectw.domain.user.entity.User;
 import com.projectw.domain.user.repository.UserRepository;
-import com.projectw.domain.waiting.dto.WaitingPoll;
 import com.projectw.domain.waiting.dto.WaitingQueueResponse;
 import com.projectw.domain.waiting.enums.WaitingStatus;
 import com.projectw.domain.waiting.repository.WaitingHistoryRepository;
@@ -24,23 +29,30 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
 public class WaitingQueueService {
+
     private final RedissonClient redissonClient;
     private final NotificationService notificationService;
     private final StoreRepository storeRepository;
-    private final RedisProducer redisProducer;
     private final WaitingService waitingService;
     private final WaitingHistoryService waitingHistoryService;
     private final UserRepository userRepository;
     private final WaitingHistoryRepository waitingHistoryRepository;
+    private final ReservationService reservationService;
+    private final ReservationRepository reservationRepository;
 
     public SseEmitter connect(AuthUser authUser, long storeId) {
+        if(authUser == null) return null;
+
         RScoredSortedSet<String> sortedSet = redissonClient.getScoredSortedSet(getRedisSortedSetKey(storeId));
         Integer rank = sortedSet.rank(String.valueOf(authUser.getUserId()));
         if(rank == null) {
@@ -57,6 +69,10 @@ public class WaitingQueueService {
 
         Store store = storeRepository.findWithUserById(storeId)
                 .orElseThrow(() -> new NotFoundException(ResponseCode.NOT_FOUND_STORE));
+
+        if( !(LocalTime.now().isAfter(store.getOpenTime()) && LocalTime.now().isBefore(store.getCloseTime())) ) {
+            throw new StoreNotOpenException(ResponseCode.STORE_NOT_OPEN);
+        }
 
         // REGISTERED 상태가 존재하면 이미 웨이팅 중
         if(waitingHistoryRepository.existsByUserAndStoreAndStatus(User.fromAuthUser(authUser), store, WaitingStatus.REGISTERED)){
@@ -107,11 +123,30 @@ public class WaitingQueueService {
         // 완료로 변경
         waitingHistoryService.completeHistory(user, store);
 
-        notificationService.broadcast(getSseKey(storeId, popUserId), 0);
-        notificationService.delete(getSseKey(storeId,popUserId));
         // 웨이팅 서비스에서 레스토랑 가중치 감소
         waitingService.incrementWeight(String.valueOf(storeId), -1.0);
-        redisProducer.send("waiting-poll", new WaitingPoll(score.longValue(), storeId, Long.parseLong(popUserId), LocalDateTime.now()));
+
+        LocalDateTime at = LocalDateTime.now();
+        Long num = score.longValue();
+
+        Reservation reservation = Reservation.builder()
+                .orderId(UUID.randomUUID().toString())
+                .status(ReservationStatus.COMPLETE)
+                .type(ReservationType.WAIT)          // 웨이팅 , 예약 중 예약이라는 의미
+                .reservationDate(at.toLocalDate())
+                .reservationTime(at.toLocalTime().truncatedTo(TimeUnit.SECONDS.toChronoUnit()))
+                .numberPeople(1L)
+                .reservationNo(num)
+                .paymentYN(false)
+                .paymentAmt(0L)
+                .user(user)
+                .store(store)
+                .build();
+
+        reservationRepository.save(reservation);
+
+        notificationService.broadcast(getSseKey(storeId, popUserId), 0);
+        notificationService.delete(getSseKey(storeId,popUserId));
         updateAllUsers(storeId);
     }
 
@@ -158,10 +193,18 @@ public class WaitingQueueService {
         // 마감 메세지 보내기
         Collection<String> values = sortedSet.valueRange(cutline, -1);
         for (String userId : values) {
-            notificationService.broadcast(getSseKey(storeId, userId), "대기열 마감");
+            notificationService.broadcast(getSseKey(storeId, userId), "end");
             notificationService.delete(getSseKey(storeId, userId));
         }
 
+
+        List<Long> users = userRepository.findAllById(values.stream()
+                        .map(Long::parseLong)
+                        .toList())
+                .stream()
+                .map(User::getId).toList();
+
+        waitingHistoryService.cancelHistory(users, store);
         // cutline이 50이면 50 뒤부터 삭제
         sortedSet.removeRangeByRank(cutline, -1);
     }
@@ -187,9 +230,14 @@ public class WaitingQueueService {
         int rank = 1;
         for(ScoredEntry<String> scoredEntry : scoredEntries) {
             ids.add(new WaitingQueueResponse.Info(rank++, Long.parseLong(scoredEntry.getValue())));
+
+            // 상위 10명 까지만
+            if(rank == 11){
+                break;
+            }
         }
 
-        return new WaitingQueueResponse.List(ids.size(), ids);
+        return new WaitingQueueResponse.List(scoredEntries.size(), ids);
     }
 
     /**
