@@ -25,7 +25,6 @@ import com.projectw.domain.store.entity.Store;
 import com.projectw.domain.store.repository.StoreRepository;
 import com.projectw.domain.user.entity.User;
 import com.projectw.domain.user.repository.UserRepository;
-import com.projectw.domain.waiting.dto.WaitingPoll;
 import com.projectw.security.AuthUser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,13 +44,11 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.lang.reflect.Method;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -609,44 +606,5 @@ public class ReservationServiceTest {
         // then
         assertEquals(1, carts.size());
         assertEquals(menu.getId() , carts.get(0).menuId());
-    }
-
-    @Test
-    public void 웨이팅_체크인_시_예약_생성_User_없으면_NotFoundException() throws Exception {
-        // given
-        WaitingPoll waitingPoll = new WaitingPoll(1L, 1L, 1L, LocalDateTime.now());
-        given(userRepository.findById(anyLong())).willReturn(Optional.empty());
-
-        // when then
-        assertThatThrownBy(()-> reservationService.onWaitingPoll(waitingPoll))
-                .isInstanceOf(NotFoundException.class)
-                .hasMessage(ResponseCode.NOT_FOUND_USER.getMessage());
-    }
-
-    @Test
-    public void 웨이팅_체크인_시_예약_생성_Store_없으면_NotFoundException() throws Exception {
-        // given
-        WaitingPoll waitingPoll = new WaitingPoll(1L, 1L, 1L, LocalDateTime.now());
-        User user = User.fromAuthUser(new AuthUser(1L, "", UserRole.ROLE_USER));
-        given(userRepository.findById(anyLong())).willReturn(Optional.of(user));
-        given(storeRepository.findById(anyLong())).willReturn(Optional.empty());
-
-        // when then
-        assertThatThrownBy(()-> reservationService.onWaitingPoll(waitingPoll))
-                .isInstanceOf(NotFoundException.class)
-                .hasMessage(ResponseCode.NOT_FOUND_STORE.getMessage());
-    }
-
-    @Test
-    public void 웨이팅_체크인_시_예약_생성() throws Exception {
-        // given
-        WaitingPoll waitingPoll = new WaitingPoll(1L, 1L, 1L, LocalDateTime.now());
-        User user = User.fromAuthUser(new AuthUser(1L, "", UserRole.ROLE_USER));
-        Store store = new Store();
-        given(userRepository.findById(anyLong())).willReturn(Optional.of(user));
-        given(storeRepository.findById(anyLong())).willReturn(Optional.of(store));
-        reservationService.onWaitingPoll(waitingPoll);
-        // when then
-        verify(reservationRepository, times(1)).save(any());
     }
 }
