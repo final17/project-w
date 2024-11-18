@@ -31,6 +31,11 @@ public class SecurityFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
         String requestURI = request.getRequestURI();
 
+        if (validatePublicUrl(requestURI)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         // Public 경로 처리
         if (isPublicPath(requestURI)) {
             filterChain.doFilter(request, response);
@@ -94,6 +99,10 @@ public class SecurityFilter extends OncePerRequestFilter {
 
         return publicPaths.stream().anyMatch(requestURI::startsWith)
                 || (requestURI.matches(authPathRegex) && !requestURI.contains("logout"));
+    }
+
+    private boolean validatePublicUrl(String url) {
+        return (url.equals("/api/v1/user/stores"));
     }
 
     /**

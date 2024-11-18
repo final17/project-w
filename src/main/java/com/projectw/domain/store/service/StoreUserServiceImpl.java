@@ -37,7 +37,7 @@ public class StoreUserServiceImpl implements StoreUserService {
     private final RedissonClient redissonClient;
 
     @Override
-    public Page<StoreResponse.Info> getAllStore(AuthUser authUser, Pageable pageable) {
+    public Page<StoreResponse.Info> getAllStore(Pageable pageable) {
         Page<Store> allStore = storeRepository.findAll(pageable);
         return allStore.map(StoreResponse.Info::new);
     }
@@ -55,7 +55,6 @@ public class StoreUserServiceImpl implements StoreUserService {
                 log.info("Lock 획득 실패 = " + key);
                 throw new RuntimeException("Lock 획득 실패: 다른 프로세스에서 사용 중입니다.");
             }
-
             // 로직 실행
             store = storeAddView(storeId);
         } catch (InterruptedException e) {
