@@ -40,60 +40,6 @@ public class ReservationController {
         return ResponseEntity.ok(SuccessResponse.of(null));
     }
 
-    /**
-     * method : addCartItem
-     * memo   : 유저가 해당 음식점에서 메뉴를 골라서 담는 작업
-     * */
-    @Secured({UserRole.Authority.USER})
-    @PostMapping("/store/{storeId}/cart")
-    public ResponseEntity<SuccessResponse<Void>> addCartItem(
-            @AuthenticationPrincipal AuthUser authUser ,
-            @PathVariable Long storeId,
-            @Valid @RequestBody ReserveRequest.AddCart addCart) {
-        reservationService.addCartItem(authUser.getUserId() , storeId , addCart);
-        return ResponseEntity.ok(SuccessResponse.of(null));
-    }
-
-    /**
-     * method : updateCartItem
-     * memo   : 유저가 해당 음식점에서 메뉴를 골라서 담는 작업
-     * */
-    @Secured({UserRole.Authority.USER})
-    @PatchMapping("/store/{storeId}/cart")
-    public ResponseEntity<SuccessResponse<Void>> updateCartItem(
-            @AuthenticationPrincipal AuthUser authUser ,
-            @PathVariable Long storeId,
-            @Valid @RequestBody ReserveRequest.UpdateCart updateCart) {
-        reservationService.updateCartItem(authUser.getUserId() , storeId , updateCart);
-        return ResponseEntity.ok(SuccessResponse.of(null));
-    }
-
-    /**
-     * method : removeCartItem
-     * memo   : 유저가 해당 음식점에서 메뉴를 삭제하는 작업
-     * */
-    @Secured({UserRole.Authority.USER})
-    @DeleteMapping("/store/{storeId}/cart")
-    public ResponseEntity<SuccessResponse<Void>> removeCartItem(
-            @AuthenticationPrincipal AuthUser authUser ,
-            @PathVariable Long storeId,
-            @Valid @RequestBody ReserveRequest.RemoveCart removeCart) {
-        reservationService.removeCartItem(authUser.getUserId() , storeId , removeCart);
-        return ResponseEntity.ok(SuccessResponse.of(null));
-    }
-
-    /**
-     * method : getCartItems
-     * memo   : 유저가 해당 음식점에서 메뉴를 조회하는 작업
-     * */
-    @Secured({UserRole.Authority.USER})
-    @GetMapping("/store/{storeId}/cart")
-    public ResponseEntity<SuccessResponse<List<ReserveResponse.Carts>>> getCartItems(
-            @AuthenticationPrincipal AuthUser authUser ,
-            @PathVariable Long storeId) {
-        return ResponseEntity.ok(SuccessResponse.of(reservationService.getCartItems(authUser.getUserId() , storeId)));
-    }
-
     @Secured({UserRole.Authority.USER})
     @GetMapping("/reservations")
     public ResponseEntity<SuccessResponse<Page<ReserveResponse.Infos>>> getUserReservations(
