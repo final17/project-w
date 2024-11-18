@@ -217,10 +217,9 @@
 ### 아키텍처 다이어그램
 ![image](https://github.com/user-attachments/assets/b0234b41-039d-4489-b8be-f7c1e08124e0)
 
----
 
 <details>
-<summary style="font-size: 24px;"><b>📦 적용 기술 상세보기</b></summary>
+<summary style="font-size: 18px;"><b>📦 적용 기술 상세보기</b></summary>
 
 ### 💾 **데이터베이스 및 캐싱**
 
@@ -1072,6 +1071,7 @@ boolBuilder = new BoolQuery.Builder()
 6. **1PR 당 1인 이상 확인 후 머지**
 - 각 PR에 대해 최소 1명 이상의 승인을 통해 코드 품질을 개선.
 
+
 ---
 
 ## 성과 및 회고
@@ -1107,7 +1107,35 @@ boolBuilder = new BoolQuery.Builder()
 
 
 ## ☁ 와이어프레임
+https://www.figma.com/design/XC7jH231J14F6BCBdgOsf1/Untitled?node-id=0-1&t=VN6XSThorsDXxCW2-1
 
 ## ☁ ERD 다이어그램
+![image](https://github.com/user-attachments/assets/a3388b69-092f-4341-b7c8-5f3a32c4788c)
 
 ## 📑 API 명세서
+
+<details>
+<summary style="font-size: 16px">상세보기</summary>
+<img src="https://github.com/user-attachments/assets/9d4f0a9c-a15b-4fe7-b669-fe8f057ff196"/>
+<img src="https://github.com/user-attachments/assets/dda639ac-e9a4-4ae7-ace9-84f258075a9d"/>
+<img src="https://github.com/user-attachments/assets/8da60ab7-c5bf-4831-905f-106f248b6af9"/>
+<img src="https://github.com/user-attachments/assets/0dc541ce-4cdf-4a73-b2ef-5c6c93eb0e0e"/>
+<img src="https://github.com/user-attachments/assets/97535ed8-e41c-4114-a941-80e9cacd1415"/>
+<img src="https://github.com/user-attachments/assets/9151a27f-2645-4415-a1de-853e358420e5"/>
+<img src="https://github.com/user-attachments/assets/562ca60b-80c5-4e4f-aa6f-9478e2d20fce"/>
+<img src="https://github.com/user-attachments/assets/4ebda14a-047c-4236-b9c3-41eaf1f4eda7"/>
+<img src="https://github.com/user-attachments/assets/08c3d448-03da-4e51-b7c8-de9d98652d9f"/>
+<img src="https://github.com/user-attachments/assets/8194388c-e2d3-4ad4-82e2-813cb3017fe8"/>
+<img src="https://github.com/user-attachments/assets/f99c6a3e-8803-4a4c-acbc-8316b1979ba5"/>
+<img src="https://github.com/user-attachments/assets/a7f6e64d-8754-4e26-a8e8-f9a07dea0cbd"/>
+<img src="https://github.com/user-attachments/assets/ad08260c-c09f-4d90-a46c-117a2ca2fa64"/>
+<img src="https://github.com/user-attachments/assets/22495039-7e74-4407-a25e-a6176ad200f7"/>
+<img src="https://github.com/user-attachments/assets/13102b7c-800b-4db2-9690-e83093de3126"/>
+<img src="https://github.com/user-attachments/assets/57f174e2-65a6-45b1-b354-21b4389d0b6e"/>
+<img src="https://github.com/user-attachments/assets/f314ea28-a56a-401a-92dd-0dec66c8d216"/>
+<img src="https://github.com/user-attachments/assets/e506d38d-e806-4acf-9d85-64730c32e9bc"/>
+<img src="https://github.com/user-attachments/assets/b97a6b60-87b8-4257-83bd-28a431377636"/>
+<img src="https://github.com/user-attachments/assets/d28e1a06-30aa-41b0-ac7f-0130f3bc276c"/>
+<img src="https://github.com/user-attachments/assets/58619fe2-f7a4-4ace-8da7-5fb2ce37e277"/>
+
+</details>
