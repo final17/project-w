@@ -615,66 +615,65 @@ API의 응답 데이터 구조를 다시 파악하기 위해 API 문서를 면�
 **문제**
 - 검색 속도가 1초 정도로 느려 검색 속도 향상이 필요함
 
-<details><summary>🧾 의사 결정 </summary>
+    <details><summary>🧾 의사 결정 </summary>
+    
+    <details><summary> 검색을 고도화 시키는 방법 </summary>
+    
+    1. 페이지네이션: 검색 결과가 많은 경우 한 번에 모든 데이터를 가져오기 않고, 페이지네이션을 적용하여 필요한 부분만 조회하도록 할 수 있습니다.
+       2. JPA 쿼리 최적화 및 Indexing: 데이터베이스 테이블에 인덱스를 설정하여 검색 속도를 높일 수 있습니다.
+       3. Redis 캐싱 적용: 자주 조회하는 음식점 데이터를 Redis에 캐싱하여 데이터베이스 조회 빈도를 줄일 수 있습니다.
+    
+    이중에서 페이지네이션은 적용을 완료하였고, Indexing을 하는 것이 적합하다고 생각을 하여 Indexing을 적용하였습니다. 그 후에 Redis 캐싱을 적용하였습니다.
+    </details>
+    
+    <details><summary> 인덱스 종류 </summary>
+    
+    1. 단일 인덱스(Single Index): 하나의 컬럼에 인덱스를 설정하여 해당 컬럼에 대한 검색을 최적화 합니다.
+       2. 복합 인덱스(Composite Index): 여러 컬럼을 조합하여 인덱스를 생성하는 방석으로, 특정 조합에 대한 최적의 성능을 제공
+       3. 유니크 인덱스(Unique Index): 중복이 허용되지 않도록 하는 인덱스
+       4. 전문검색 인덱스(Full-Text Index): 텍스트 기반의 검색을 최적화 하기 위한 인덱스
+    
+    이중에서 Full-Text Inex가 텍스트 기반의 검색으로 적합하다고 생각하여 적용하였습니다.
+    
+    </details>
+    
+    <details><summary> 해결 순서 </summary>
+    
+    1. Full-Text Index 적용
+       * Full-Text Index를 사용하면 키워드 검색을 지원하지 않습니다.("검색어"만 검색이 가능하고 "%검색어", "검색어%", "%검색어%")
+       2. Full-Text Index에서 N-Gram을 사용하기
+       * Full-Text는 위와 같은 문제가 발생하여 N-Gram을 사용하였습니다. N-Gram을 사용하면 위에서 발생한 문제를 해결할 수 있었습니다.
+       * ![image](https://github.com/user-attachments/assets/3403990d-4d17-4666-b320-683761dbce14)
+       * 하지만 Like만 사용한 결과와 Full-Text Index N-Gram을 사용한 결과를 확인해보면 "소라", "도깨비"를 검색하면 빠르고, "식당"은 둘이 속도가 비슷하고, "찌개", "국밥"은 N-Gram방식이 느린 것을 확인할 수 있었습니다.
+       * N-Gram이 느린 이유는 N-Gram은 특정 검색 시 세밀한 일치 검색을 가능하게 하지만 더 느려질 수 있기 때문이었습니다.
+       * 정화도는 향상되었지만 속도가 많이 느려지기 때문에 적합하지 않다고 생각하였습니다.
+       3. Single Index 걸어보기
+       * 처음으로 돌아가 가장 기본적인 index인 Single Index를 걸어보았습니다
+       * 인덱싱 적용 범위
+         * EXPLAIN SELECT * FROM store WHERE business_name LIKE '%도깨비%';
+         * ![image](https://github.com/user-attachments/assets/5cf2cf95-cd3e-4a22-b883-321ff7ef07a2)
+         * EXPLAIN SELECT * FROM store WHERE business_name LIKE '도깨비%';
+         * ![image](https://github.com/user-attachments/assets/26efeff3-c0ec-46db-a4e5-8d94e0081094)
+         * EXPLAIN SELECT * FROM store WHERE business_name LIKE '%도깨비';
+         * ![image](https://github.com/user-attachments/assets/8023c79a-750b-4cfd-91b9-386963c650ff)
+       * 인덱싱 없이 LIKE만 사용하여 검색했을 때
+       * ![image](https://github.com/user-attachments/assets/11a4b11c-b140-4418-b50d-cf3190ecf12d)
+       * 인덱싱 사용했을 때
+       * ![image](https://github.com/user-attachments/assets/9544af92-503a-42bf-bc87-ecd71d108621)
+       4. Redis 캐싱 사용하기
+       * 음식점 데이터는 자주 조회되고, 변경이 적고 읽기 비율이 높은 데이터라고 생각하여 Redis 캐싱 대상에 적합하다고 생각하였습니다.
+       * 처음 페이징 처리된 데이터를 redis에 넣으려고 하자 에러가 나오면서 넣을 수 없었습니다.
+       * ![image](https://github.com/user-attachments/assets/39fc68be-c546-4270-b08f-f2ad0df8ef04)
+       * 그래서 페이징 처리된 데이터를 dto를 새로 만들어서 해결하였습니다.
+       * Redis 결과
+         * 캐싱을 처리하기 전
+         * ![image](https://github.com/user-attachments/assets/3eef3793-ab3b-4e43-a5be-6405dffa75f9)
+         * 캐싱 처리 후
+         * ![image](https://github.com/user-attachments/assets/c0d25d43-a3f4-4ccc-b745-20716a10fc9e)
+       * 속도가 <span style="color:red;">1048.90ms → 4.32ms</span>로 빨라진 것을 확인 할 수 있습니다.
 
-<details><summary> 검색을 고도화 시키는 방법 </summary>
-
-1. 페이지네이션: 검색 결과가 많은 경우 한 번에 모든 데이터를 가져오기 않고, 페이지네이션을 적용하여 필요한 부분만 조회하도록 할 수 있습니다.
-2. JPA 쿼리 최적화 및 Indexing: 데이터베이스 테이블에 인덱스를 설정하여 검색 속도를 높일 수 있습니다.
-3. Redis 캐싱 적용: 자주 조회하는 음식점 데이터를 Redis에 캐싱하여 데이터베이스 조회 빈도를 줄일 수 있습니다.
-
-이중에서 페이지네이션은 적용을 완료하였고, Indexing을 하는 것이 적합하다고 생각을 하여 Indexing을 적용하였습니다. 그 후에 Redis 캐싱을 적용하였습니다.
-</details>
-
-<details><summary> 인덱스 종류 </summary>
-
-1. 단일 인덱스(Single Index): 하나의 컬럼에 인덱스를 설정하여 해당 컬럼에 대한 검색을 최적화 합니다.
-2. 복합 인덱스(Composite Index): 여러 컬럼을 조합하여 인덱스를 생성하는 방석으로, 특정 조합에 대한 최적의 성능을 제공
-3. 유니크 인덱스(Unique Index): 중복이 허용되지 않도록 하는 인덱스
-4. 전문검색 인덱스(Full-Text Index): 텍스트 기반의 검색을 최적화 하기 위한 인덱스
-
-이중에서 Full-Text Inex가 텍스트 기반의 검색으로 적합하다고 생각하여 적용하였습니다.
-
-</details>
-
-<details><summary> 해결 순서 </summary>
-
-1. Full-Text Index 적용
-* Full-Text Index를 사용하면 키워드 검색을 지원하지 않습니다.("검색어"만 검색이 가능하고 "%검색어", "검색어%", "%검색어%")
-2. Full-Text Index에서 N-Gram을 사용하기
-* Full-Text는 위와 같은 문제가 발생하여 N-Gram을 사용하였습니다. N-Gram을 사용하면 위에서 발생한 문제를 해결할 수 있었습니다.
-* ![image](https://github.com/user-attachments/assets/3403990d-4d17-4666-b320-683761dbce14)
-* 하지만 Like만 사용한 결과와 Full-Text Index N-Gram을 사용한 결과를 확인해보면 "소라", "도깨비"를 검색하면 빠르고, "식당"은 둘이 속도가 비슷하고, "찌개", "국밥"은 N-Gram방식이 느린 것을 확인할 수 있었습니다.
-* N-Gram이 느린 이유는 N-Gram은 특정 검색 시 세밀한 일치 검색을 가능하게 하지만 더 느려질 수 있기 때문이었습니다.
-* 정화도는 향상되었지만 속도가 많이 느려지기 때문에 적합하지 않다고 생각하였습니다.
-3. Single Index 걸어보기
-* 처음으로 돌아가 가장 기본적인 index인 Single Index를 걸어보았습니다
-* 인덱싱 적용 범위
-  * EXPLAIN SELECT * FROM store WHERE business_name LIKE '%도깨비%';
-  * ![image](https://github.com/user-attachments/assets/5cf2cf95-cd3e-4a22-b883-321ff7ef07a2)
-  * EXPLAIN SELECT * FROM store WHERE business_name LIKE '도깨비%';
-  * ![image](https://github.com/user-attachments/assets/26efeff3-c0ec-46db-a4e5-8d94e0081094)
-  * EXPLAIN SELECT * FROM store WHERE business_name LIKE '%도깨비';
-  * ![image](https://github.com/user-attachments/assets/8023c79a-750b-4cfd-91b9-386963c650ff)
-* 인덱싱 없이 LIKE만 사용하여 검색했을 때
-* ![image](https://github.com/user-attachments/assets/11a4b11c-b140-4418-b50d-cf3190ecf12d)
-* 인덱싱 사용했을 때
-* ![image](https://github.com/user-attachments/assets/9544af92-503a-42bf-bc87-ecd71d108621)
-4. Redis 캐싱 사용하기
-* 음식점 데이터는 자주 조회되고, 변경이 적고 읽기 비율이 높은 데이터라고 생각하여 Redis 캐싱 대상에 적합하다고 생각하였습니다.
-* 처음 페이징 처리된 데이터를 redis에 넣으려고 하자 에러가 나오면서 넣을 수 없었습니다.
-* ![image](https://github.com/user-attachments/assets/39fc68be-c546-4270-b08f-f2ad0df8ef04)
-* 그래서 페이징 처리된 데이터를 dto를 새로 만들어서 해결하였습니다.
-* Redis 결과
-  * 캐싱을 처리하기 전
-  * ![image](https://github.com/user-attachments/assets/3eef3793-ab3b-4e43-a5be-6405dffa75f9)
-  * 캐싱 처리 후
-  * ![image](https://github.com/user-attachments/assets/c0d25d43-a3f4-4ccc-b745-20716a10fc9e)
-* 속도가 <span style="color:red;">1048.90ms → 4.32ms</span>로 빨라진 것을 확인 할 수 있습니다.
-
-
-</details>
-</details>
+    </details>
+    </details>
 </details>
 <br/>
 <details>
