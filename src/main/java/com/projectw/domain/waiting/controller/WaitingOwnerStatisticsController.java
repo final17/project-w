@@ -5,11 +5,13 @@ import com.projectw.domain.waiting.dto.WaitingStatisticsResponse;
 import com.projectw.domain.waiting.service.WaitingStatisticsService;
 import com.projectw.security.AuthUser;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
 
 @RestController
@@ -18,6 +20,14 @@ import java.util.List;
 public class WaitingOwnerStatisticsController {
 
     private final WaitingStatisticsService statisticsService;
+
+    @GetMapping("/v1/owner/stores/{storeId}/waitings/statistics/monthly")
+    public ResponseEntity<SuccessResponse<WaitingStatisticsResponse.Monthly>> getMonthlyStatistics(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable long storeId,
+            @RequestParam("month") @DateTimeFormat(pattern = "yyyy-MM") YearMonth yearMonth) {
+        return ResponseEntity.ok(SuccessResponse.of(statisticsService.getMonthlyStatistics(authUser, storeId, yearMonth)));
+    }
 
     @GetMapping("/v1/owner/stores/{storeId}/waitings/statistics/daily/range")
     public ResponseEntity<SuccessResponse<WaitingStatisticsResponse.DailyPage>> getDailyWaitingStatisticsBetweenDate(

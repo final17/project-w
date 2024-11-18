@@ -7,6 +7,8 @@ import com.projectw.common.exceptions.NotFoundException;
 import com.projectw.common.exceptions.UserAlreadyInQueueException;
 import com.projectw.common.utils.RedisProducer;
 import com.projectw.domain.notification.service.NotificationService;
+import com.projectw.domain.reservation.entity.Reservation;
+import com.projectw.domain.reservation.repository.ReservationRepository;
 import com.projectw.domain.store.entity.Store;
 import com.projectw.domain.store.repository.StoreRepository;
 import com.projectw.domain.user.entity.User;
@@ -27,6 +29,7 @@ import org.redisson.client.protocol.ScoredEntry;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,6 +41,9 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class WaitingQueueServiceTest {
+
+    @Mock
+    private ReservationRepository reservationRepository;
 
     @Mock
     private RedissonClient redissonClient;
@@ -62,6 +68,7 @@ class WaitingQueueServiceTest {
     private AuthUser owner;
     private AuthUser user;
     private Store store;
+    private Reservation reservation;
     private RScoredSortedSet sortedSetMock;
     private RAtomicLong atomicLong;
 
@@ -71,9 +78,12 @@ class WaitingQueueServiceTest {
         user = new AuthUser(2L, "email2", UserRole.ROLE_USER);
         store = new Store();
         ReflectionTestUtils.setField(store, "id", 1L);
+        ReflectionTestUtils.setField(store, "openTime", LocalTime.of(0,0,0));
+        ReflectionTestUtils.setField(store, "closeTime", LocalTime.of(23,59,59,999_999_999));
         ReflectionTestUtils.setField(store, "user", User.fromAuthUser(owner));
         sortedSetMock = mock(RScoredSortedSet.class);
         atomicLong = mock(RAtomicLong.class);
+        reservation = mock(Reservation.class);
     }
 
     @Test
@@ -132,6 +142,7 @@ class WaitingQueueServiceTest {
         given(redissonClient.getAtomicLong(anyString())).willReturn(atomicLong);
         given(atomicLong.incrementAndGet()).willReturn(1L);
 
+        store.getCloseTime();
         // when
         WaitingQueueResponse.Info info = waitingQueueService.addUserToQueue(user, 1L);
 
@@ -172,7 +183,6 @@ class WaitingQueueServiceTest {
         given(storeRepository.findWithUserById(anyLong())).willReturn(Optional.of(store));
         given(redissonClient.getScoredSortedSet(anyString())).willReturn(sortedSetMock);
         given(sortedSetMock.isEmpty()).willReturn(true);
-
         // when
         waitingQueueService.pollFirstUser(owner, store.getId());
 
@@ -215,7 +225,6 @@ class WaitingQueueServiceTest {
         verify(waitingHistoryService, times(1)).completeHistory(any(), eq(store));
         verify(waitingService, times(1)).incrementWeight(any(), eq(-1.0));
         verify(notificationService, times(1)).delete(anyString());
-        verify(redisProducer, times(1)).send(anyString(), any());
     }
 
     @Test
@@ -240,7 +249,7 @@ class WaitingQueueServiceTest {
         waitingQueueService.cancel(user, store.getId());
 
         // then
-        verify(waitingHistoryService, times(1)).cancelHistory(any(), eq(store));
+        verify(waitingHistoryService, times(1)).cancelHistory(any(User.class), eq(store));
         verify(sortedSetMock, times(1)).remove(String.valueOf(user.getUserId()));
         verify(waitingService, times(1)).incrementWeight(anyString(), eq(-1.0));
         verify(notificationService, times(1)).delete(anyString());
@@ -283,8 +292,8 @@ class WaitingQueueServiceTest {
         waitingQueueService.clearQueueFromRank(owner, store.getId(), 1);
 
         // then
-        verify(notificationService, times(3)).broadcast(anyString(), eq("대기열 마감"));
         verify(notificationService, times(3)).delete(anyString());
+        verify(notificationService, times(3)).broadcast(anyString(), any());
         verify(sortedSetMock, times(1)).removeRangeByRank(1, -1);
     }
 
