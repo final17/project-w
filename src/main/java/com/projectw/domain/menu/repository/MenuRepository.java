@@ -20,6 +20,6 @@ public interface MenuRepository extends JpaRepository<Menu, Long> {
     @Query("SELECT m FROM Menu m WHERE m.id IN(:menuIds)")
     List<Menu> getMenus(List<Long> menuIds);
 
-    @Query("SELECT m FROM Menu m WHERE m.store.id = :id")
+    @Query("SELECT m FROM Menu m WHERE m.store.id = :id AND m.isDeleted=false")
     List<Menu> findAllByStoreId(@Param("id") Long id);
 }
