@@ -6,11 +6,13 @@ import com.projectw.domain.waiting.service.WaitingHistoryService;
 import com.projectw.domain.waiting.service.WaitingQueueService;
 import com.projectw.security.AuthUser;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 public class WaitingQueueUserController {

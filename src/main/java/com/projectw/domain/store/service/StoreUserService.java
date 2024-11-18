@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public interface StoreUserService {
-    Page<StoreResponse.Info> getAllStore(AuthUser authUser, Pageable pageable);
+    Page<StoreResponse.Info> getAllStore(Pageable pageable);
 
     StoreResponse.Info getOneStore(AuthUser authUser, Long storeId);
 

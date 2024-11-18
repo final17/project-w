@@ -5,6 +5,7 @@ import com.projectw.domain.store.dto.StoreResponse;
 import com.projectw.domain.store.service.StoreUserService;
 import com.projectw.security.AuthUser;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -12,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/user/stores")
 @RequiredArgsConstructor
@@ -21,12 +23,11 @@ public class StoreUserController {
 
     @GetMapping
     public ResponseEntity<SuccessResponse<Page<StoreResponse.Info>>> getAllStore(
-            @AuthenticationPrincipal AuthUser authUser,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<StoreResponse.Info> StoreResponseDtoList = storeUserService.getAllStore(authUser, pageable);
+        Page<StoreResponse.Info> StoreResponseDtoList = storeUserService.getAllStore(pageable);
         return ResponseEntity.ok(SuccessResponse.of(StoreResponseDtoList));
     }
 

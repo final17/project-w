@@ -51,12 +51,12 @@ public class WebSecurityConfig {
             .httpBasic(AbstractHttpConfigurer::disable) // BasicAuthenticationFilter 비활성화
             .logout(AbstractHttpConfigurer::disable) // LogoutFilter 비활성화
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/*/user/stores").permitAll()
                 .requestMatchers("/api/*/auth/**").permitAll()
                 .requestMatchers("/api/*/user/stores/*/waitings/connection").permitAll() // sse 연결끊으면 에러 때문에 permitAll 처리
                 .requestMatchers("/auth/*/logout").authenticated()
                 .requestMatchers("/api/*/user/**").hasAnyAuthority(UserRole.Authority.USER, UserRole.Authority.OWNER, UserRole.Authority.ADMIN)
                 .requestMatchers("/api/*/owner/**").hasAnyAuthority(UserRole.Authority.OWNER, UserRole.Authority.ADMIN)
-                .requestMatchers("/api/*/owner/**").hasAuthority(UserRole.Authority.ADMIN)
                 .requestMatchers("/api/*/allergies").permitAll()
                 .requestMatchers("/api/*/payment/success" , "/api/*/payment/fail").permitAll()
                 .requestMatchers("/health").permitAll()

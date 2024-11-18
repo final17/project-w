@@ -47,6 +47,7 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Objects;
 import java.util.UUID;
 
 @Slf4j
@@ -258,7 +259,7 @@ public class PaymentService {
 
         // Card 정보가 있으면 처리
         Card card = null;
-        if (jsonNode.has("card") && Strings.hasText(jsonNode.get("card").textValue())) {
+        if (jsonNode.has("card")) {
             JsonNode cardNode = jsonNode.get("card");
             card = Card.builder()
                     .amount(cardNode.get("amount").intValue())
