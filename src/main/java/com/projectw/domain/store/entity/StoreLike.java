@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor
+@Table(name = "store_like", indexes = @Index(name = "idx_store_like", columnList = "user_id"))
 public class StoreLike extends Timestamped {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
