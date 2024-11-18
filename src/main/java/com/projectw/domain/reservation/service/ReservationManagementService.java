@@ -78,8 +78,10 @@ public class ReservationManagementService {
         reservation.updateStatus(ReservationStatus.COMPLETE);
     }
 
-    public Page<ReserveResponse.Infos> getOnwerReservations(Long userId , ReserveRequest.OwnerParameter ownerParameter) {
+    public Page<ReserveResponse.Infos> getOnwerReservations(Long userId, ReserveRequest.OwnerParameter ownerParameter) {
         Pageable pageable = PageRequest.of(ownerParameter.page() - 1, ownerParameter.size());
-        return reservationRepository.getOwnerReservations(userId , ownerParameter , pageable);
+        // 이 부분에서 storeId가 필요함
+        return reservationRepository.getOwnerReservations(userId, ownerParameter.storeId(), ownerParameter, pageable);
     }
+
 }

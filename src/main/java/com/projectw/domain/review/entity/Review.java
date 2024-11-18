@@ -44,6 +44,10 @@ public class Review extends Timestamped {
     @JoinColumn(name = "reservation_id")
     private Reservation reservation;
 
+    @ManyToOne(fetch = FetchType.LAZY)  // Menu와의 관계 추가
+    @JoinColumn(name = "menu_id")
+    private Menu menu;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
@@ -52,13 +56,14 @@ public class Review extends Timestamped {
     private List<Like> likes = new ArrayList<>();
 
     @Builder
-    public Review(String title, String content, int rating, Reservation reservation) {
+    public Review(String title, String content, int rating, Reservation reservation, Menu menu, User user, Store store) {
         this.title = title;
         this.content = content;
         this.rating = rating;
         this.reservation = reservation;
-        this.user = reservation.getUser();
-        this.store = reservation.getStore();
+        this.menu = menu;  // 웨이팅일 경우 null
+        this.user = user;  // 직접 받도록 수정
+        this.store = store;  // 직접 받도록 수정
     }
 
     public void addImage(ReviewImage image) {

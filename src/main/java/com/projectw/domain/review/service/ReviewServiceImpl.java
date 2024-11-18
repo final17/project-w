@@ -4,6 +4,7 @@ import com.projectw.common.config.S3Service;
 import com.projectw.domain.like.repository.LikeRepository;
 import com.projectw.domain.menu.entity.Menu;
 import com.projectw.domain.menu.repository.MenuRepository;
+import com.projectw.domain.reservation.dto.ReserveResponse;
 import com.projectw.domain.reservation.entity.Reservation;
 import com.projectw.domain.reservation.enums.ReservationStatus;
 import com.projectw.domain.reservation.repository.ReservationRepository;
@@ -24,8 +25,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -65,6 +68,9 @@ public class ReviewServiceImpl implements ReviewService {
                 .content(reviewRequestDto.content())
                 .rating(reviewRequestDto.rating())
                 .reservation(reservation)
+                .user(user)
+                .store(reservation.getStore())
+                .menu(menu)
                 .build();
 
         // S3에 이미지를 업로드하고 URL 리스트 생성
@@ -244,4 +250,75 @@ public class ReviewServiceImpl implements ReviewService {
             return new ReviewResponse.Info(review, user, imageUrls, likeCount);
         });
     }
+
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public List<ReserveResponse.Carts> getReservationMenus(Long userId, Long reservationId) {
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다."));
+
+        if (!reservation.getUser().getId().equals(userId)) {
+            throw new IllegalArgumentException("해당 예약에 대한 권한이 없습니다.");
+        }
+
+        return reservation.getReservationMenus()
+                .stream()
+                .map(menu -> new ReserveResponse.Carts(
+                        menu.getMenu().getId(),      // menuId
+                        menu.getMenuName(),          // menuName
+                        menu.getMenuPrice(),         // price
+                        menu.getMenuCnt()           // cnt
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public ReviewResponse.Info createWaitingReview(Long storeId, ReviewRequest.Create reviewRequestDto, String email, List<MultipartFile> images) {
+        Store store = storeRepository.findById(storeId)
+                .orElseThrow(() -> new IllegalArgumentException("매장을 찾을 수 없습니다."));
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("권한이 없습니다."));
+
+        Reservation reservation = reservationRepository.findByUserAndStore(user, store)
+                .orElseThrow(() -> new IllegalArgumentException("해당 매장의 방문 내역이 없습니다."));
+
+        if (!reservation.getStatus().equals(ReservationStatus.COMPLETE)) {
+            throw new IllegalArgumentException("방문 완료된 예약에 대해서만 리뷰를 작성할 수 있습니다.");
+        }
+
+        if (reviewRepository.existsByUserAndStore(user, store)) {
+            throw new IllegalArgumentException("이미 리뷰를 작성하셨습니다.");
+        }
+
+        Review review = Review.builder()
+                .title(reviewRequestDto.title())
+                .content(reviewRequestDto.content())
+                .rating(reviewRequestDto.rating())
+                .reservation(reservation)
+                .store(store)
+                .user(user)
+                .build();
+
+        // S3에 이미지를 업로드하고 URL 리스트 생성
+        List<String> imageUrls = new ArrayList<>();
+        if (images != null && !images.isEmpty()) {
+            for (MultipartFile image : images) {
+                String imageUrl = s3Service.uploadFile(image);
+                imageUrls.add(imageUrl);
+
+                ReviewImage reviewImage = ReviewImage.builder()
+                        .imageUrl(imageUrl)
+                        .review(review)
+                        .build();
+
+                review.getImages().add(reviewImage);
+            }
+        }
+
+        Review savedReview = reviewRepository.save(review);
+        Long likeCount = 0L;
+
+        return new ReviewResponse.Info(savedReview, user, imageUrls, likeCount);
+    }
+
 }

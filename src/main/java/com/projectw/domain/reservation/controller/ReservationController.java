@@ -47,4 +47,15 @@ public class ReservationController {
             @ModelAttribute ReserveRequest.Parameter parameter) {
         return ResponseEntity.ok(SuccessResponse.of(reservationService.getUserReservations(authUser.getUserId() , parameter)));
     }
+
+    @GetMapping("/reservations/{reservationId}/menu")
+    public ResponseEntity<SuccessResponse<List<ReserveResponse.Carts>>> getReservationMenus(
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long reservationId
+    ) {
+        List<ReserveResponse.Carts> menus = reservationService.getReservationMenus(authUser.getUserId(), reservationId);
+        return ResponseEntity.ok(SuccessResponse.of(menus));
+    }
+
+
 }

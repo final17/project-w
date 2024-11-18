@@ -13,6 +13,8 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -60,6 +62,9 @@ public class Reservation extends Timestamped {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "store_id", nullable = false)
     private Store store;
+
+    @OneToMany(mappedBy = "reservation", fetch = FetchType.LAZY)
+    private List<ReservationMenu> reservationMenus = new ArrayList<>();
 
     @Builder
     public Reservation(String orderId , ReservationStatus status , ReservationType type , LocalDate reservationDate , LocalTime reservationTime , Long reservationNo , Long numberPeople , boolean paymentYN , Long paymentAmt , User user , Store store) {
