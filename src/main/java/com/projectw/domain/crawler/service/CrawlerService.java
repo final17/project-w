@@ -32,7 +32,7 @@ public class CrawlerService {
     private final RedissonClient redissonClient;
     private final ObjectMapper objectMapper;
     private static final long CACHE_TTL_HOURS = 24; // 캐시 유효 시간
-    private List<String> proxyHosts = List.of("54.180.140.244", "3.35.133.31");
+    private List<String> proxyHosts = List.of("3.34.95.204", "54.180.156.29");
     private int proxyIndex = 0;
     private static final int PROXY_PORT = 3128;
     private static final int MAX_REQUESTS_BEFORE_CHANGE = 10; // 10번 접속마다 IP 변경
