@@ -306,10 +306,10 @@ public class ReservationService {
         return reservation.getReservationMenus()
                 .stream()
                 .map(menu -> new ReserveResponse.Carts(
-                        menu.getMenu().getId(),  // menuId -> Long
-                        menu.getMenuName(),      // menuName -> String
-                        menu.getMenuPrice(),     // price -> Long
-                        menu.getMenuCnt()        // cnt -> Long
+                        menu.getMenu().getId(),
+                        menu.getMenuName(),
+                        menu.getMenuPrice(),
+                        menu.getMenuCnt()
                 ))
                 .collect(Collectors.toList());
     }
