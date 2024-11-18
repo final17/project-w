@@ -31,6 +31,7 @@ import com.projectw.domain.store.entity.Store;
 import com.projectw.domain.store.repository.StoreRepository;
 import com.projectw.domain.user.entity.User;
 import com.projectw.domain.user.repository.UserRepository;
+import io.jsonwebtoken.lang.Strings;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -257,7 +258,7 @@ public class PaymentService {
 
         // Card 정보가 있으면 처리
         Card card = null;
-        if (jsonNode.has("card")) {
+        if (jsonNode.has("card") && Strings.hasText(jsonNode.get("card").textValue())) {
             JsonNode cardNode = jsonNode.get("card");
             card = Card.builder()
                     .amount(cardNode.get("amount").intValue())
