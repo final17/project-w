@@ -47,12 +47,14 @@ public class CrawlerService {
             proxyRequestCounts[i] = new AtomicInteger(0); // 접속 횟수 초기화
         }
     }
+
     /**
      * 네이버 블로그 검색 with Redis 캐싱
      */
     public List<CrawlerResponseDto> searchNaverBlog(String keyword, int page) {
         String cacheKey = generateCacheKey("blog", keyword, page);
         RBucket<String> bucket = redissonClient.getBucket(cacheKey);
+
 
         // 캐시에서 데이터 조회
         String cachedData = bucket.get();
@@ -275,22 +277,16 @@ public class CrawlerService {
             proxyIndex = (proxyIndex + 1) % proxyHosts.size(); // 다음 프록시로 변경
             proxyRequestCounts[proxyIndex].set(0); // 새로운 프록시의 접속 횟수 리셋
         }
+
         return Jsoup.connect(url)
                 .proxy(currentProxy, PROXY_PORT) // 프록시 설정
-                .userAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36") // User-Agent 설정
-                .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7") // Accept 헤더 설정
+                .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36") // User-Agent 설정
+                .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8") // Accept 헤더 설정
                 .header("Accept-Language", "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7") // Accept-Language 헤더 설정
                 .header("Accept-Encoding", "gzip, deflate, br") // Accept-Encoding 헤더 설정
                 .header("Cache-Control", "no-cache") // Cache-Control 헤더 설정
-                .header("Cookie", "NNB=VVEU745SXPUFE") // Cookie 헤더 설정
-                .header("sec-ch-ua", "\"Chromium\";v=\"118\", \"Google Chrome\";v=\"118\", \"Not=A?Brand\";v=\"99\"") // sec-ch-ua 헤더 설정
-                .header("sec-ch-ua-mobile", "?0") // sec-ch-ua-mobile 헤더 설정
-                .header("sec-ch-ua-platform", "\"macOS\"") // sec-ch-ua-platform 헤더 설정
-                .header("Sec-Fetch-Dest", "document") // Sec-Fetch-Dest 헤더 설정
-                .header("Sec-Fetch-Mode", "navigate") // Sec-Fetch-Mode 헤더 설정
-                .header("Sec-Fetch-Site", "none") // Sec-Fetch-Site 헤더 설정
-                .header("Sec-Fetch-User", "?1") // Sec-Fetch-User 헤더 설정
-                .referrer("https://search.naver.com") // referrer 설정
+                .header("Upgrade-Insecure-Requests", "1") // Upgrade-Insecure-Requests 헤더 설정
+                .header("Connection", "keep-alive") // Connection 헤더 설정
                 .timeout(5000) // 타임아웃 설정
                 .get(); // GET 요청 수행
     }
