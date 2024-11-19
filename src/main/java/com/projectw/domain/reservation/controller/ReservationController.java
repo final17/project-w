@@ -29,7 +29,6 @@ public class ReservationController {
      * method : reservationCancelReservation
      * memo   : 유저가 직접 결제 취소함
      * */
-    @Secured({UserRole.Authority.USER})
     @PatchMapping("/store/{storeId}/reservation/{reservationId}")
     public ResponseEntity<SuccessResponse<Void>> reservationCancelReservation(
             @AuthenticationPrincipal AuthUser authUser ,
@@ -40,12 +39,11 @@ public class ReservationController {
         return ResponseEntity.ok(SuccessResponse.of(null));
     }
 
-    @Secured({UserRole.Authority.USER})
     @GetMapping("/reservations")
-    public ResponseEntity<SuccessResponse<Page<ReserveResponse.Infos>>> getUserReservations(
+    public ResponseEntity<SuccessResponse<Page<ReserveResponse.Infos>>> getReservations(
             @AuthenticationPrincipal AuthUser authUser ,
             @ModelAttribute ReserveRequest.Parameter parameter) {
-        return ResponseEntity.ok(SuccessResponse.of(reservationService.getUserReservations(authUser.getUserId() , parameter)));
+        return ResponseEntity.ok(SuccessResponse.of(reservationService.getReservations(authUser.getUserId() , parameter)));
     }
 
     @GetMapping("/reservations/{reservationId}/menu")

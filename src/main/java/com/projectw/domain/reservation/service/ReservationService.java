@@ -157,9 +157,9 @@ public class ReservationService {
         }
     }
 
-    public Page<ReserveResponse.Infos> getUserReservations(Long userId , ReserveRequest.Parameter parameter) {
+    public Page<ReserveResponse.Infos> getReservations(Long userId , ReserveRequest.Parameter parameter) {
         Pageable pageable = PageRequest.of(parameter.page() - 1, parameter.size());
-        return reservationRepository.getUserReservations(userId , parameter , pageable);
+        return reservationRepository.getReservations(userId , parameter , pageable);
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)

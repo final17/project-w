@@ -84,7 +84,7 @@ public class ReservationDslRepositoryImpl implements ReservationDslRepository{
     }
 
     @Override
-    public Page<ReserveResponse.Infos> getUserReservations(Long userId, ReserveRequest.Parameter parameter, Pageable pageable) {
+    public Page<ReserveResponse.Infos> getReservations(Long userId, ReserveRequest.Parameter parameter, Pageable pageable) {
 
         JPQLQuery<Long> menuIdSubQuery = JPAExpressions
                 .select(reservationMenu.menu.id.min())

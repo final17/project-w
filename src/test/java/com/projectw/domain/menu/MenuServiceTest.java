@@ -86,7 +86,7 @@ public class MenuServiceTest {
                 -122.4194 // longitude
         );
 
-        MenuRequestDto.Create requestDto = new MenuRequestDto.Create("New Menu", 5000, List.of(1L, 2L));
+        MenuRequestDto.Create requestDto = new MenuRequestDto.Create("New Menu", 5000, List.of(1L, 2L) , null);
 
         Allergy allergy1 = new Allergy("Peanut", "Peanut allergy");
         Allergy allergy2 = new Allergy("Dairy", "Dairy allergy");
@@ -110,7 +110,8 @@ public class MenuServiceTest {
                 "New Menu",
                 5000,
                 Set.of("Peanut", "Dairy"), // 알레르기 목록
-                0
+                0,
+                null
         );
 
         // When
@@ -153,7 +154,7 @@ public class MenuServiceTest {
 
         when(storeRepository.findById(storeId)).thenReturn(Optional.of(store));
 
-        MenuRequestDto.Create requestDto = new MenuRequestDto.Create("New Menu", 5000, List.of());
+        MenuRequestDto.Create requestDto = new MenuRequestDto.Create("New Menu", 5000, List.of() , null);
 
         // When & Then
         AccessDeniedException exception = assertThrows(
@@ -195,7 +196,7 @@ public class MenuServiceTest {
                 -122.4194 // longitude
         );
         Menu menu = new Menu("Old Menu", 4000, store, Set.of());
-        MenuRequestDto.Update requestDto = new MenuRequestDto.Update(1L, "Pizza", 10000, List.of(1L, 2L));
+        MenuRequestDto.Update requestDto = new MenuRequestDto.Update(1L, "Pizza", 10000, List.of(1L, 2L), null);
 
         Allergy allergy = new Allergy("Peanut", "Peanut Allergy");
 
