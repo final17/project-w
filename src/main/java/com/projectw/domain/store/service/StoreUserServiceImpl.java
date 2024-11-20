@@ -37,9 +37,13 @@ public class StoreUserServiceImpl implements StoreUserService {
     private final RedissonClient redissonClient;
 
     @Override
-    public Page<StoreResponse.Info> getAllStore(Pageable pageable) {
+    public Page<StoreResponse.InfoLike> getAllStore(Pageable pageable) {
         Page<Store> allStore = storeRepository.findAll(pageable);
-        return allStore.map(StoreResponse.Info::new);
+
+        return allStore.map(store -> {
+            Long likeCount = storeLikeRepository.findByStoreId(store.getId()); // 좋아요 수 조회
+            return new StoreResponse.InfoLike(store, likeCount);
+        });
     }
 
     @Override

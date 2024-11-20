@@ -113,7 +113,7 @@ class StoreUserServiceImplTest {
             given(storeRepository.findAll(pageable)).willReturn(storePage);
 
             // when
-            Page<StoreResponse.Info> result = storeUserService.getAllStore(pageable);
+            Page<StoreResponse.InfoLike> result = storeUserService.getAllStore(pageable);
 
             // then
             assertNotNull(result);
