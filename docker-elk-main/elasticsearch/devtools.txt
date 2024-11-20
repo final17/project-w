@@ -1,0 +1,171 @@
+PUT /stores
+{
+  "settings": {
+    "index": {
+      "number_of_shards": 3,
+      "number_of_replicas": 1,
+      "analysis": {
+        "filter": {
+          "nori_pos_filter": {
+            "type": "nori_part_of_speech",
+            "stoptags": [
+              "E", "IC", "J", "MAG", "MAJ", "MM", "SP", "SSC", "SSO", "SC", "SE",
+              "XPN", "XSA", "XSV", "UNA", "NA", "VSV"
+            ]
+          },
+          "whitespace_remove": {
+            "type": "pattern_replace",
+            "pattern": " ",
+            "replacement": ""
+          },
+          "stopwords": {
+            "type": "stop",
+            "stopwords": [" "]
+          }
+        },
+        "normalizer": {
+          "remove_spaces_normalizer": {
+            "type": "custom",
+            "filter": ["lowercase", "whitespace_remove"],
+            "char_filter": []
+          }
+        },
+        "analyzer": {
+          "my_nori_analyzer": {
+            "type": "custom",
+            "tokenizer": "my_nori_tokenizer",
+            "filter": ["lowercase", "stop", "trim", "stopwords", "nori_pos_filter"],
+            "char_filter": ["html_strip"]
+          }
+        },
+        "tokenizer": {
+          "my_nori_tokenizer": {
+            "type": "nori_tokenizer",
+            "decompound_mode": "mixed",
+            "discard_punctuation": false
+          }
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "id": {
+        "type": "integer"
+      },
+      "address": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        },
+        "copy_to": ["full_text"],
+        "analyzer": "my_nori_analyzer"
+      },
+      "close_time": {
+        "type": "date",
+        "format": "HH:mm:ss"
+      },
+      "created_at": {
+        "type": "date",
+        "format": "yyyy-MM-dd HH:mm:ss.SSS"
+      },
+      "deposit": {
+        "type": "integer"
+      },
+      "description": {
+        "type": "text",
+        "analyzer": "my_nori_analyzer"
+      },
+      "district_category": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        },
+        "copy_to": ["full_text"],
+        "analyzer": "my_nori_analyzer"
+      },
+      "full_text": {
+        "type": "text",
+        "analyzer": "my_nori_analyzer"
+      },
+      "image": {
+        "type": "text"
+      },
+      "is_deleted": {
+        "type": "boolean"
+      },
+      "is_next_day": {
+        "type": "boolean"
+      },
+      "last_order": {
+        "type": "date",
+        "format": "HH:mm:ss"
+      },
+      "latitude": {
+        "type": "float"
+      },
+      "longitude": {
+        "type": "float"
+      },
+      "menu": {
+        "type": "text",
+        "copy_to": ["full_text"]
+      },
+      "open_time": {
+        "type": "date",
+        "format": "HH:mm:ss"
+      },
+      "phone_number": {
+        "type": "text"
+      },
+      "reservation_table_count": {
+        "type": "integer"
+      },
+      "table_count": {
+        "type": "integer"
+      },
+      "tags": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
+      "title": {
+        "type": "text",
+        "fields": {
+          "completion": {
+            "type": "completion",
+            "analyzer": "simple",
+            "preserve_separators": true,
+            "preserve_position_increments": true,
+            "max_input_length": 50
+          },
+          "keyword": {
+            "type": "keyword",
+            "normalizer": "remove_spaces_normalizer"
+          }
+        },
+        "copy_to": ["full_text"],
+        "analyzer": "my_nori_analyzer"
+      },
+      "turnover": {
+        "type": "date",
+        "format": "HH:mm:ss"
+      },
+      "updated_at": {
+        "type": "date",
+        "format": "yyyy-MM-dd HH:mm:ss.SSS"
+      },
+      "user_id": {
+        "type": "integer"
+      }
+    }
+  }
+}
