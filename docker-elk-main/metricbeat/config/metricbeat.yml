@@ -1,0 +1,12 @@
+metricbeat.modules:
+  - module: elasticsearch
+    metricsets: ["node"]
+    period: 10s
+    hosts: ["http://elasticsearch:9200"]
+    username: "elastic"
+    password: "changeme"
+
+output.elasticsearch:
+  hosts: ["http://elasticsearch:9200"]
+  username: "elastic"
+  password: "changeme"

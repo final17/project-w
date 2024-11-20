@@ -30,7 +30,7 @@
     - 처리된 데이터를 다양한 엔티티로 분산 저장하여 후속 분석 및 보고에 최적화된 구조 구현
 
 
-5**웹 크롤링**
+5. **웹 크롤링**
    - 음식점 이름과 지역명 추출 후 "맛집" 키워드 추가 하여 네이버 기반 웹 크롤링
    - Redis 캐시 및 ec2 프록시 ip를 확용하여 네이버 ip밴 가능성 축소
 
@@ -74,7 +74,7 @@
 <details>
 <summary><strong>🔍 상황 분석</strong></summary>
 
-- **분석**: 대기열 등록 로직이 발권번호 테이블과 웨이팅 테이블로 구성되어 있으며, 동시에 접근 시 발권번호가 올바르게 증가하지 않고 중복된 번호가 저장되는 문제가 있었습니다.
+- **분석**: 대기열 등록 로직에 동시에 접근 시 발권번호가 순차적으로 올바르게 증가하지 않고 중복된 번호가 저장되는 문제가 있었습니다.
 
 </details>
 
@@ -217,10 +217,9 @@
 ### 아키텍처 다이어그램
 ![image](https://github.com/user-attachments/assets/b0234b41-039d-4489-b8be-f7c1e08124e0)
 
----
 
 <details>
-<summary style="font-size: 24px;"><b>📦 적용 기술 상세보기</b></summary>
+<summary style="font-size: 18px;"><b>📦 적용 기술 상세보기</b></summary>
 
 ### 💾 **데이터베이스 및 캐싱**
 
@@ -522,6 +521,17 @@
 - 문의 유형과 세부 항목을 Enum과 전략 패턴을 활용해 각 문의 유형을 Enum으로 정의하고, 이를 기반으로 각각의 로직을 별도의 전략 클래스로 분리
   - **확장성**: Enum에 새로운 문의 유형을 추가하고, 전략 클래스를 추가하는 방식으로 확장할 수 있어 코드가 비대해지는 것을 방지할 수 있음.
   - **유연성**: 새로운 로직이나 케이스 추가 시 기존 코드 변경 없이 클래스와 Enum만 추가하여 기능을 확장할 수 있음.
+
+### 통합 검색
+- 사용자가 입력한 키워드를 기반으로 메뉴, 주소, 가게명을 검색할 수 있는 통합 검색 기능 제공
+- 주소와 지역별 카테고리를 선택해 원하는 검색 결과를 더 세부적으로 탐색 가능
+- 대량의 데이터를 빠르게 검색하고 높은 정확도로 결과를 제공하기 위해 **Elasticsearch**를 활용하여 최적화된 검색 환경 제공
+
+### 웨이팅 대기열
+- 클릭 한 번으로 웨이팅 대기열에 등록하거나 취소할 수 있는 직관적인 사용자 인터페이스 제공
+- 사용자에게 현재 대기 순번과 예상 대기 시간을 실시간으로 알림 제공, 대기 중인 고객의 편의성 극대화
+- 빠르고 정확한 대기열 관리 및 순번 처리를 위해 **Redis**를 활용한 실시간 데이터 처리로 안정성과 효율성 확보
+
 ---
 
 
@@ -604,66 +614,65 @@ API의 응답 데이터 구조를 다시 파악하기 위해 API 문서를 면�
 **문제**
 - 검색 속도가 1초 정도로 느려 검색 속도 향상이 필요함
 
-<details><summary>🧾 의사 결정 </summary>
+    <details><summary>🧾 의사 결정 </summary>
+    
+    <details><summary> 검색을 고도화 시키는 방법 </summary>
+    
+    1. 페이지네이션: 검색 결과가 많은 경우 한 번에 모든 데이터를 가져오기 않고, 페이지네이션을 적용하여 필요한 부분만 조회하도록 할 수 있습니다.
+       2. JPA 쿼리 최적화 및 Indexing: 데이터베이스 테이블에 인덱스를 설정하여 검색 속도를 높일 수 있습니다.
+       3. Redis 캐싱 적용: 자주 조회하는 음식점 데이터를 Redis에 캐싱하여 데이터베이스 조회 빈도를 줄일 수 있습니다.
+    
+    이중에서 페이지네이션은 적용을 완료하였고, Indexing을 하는 것이 적합하다고 생각을 하여 Indexing을 적용하였습니다. 그 후에 Redis 캐싱을 적용하였습니다.
+    </details>
+    
+    <details><summary> 인덱스 종류 </summary>
+    
+    1. 단일 인덱스(Single Index): 하나의 컬럼에 인덱스를 설정하여 해당 컬럼에 대한 검색을 최적화 합니다.
+       2. 복합 인덱스(Composite Index): 여러 컬럼을 조합하여 인덱스를 생성하는 방석으로, 특정 조합에 대한 최적의 성능을 제공
+       3. 유니크 인덱스(Unique Index): 중복이 허용되지 않도록 하는 인덱스
+       4. 전문검색 인덱스(Full-Text Index): 텍스트 기반의 검색을 최적화 하기 위한 인덱스
+    
+    이중에서 Full-Text Inex가 텍스트 기반의 검색으로 적합하다고 생각하여 적용하였습니다.
+    
+    </details>
+    
+    <details><summary> 해결 순서 </summary>
+    
+    1. Full-Text Index 적용
+       * Full-Text Index를 사용하면 키워드 검색을 지원하지 않습니다.("검색어"만 검색이 가능하고 "%검색어", "검색어%", "%검색어%")
+       2. Full-Text Index에서 N-Gram을 사용하기
+       * Full-Text는 위와 같은 문제가 발생하여 N-Gram을 사용하였습니다. N-Gram을 사용하면 위에서 발생한 문제를 해결할 수 있었습니다.
+       * ![image](https://github.com/user-attachments/assets/3403990d-4d17-4666-b320-683761dbce14)
+       * 하지만 Like만 사용한 결과와 Full-Text Index N-Gram을 사용한 결과를 확인해보면 "소라", "도깨비"를 검색하면 빠르고, "식당"은 둘이 속도가 비슷하고, "찌개", "국밥"은 N-Gram방식이 느린 것을 확인할 수 있었습니다.
+       * N-Gram이 느린 이유는 N-Gram은 특정 검색 시 세밀한 일치 검색을 가능하게 하지만 더 느려질 수 있기 때문이었습니다.
+       * 정화도는 향상되었지만 속도가 많이 느려지기 때문에 적합하지 않다고 생각하였습니다.
+       3. Single Index 걸어보기
+       * 처음으로 돌아가 가장 기본적인 index인 Single Index를 걸어보았습니다
+       * 인덱싱 적용 범위
+         * EXPLAIN SELECT * FROM store WHERE business_name LIKE '%도깨비%';
+         * ![image](https://github.com/user-attachments/assets/5cf2cf95-cd3e-4a22-b883-321ff7ef07a2)
+         * EXPLAIN SELECT * FROM store WHERE business_name LIKE '도깨비%';
+         * ![image](https://github.com/user-attachments/assets/26efeff3-c0ec-46db-a4e5-8d94e0081094)
+         * EXPLAIN SELECT * FROM store WHERE business_name LIKE '%도깨비';
+         * ![image](https://github.com/user-attachments/assets/8023c79a-750b-4cfd-91b9-386963c650ff)
+       * 인덱싱 없이 LIKE만 사용하여 검색했을 때
+       * ![image](https://github.com/user-attachments/assets/11a4b11c-b140-4418-b50d-cf3190ecf12d)
+       * 인덱싱 사용했을 때
+       * ![image](https://github.com/user-attachments/assets/9544af92-503a-42bf-bc87-ecd71d108621)
+       4. Redis 캐싱 사용하기
+       * 음식점 데이터는 자주 조회되고, 변경이 적고 읽기 비율이 높은 데이터라고 생각하여 Redis 캐싱 대상에 적합하다고 생각하였습니다.
+       * 처음 페이징 처리된 데이터를 redis에 넣으려고 하자 에러가 나오면서 넣을 수 없었습니다.
+       * ![image](https://github.com/user-attachments/assets/39fc68be-c546-4270-b08f-f2ad0df8ef04)
+       * 그래서 페이징 처리된 데이터를 dto를 새로 만들어서 해결하였습니다.
+       * Redis 결과
+         * 캐싱을 처리하기 전
+         * ![image](https://github.com/user-attachments/assets/3eef3793-ab3b-4e43-a5be-6405dffa75f9)
+         * 캐싱 처리 후
+         * ![image](https://github.com/user-attachments/assets/c0d25d43-a3f4-4ccc-b745-20716a10fc9e)
+       * 속도가 <span style="color:red;">1048.90ms → 4.32ms</span>로 빨라진 것을 확인 할 수 있습니다.
 
-<details><summary> 검색을 고도화 시키는 방법 </summary>
-
-1. 페이지네이션: 검색 결과가 많은 경우 한 번에 모든 데이터를 가져오기 않고, 페이지네이션을 적용하여 필요한 부분만 조회하도록 할 수 있습니다.
-2. JPA 쿼리 최적화 및 Indexing: 데이터베이스 테이블에 인덱스를 설정하여 검색 속도를 높일 수 있습니다.
-3. Redis 캐싱 적용: 자주 조회하는 음식점 데이터를 Redis에 캐싱하여 데이터베이스 조회 빈도를 줄일 수 있습니다.
-
-이중에서 페이지네이션은 적용을 완료하였고, Indexing을 하는 것이 적합하다고 생각을 하여 Indexing을 적용하였습니다. 그 후에 Redis 캐싱을 적용하였습니다.
-</details>
-
-<details><summary> 인덱스 종류 </summary>
-
-1. 단일 인덱스(Single Index): 하나의 컬럼에 인덱스를 설정하여 해당 컬럼에 대한 검색을 최적화 합니다.
-2. 복합 인덱스(Composite Index): 여러 컬럼을 조합하여 인덱스를 생성하는 방석으로, 특정 조합에 대한 최적의 성능을 제공
-3. 유니크 인덱스(Unique Index): 중복이 허용되지 않도록 하는 인덱스
-4. 전문검색 인덱스(Full-Text Index): 텍스트 기반의 검색을 최적화 하기 위한 인덱스
-
-이중에서 Full-Text Inex가 텍스트 기반의 검색으로 적합하다고 생각하여 적용하였습니다.
-
-</details>
-
-<details><summary> 해결 순서 </summary>
-
-1. Full-Text Index 적용
-* Full-Text Index를 사용하면 키워드 검색을 지원하지 않습니다.("검색어"만 검색이 가능하고 "%검색어", "검색어%", "%검색어%")
-2. Full-Text Index에서 N-Gram을 사용하기
-* Full-Text는 위와 같은 문제가 발생하여 N-Gram을 사용하였습니다. N-Gram을 사용하면 위에서 발생한 문제를 해결할 수 있었습니다.
-* ![image](https://github.com/user-attachments/assets/3403990d-4d17-4666-b320-683761dbce14)
-* 하지만 Like만 사용한 결과와 Full-Text Index N-Gram을 사용한 결과를 확인해보면 "소라", "도깨비"를 검색하면 빠르고, "식당"은 둘이 속도가 비슷하고, "찌개", "국밥"은 N-Gram방식이 느린 것을 확인할 수 있었습니다.
-* N-Gram이 느린 이유는 N-Gram은 특정 검색 시 세밀한 일치 검색을 가능하게 하지만 더 느려질 수 있기 때문이었습니다.
-* 정화도는 향상되었지만 속도가 많이 느려지기 때문에 적합하지 않다고 생각하였습니다.
-3. Single Index 걸어보기
-* 처음으로 돌아가 가장 기본적인 index인 Single Index를 걸어보았습니다
-* 인덱싱 적용 범위
-  * EXPLAIN SELECT * FROM store WHERE business_name LIKE '%도깨비%';
-  * ![image](https://github.com/user-attachments/assets/5cf2cf95-cd3e-4a22-b883-321ff7ef07a2)
-  * EXPLAIN SELECT * FROM store WHERE business_name LIKE '도깨비%';
-  * ![image](https://github.com/user-attachments/assets/26efeff3-c0ec-46db-a4e5-8d94e0081094)
-  * EXPLAIN SELECT * FROM store WHERE business_name LIKE '%도깨비';
-  * ![image](https://github.com/user-attachments/assets/8023c79a-750b-4cfd-91b9-386963c650ff)
-* 인덱싱 없이 LIKE만 사용하여 검색했을 때
-* ![image](https://github.com/user-attachments/assets/11a4b11c-b140-4418-b50d-cf3190ecf12d)
-* 인덱싱 사용했을 때
-* ![image](https://github.com/user-attachments/assets/9544af92-503a-42bf-bc87-ecd71d108621)
-4. Redis 캐싱 사용하기
-* 음식점 데이터는 자주 조회되고, 변경이 적고 읽기 비율이 높은 데이터라고 생각하여 Redis 캐싱 대상에 적합하다고 생각하였습니다.
-* 처음 페이징 처리된 데이터를 redis에 넣으려고 하자 에러가 나오면서 넣을 수 없었습니다.
-* ![image](https://github.com/user-attachments/assets/39fc68be-c546-4270-b08f-f2ad0df8ef04)
-* 그래서 페이징 처리된 데이터를 dto를 새로 만들어서 해결하였습니다.
-* Redis 결과
-  * 캐싱을 처리하기 전
-  * ![image](https://github.com/user-attachments/assets/3eef3793-ab3b-4e43-a5be-6405dffa75f9)
-  * 캐싱 처리 후
-  * ![image](https://github.com/user-attachments/assets/c0d25d43-a3f4-4ccc-b745-20716a10fc9e)
-* 속도가 <span style="color:red;">1048.90ms → 4.32ms</span>로 빨라진 것을 확인 할 수 있습니다.
-
-
-</details>
-</details>
+    </details>
+    </details>
 </details>
 <br/>
 <details>
@@ -712,7 +721,7 @@ DB에서 `LIKE` 연산을 통해 키워드 검색을 수행해 보았습니다.
 ### 조건 및 결과
 - 데이터 개수: 100만 건
 - 검색 컬럼: 사업명, 사업형태, 주소, 도로명 주소, 메뉴
-- 결과: 약 15초 소요
+- 결과: 약 5초 소요
   ![image](https://github.com/user-attachments/assets/b871da24-9e08-4ce0-a66f-c15afbb6a32f)
 
 ## 인덱스 적용
@@ -1062,42 +1071,70 @@ boolBuilder = new BoolQuery.Builder()
 6. **1PR 당 1인 이상 확인 후 머지**
 - 각 PR에 대해 최소 1명 이상의 승인을 통해 코드 품질을 개선.
 
+
 ---
 
 ## 성과 및 회고
 
 ### 잘된 점
 - **성능 최적화 성공**
-    - Redis와 Kafka를 도입해 대규모 트래픽 환경에서도 안정적인 쿠폰 발급 구현.
-    - API 처리량 250req/sec를 초과 달성하며 목표를 상회하는 성과를 기록.
+    - Redis 캐싱을 도입해 1048.9ms에서 4.32ms로 약 24278% 향상시킴
+    - Like , 조회수 기능을 초당 1000번 접근이 되어도 문제 없이 동작
 
 - **효율적인 협업**
-    - 팀원 간 역할 분담이 명확했으며, GitHub Actions를 활용한 CI/CD 구축으로 개발-배포 주기를 단축.
+    - 팀원 간 역할 분담이 명확했으며, GitHub Actions , Jenkins을 활용한 CI/CD 구축으로 개발-배포 주기를 단축.
     - 매일 스크럼을 통해 문제를 빠르게 공유하고, 적극적으로 해결.
+    - GitHub에 commit시 구분하여 해당 commit이 무엇을 의미하는지 쉽게 파악 가능
 
 ### 아쉬운 점
-- **프로젝트 초기 설계 부족**
-    - 도메인 설계 및 서비스 분리 단계에서 충분한 검토가 이루어지지 않아 일부 마이크로서비스 간 의존성 증가.
-
-- **시간 부족으로 일부 기능 미완성**
-    - 사용자 피드백 시스템과 추가 정산 기능 개발이 지연되어 구현하지 못함.
+- **의사소통이 잘되었지만 정책적인 부분에 대해 지식부족으로 의견충돌이 잦음.**
+    - 백엔드와 프론트엔드간의 기능 구현 의견 충돌에 의해서 비교적 시간을 많이 쏟았다.
 
 ---
 
 ### 향후 계획
 - **기술적 고도화**
-    - Java 21의 가상 스레드를 도입하여 병렬 처리 성능을 개선하고, 무중단 배포를 위한 추가적인 CI/CD 개선 계획.
+    - 무중단 배포를 위한 추가적인 CI/CD 개선 계획
+    - 엘라스틱서치를 통해 크롤링시 악성 후기 및 저품질 검색 결과 필터링 작업
 
 - **추가 기능 개발**
-    - 사용자 피드백 시스템 도입으로 서비스 품질을 지속적으로 향상.
-    - 데이터 분석 기능을 추가해 쿠폰 발급 및 사용 데이터를 기반으로 한 비즈니스 인사이트 제공.
+    - WebFlux를 도입해 리액티브프로그래밍으로 I/O기능을 모듈로 빼는 작업
+    - MSA를 공부하여 여러 개의 작은 서비스로 나눠 배포하기
 
 - **테스트 자동화 강화**
     - 기존 단위 테스트 외에 통합 테스트 및 부하 테스트를 추가하여 안정성을 더욱 강화.
 
 
 ## ☁ 와이어프레임
+https://www.figma.com/design/XC7jH231J14F6BCBdgOsf1/Untitled?node-id=0-1&t=VN6XSThorsDXxCW2-1
 
 ## ☁ ERD 다이어그램
+![image](https://github.com/user-attachments/assets/a3388b69-092f-4341-b7c8-5f3a32c4788c)
 
 ## 📑 API 명세서
+
+<details>
+<summary style="font-size: 16px">상세보기</summary>
+<img src="https://github.com/user-attachments/assets/9d4f0a9c-a15b-4fe7-b669-fe8f057ff196"/>
+<img src="https://github.com/user-attachments/assets/dda639ac-e9a4-4ae7-ace9-84f258075a9d"/>
+<img src="https://github.com/user-attachments/assets/8da60ab7-c5bf-4831-905f-106f248b6af9"/>
+<img src="https://github.com/user-attachments/assets/0dc541ce-4cdf-4a73-b2ef-5c6c93eb0e0e"/>
+<img src="https://github.com/user-attachments/assets/97535ed8-e41c-4114-a941-80e9cacd1415"/>
+<img src="https://github.com/user-attachments/assets/9151a27f-2645-4415-a1de-853e358420e5"/>
+<img src="https://github.com/user-attachments/assets/562ca60b-80c5-4e4f-aa6f-9478e2d20fce"/>
+<img src="https://github.com/user-attachments/assets/4ebda14a-047c-4236-b9c3-41eaf1f4eda7"/>
+<img src="https://github.com/user-attachments/assets/08c3d448-03da-4e51-b7c8-de9d98652d9f"/>
+<img src="https://github.com/user-attachments/assets/8194388c-e2d3-4ad4-82e2-813cb3017fe8"/>
+<img src="https://github.com/user-attachments/assets/f99c6a3e-8803-4a4c-acbc-8316b1979ba5"/>
+<img src="https://github.com/user-attachments/assets/a7f6e64d-8754-4e26-a8e8-f9a07dea0cbd"/>
+<img src="https://github.com/user-attachments/assets/ad08260c-c09f-4d90-a46c-117a2ca2fa64"/>
+<img src="https://github.com/user-attachments/assets/22495039-7e74-4407-a25e-a6176ad200f7"/>
+<img src="https://github.com/user-attachments/assets/13102b7c-800b-4db2-9690-e83093de3126"/>
+<img src="https://github.com/user-attachments/assets/57f174e2-65a6-45b1-b354-21b4389d0b6e"/>
+<img src="https://github.com/user-attachments/assets/f314ea28-a56a-401a-92dd-0dec66c8d216"/>
+<img src="https://github.com/user-attachments/assets/e506d38d-e806-4acf-9d85-64730c32e9bc"/>
+<img src="https://github.com/user-attachments/assets/b97a6b60-87b8-4257-83bd-28a431377636"/>
+<img src="https://github.com/user-attachments/assets/d28e1a06-30aa-41b0-ac7f-0130f3bc276c"/>
+<img src="https://github.com/user-attachments/assets/58619fe2-f7a4-4ace-8da7-5fb2ce37e277"/>
+
+</details>

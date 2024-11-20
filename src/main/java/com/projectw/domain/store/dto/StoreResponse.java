@@ -7,7 +7,7 @@ import com.projectw.domain.user.dto.UserOneResponseDto;
 
 import java.time.LocalTime;
 
-public sealed interface StoreResponse permits StoreResponse.Info, StoreResponse.Like {
+public sealed interface StoreResponse permits StoreResponse.Info, StoreResponse.Like, StoreResponse.LikeCount {
     record Info(
             Long id,
             String image,
@@ -57,6 +57,12 @@ public sealed interface StoreResponse permits StoreResponse.Info, StoreResponse.
     record Like(Long storeId,String storeName, Boolean storeLike) implements StoreResponse {
         public Like(StoreLike storeLike) {
             this(storeLike.getStore().getId(), storeLike.getStore().getTitle(), storeLike.getStoreLike());
+        }
+    }
+
+    record LikeCount(Long storeLikeCount) implements StoreResponse {
+        public LikeCount(Long storeLikeCount) {
+            this.storeLikeCount = storeLikeCount;
         }
     }
 }

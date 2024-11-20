@@ -1,5 +1,9 @@
 package com.projectw.domain.review.controller;
 
+import com.projectw.common.dto.SuccessResponse;
+import com.projectw.domain.reservation.dto.ReserveResponse;
+import com.projectw.domain.reservation.entity.Reservation;
+import com.projectw.domain.reservation.repository.ReservationRepository;
 import com.projectw.domain.review.dto.ReviewRequest;
 import com.projectw.domain.review.dto.ReviewResponse;
 import com.projectw.domain.review.service.ReviewServiceImpl;
@@ -11,10 +15,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
@@ -99,5 +105,35 @@ public class ReviewController {
         Page<ReviewResponse.Info> reviews = reviewService.getUserReviews(user.getEmail(), pageable);
         return ResponseEntity.ok(reviews);
     }
+
+    @GetMapping("/reservations/{reservationId}/menus")
+    public ResponseEntity<SuccessResponse<List<ReserveResponse.Carts>>> getReservationMenus(
+            @PathVariable Long reservationId,
+            @AuthenticationPrincipal AuthUser user
+    ) {
+        List<ReserveResponse.Carts> menus = reviewService.getReservationMenus(
+                user.getUserId(),
+                reservationId
+        );
+        return ResponseEntity.ok(SuccessResponse.of(menus));
+    }
+
+    @PostMapping(value = "/{storeId}/waiting", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ReviewResponse.Info> createWaitingReview(
+            @PathVariable Long storeId,
+            @ModelAttribute ReviewRequest.Create reviewRequest,
+            @RequestParam(value = "images", required = false) List<MultipartFile> images,
+            @AuthenticationPrincipal AuthUser user
+    ) {
+        ReviewResponse.Info responseDto = reviewService.createWaitingReview(
+                storeId,
+                reviewRequest,
+                user.getEmail(),
+                images
+        );
+
+        return ResponseEntity.ok(responseDto);
+    }
+
 
 }
