@@ -13,7 +13,8 @@ import java.util.List;
 public interface StoreLikeRepository extends JpaRepository<StoreLike, Long> {
     StoreLike findByStoreIdAndUserId(Long findStore, Long findUser);
 
-    Page<StoreLike> findAllByUserId(Long user_id, Pageable pageable);
+    @Query("SELECT sl FROM StoreLike sl WHERE sl.user.id = :user_id and sl.storeLike=true")
+    Page<StoreLike> findAllByUserId(@Param("user_id")Long user_id, Pageable pageable);
 
     @Query("SELECT sl FROM StoreLike sl WHERE sl.user.id IN :userIds")
     Page<StoreLike> findAllByUserIds(@Param("userIds") List<Long> userIds, Pageable pageable);
