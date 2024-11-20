@@ -5,7 +5,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public sealed interface MenuRequestDto permits MenuRequestDto.Create, MenuRequestDto.Update {
 
@@ -20,7 +22,11 @@ public sealed interface MenuRequestDto permits MenuRequestDto.Create, MenuReques
             List<Long> allergyIds,
 
             MultipartFile image
-    ) implements MenuRequestDto { }
+    ) implements MenuRequestDto {
+        public Create {
+            if (Objects.isNull(allergyIds)) allergyIds = new ArrayList<>();
+        }
+    }
 
     record Update(
             @NotNull(message = "메뉴 ID는 필수입니다.")
@@ -34,5 +40,9 @@ public sealed interface MenuRequestDto permits MenuRequestDto.Create, MenuReques
             List<Long> allergyIds,
 
             MultipartFile image
-    ) implements MenuRequestDto { }
+    ) implements MenuRequestDto {
+        public Update {
+            if (Objects.isNull(allergyIds)) allergyIds = new ArrayList<>();
+        }
+    }
 }
