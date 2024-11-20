@@ -112,6 +112,7 @@ public class PaymentService {
                     .orderName(prepare.orderName())
                     .amount(prepare.amount())
                     .status(Status.PENDING)
+                    .idempotentKey(prepare.idempotentKey())
                     .user(user)
                     .store(store)
                     .build();
