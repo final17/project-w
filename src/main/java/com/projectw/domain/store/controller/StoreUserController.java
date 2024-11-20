@@ -73,4 +73,13 @@ public class StoreUserController {
         Page<StoreResponse.Like> storeLikeResposeDto = storeUserService.getLikeStore(authUser, pageable);
         return ResponseEntity.ok(SuccessResponse.of(storeLikeResposeDto));
     }
+
+    @GetMapping("/{storeId}/storelike")
+    public ResponseEntity<SuccessResponse<StoreResponse.LikeCount>> getStoreLikeCount(
+            @PathVariable("storeId") Long storeId
+    ) {
+        StoreResponse.LikeCount likeCount = storeUserService.getStoreLikeCount(storeId);
+        return ResponseEntity.ok(SuccessResponse.of(likeCount));
+    }
+
 }
