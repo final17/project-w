@@ -120,7 +120,7 @@ public class SearchService {
                                  if (likeCount == null) {
                                      likeCount = 0L;
                                  }
-                                 source.setStoreLikeCount(likeCount);
+                                 source.updateStoreLikeCount(likeCount);
                                  return source;
                              }).toList())
                      .build();

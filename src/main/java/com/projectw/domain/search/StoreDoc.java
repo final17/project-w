@@ -66,8 +66,8 @@ public class StoreDoc {
     @JsonProperty("district_category")
     private String districtCategory;
 
-    @Setter
-    private long storeLikeCount = 0;
+    @Builder.Default
+    private Long storeLikeCount = 0L;
 
 
     public static StoreDoc of(Store store, User user, List<Menu> menus) {
@@ -95,5 +95,9 @@ public class StoreDoc {
                 .longitude(store.getLongitude())
                 .districtCategory(store.getDistrictCategory().getPath())
                 .build();
+    }
+
+    public void updateStoreLikeCount(long storeLikeCount) {
+        this.storeLikeCount = storeLikeCount;
     }
 }
