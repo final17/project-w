@@ -1,5 +1,6 @@
 package com.projectw.domain.store.repository;
 
+import com.projectw.domain.store.dto.StoreResponse;
 import com.projectw.domain.store.entity.Store;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
