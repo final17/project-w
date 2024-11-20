@@ -159,4 +159,17 @@ public class StoreUserServiceImpl implements StoreUserService {
 
         return likedStores.map(StoreResponse.Like::new);
     }
+
+    @Override
+    public StoreResponse.LikeCount getStoreLikeCount(Long storeId) {
+        Store findStore = storeRepository.findById(storeId).orElseThrow(() -> new IllegalArgumentException("음식점을 찾을 수 없습니다."));
+
+        Long findStoreLike = storeLikeRepository.findByStoreId(storeId);
+
+        if (findStoreLike == null) {
+            return new StoreResponse.LikeCount(0L);
+        } else {
+            return new StoreResponse.LikeCount(findStoreLike);
+        }
+    }
 }

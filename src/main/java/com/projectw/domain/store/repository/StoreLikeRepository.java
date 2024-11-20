@@ -18,4 +18,7 @@ public interface StoreLikeRepository extends JpaRepository<StoreLike, Long> {
 
     @Query("SELECT sl FROM StoreLike sl WHERE sl.user.id IN :userIds")
     Page<StoreLike> findAllByUserIds(@Param("userIds") List<Long> userIds, Pageable pageable);
+
+    @Query("SELECT count(sl) FROM StoreLike sl where sl.store.id = :storeId and sl.storeLike = true")
+    Long findByStoreId(@Param("storeId") Long storeId);
 }

@@ -19,4 +19,6 @@ public interface StoreUserService {
     Page<StoreResponse.Like> getLikeStore(AuthUser authUser, Pageable pageable);
 
     Page<StoreResponse.Like> getLikedStoresOfFollowedUsers(AuthUser authUser, Pageable pageable);
+
+    StoreResponse.LikeCount getStoreLikeCount(Long storeId);
 }
