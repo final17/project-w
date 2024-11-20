@@ -5,10 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.projectw.domain.menu.entity.Menu;
 import com.projectw.domain.store.entity.Store;
 import com.projectw.domain.user.entity.User;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -68,6 +65,9 @@ public class StoreDoc {
 
     @JsonProperty("district_category")
     private String districtCategory;
+
+    @Setter
+    private long storeLikeCount = 0;
 
 
     public static StoreDoc of(Store store, User user, List<Menu> menus) {

@@ -12,6 +12,7 @@ import co.elastic.clients.elasticsearch.core.search.Suggester;
 import com.projectw.common.annotations.ExecutionTimeLog;
 import com.projectw.domain.category.DistrictCategory;
 import com.projectw.domain.category.HierarchicalCategoryUtils;
+import com.projectw.domain.store.repository.StoreLikeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ import java.util.List;
 public class SearchService {
 
     private final ElasticsearchClient elasticsearchClient;
+    private final StoreLikeRepository storeLikeRepository;
 
     @ExecutionTimeLog
     public KeywordSearchResponse.AutoComplete autoComplete(String keyword) {
@@ -111,7 +113,16 @@ public class SearchService {
 
              return KeywordSearchResponse.Search.builder()
                      .keyword(search.keyword())
-                     .stores(result.hits().hits().stream().map(Hit::source).toList())
+                     .stores(result.hits().hits().stream()
+                             .map(hit -> {
+                                 StoreDoc source = hit.source();
+                                 Long likeCount = storeLikeRepository.findByStoreId(source.getId().longValue());
+                                 if (likeCount == null) {
+                                     likeCount = 0L;
+                                 }
+                                 source.setStoreLikeCount(likeCount);
+                                 return source;
+                             }).toList())
                      .build();
 
          } catch (IOException e) {
