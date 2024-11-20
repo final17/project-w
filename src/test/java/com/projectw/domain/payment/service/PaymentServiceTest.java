@@ -101,7 +101,7 @@ public class PaymentServiceTest {
         Long amount = 5000L;
         Long numberPeople = 2L;
         String orderName = "중식당";
-        prepare = new PaymentRequest.Prepare(date , time , storeId , amount , numberPeople , orderName);
+        prepare = new PaymentRequest.Prepare(date , time , storeId , amount , numberPeople , orderName , "");
         authUser = new AuthUser(1L , "test@test.com" , UserRole.ROLE_USER);
 
         String paymentKey = "JLSAID3123FASD";
