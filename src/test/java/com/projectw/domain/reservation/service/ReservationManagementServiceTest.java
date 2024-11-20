@@ -177,12 +177,12 @@ public class ReservationManagementServiceTest {
         ReserveRequest.OwnerParameter ownerParameter = new ReserveRequest.OwnerParameter(storeId , ReservationType.RESERVATION , ReservationStatus.RESERVATION , LocalDate.parse("2024-11-10") , LocalDate.parse("2024-11-20") , 1 , 10);
 
         List<ReserveResponse.Infos> infos = List.of(
-                new ReserveResponse.Infos(orderId , 1L , 1L , 1L , 1L , 1L , 5000L , true , LocalDate.parse("2024-11-12") , LocalTime.parse("11:00:00") , ReservationType.RESERVATION , ReservationStatus.RESERVATION)
+                new ReserveResponse.Infos(orderId , 1L , 1L , 1L , 1L , 1L , 2L , 5000L , true , LocalDate.parse("2024-11-12") , LocalTime.parse("11:00:00") , ReservationType.RESERVATION , ReservationStatus.RESERVATION)
         );
         Pageable pageable = PageRequest.of(ownerParameter.page() - 1, ownerParameter.size());
         Page<ReserveResponse.Infos> page = new PageImpl<>(infos , pageable , 1L);
 
-        given(reservationRepository.getOwnerReservations(anyLong(), any() , any())).willReturn(page);
+        given(reservationRepository.getOwnerReservations(anyLong(), anyLong(), any() , any())).willReturn(page);
 
         // when
         page = reservationManagementService.getOnwerReservations(userId , ownerParameter);
