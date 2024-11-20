@@ -21,7 +21,9 @@ public sealed interface PaymentRequest permits PaymentRequest.Prepare , PaymentR
             @NotNull(message = "입장인원값은 필수입니다.")
             Long numberPeople,
             @NotBlank(message = "주문명값은 필수입니다.")
-            String orderName
+            String orderName,
+            @NotBlank(message = "멱등성 키는 필수입니다.")
+            String idempotentKey
     ) implements PaymentRequest {}
 
     record Susscess (

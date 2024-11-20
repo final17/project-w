@@ -31,6 +31,9 @@ public class Payment extends Timestamped {
     @Enumerated(value = EnumType.STRING)
     private Status status; // 준비 , 완료 , 취소
 
+    @Column(nullable = false)
+    private String idempotentKey;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
