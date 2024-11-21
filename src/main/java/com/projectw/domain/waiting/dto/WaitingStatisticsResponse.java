@@ -34,7 +34,7 @@ public sealed interface WaitingStatisticsResponse permits
     )  implements WaitingStatisticsResponse{
 
         public Daily(DailyWaitingStatistics s) {
-            this(s.getTotalWaitingCount(), s.getCompletedCount(), s.getCanceledCount(), s.getCompletedAverageWaitingTime(), s.getCanceledAverageWaitTime(), s.getCancellationRate());
+            this(s.getTotalWaitingCount(), s.getCompletedCount(), s.getCanceledCount(), s.getCompletedAverageWaitingTime(), s.getCanceledAverageWaitingTime(), s.getCancellationRate());
         }
 
         public static Daily emptyData() {
@@ -64,7 +64,7 @@ public sealed interface WaitingStatisticsResponse permits
             double canceledAverageWaitingTime
     )  implements WaitingStatisticsResponse {
         public Hourly(HourlyWaitingStatistics h) {
-            this(h.getHour(), h.getTotalWaitingCount(), h.getCompletedCount(), h.getCanceledCount(), h.getMaxWaitingTime(), h.getMinWaitingTime(), h.getCompletedAverageWaitingTime(), h.getCanceledAverageWaitTime());
+            this(h.getHour(), h.getTotalWaitingCount(), h.getCompletedCount(), h.getCanceledCount(), h.getMaxWaitingTime(), h.getMinWaitingTime(), h.getCompletedAverageWaitingTime(), h.getCanceledAverageWaitingTime());
         }
 
         public static Hourly emptyData(int hour) {
