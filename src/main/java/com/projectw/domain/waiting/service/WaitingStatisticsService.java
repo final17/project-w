@@ -95,7 +95,7 @@ public class WaitingStatisticsService {
             canceledCount += dailyWaitingStatistics.getCanceledCount();
 
             completedAverageWaitingTime += dailyWaitingStatistics.getCompletedAverageWaitingTime();
-            canceledAverageWaitingTime += dailyWaitingStatistics.getCanceledAverageWaitTime();
+            canceledAverageWaitingTime += dailyWaitingStatistics.getCanceledAverageWaitingTime();
         }
 
         double cancellationRate = totalWaitingCount > 0
