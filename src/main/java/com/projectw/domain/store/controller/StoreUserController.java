@@ -22,12 +22,12 @@ public class StoreUserController {
     private final StoreUserService storeUserService;
 
     @GetMapping
-    public ResponseEntity<SuccessResponse<Page<StoreResponse.Info>>> getAllStore(
+    public ResponseEntity<SuccessResponse<Page<StoreResponse.InfoLike>>> getAllStore(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<StoreResponse.Info> StoreResponseDtoList = storeUserService.getAllStore(pageable);
+        Page<StoreResponse.InfoLike> StoreResponseDtoList = storeUserService.getAllStore(pageable);
         return ResponseEntity.ok(SuccessResponse.of(StoreResponseDtoList));
     }
 
@@ -73,4 +73,13 @@ public class StoreUserController {
         Page<StoreResponse.Like> storeLikeResposeDto = storeUserService.getLikeStore(authUser, pageable);
         return ResponseEntity.ok(SuccessResponse.of(storeLikeResposeDto));
     }
+
+    @GetMapping("/{storeId}/storelike")
+    public ResponseEntity<SuccessResponse<StoreResponse.LikeCount>> getStoreLikeCount(
+            @PathVariable("storeId") Long storeId
+    ) {
+        StoreResponse.LikeCount likeCount = storeUserService.getStoreLikeCount(storeId);
+        return ResponseEntity.ok(SuccessResponse.of(likeCount));
+    }
+
 }

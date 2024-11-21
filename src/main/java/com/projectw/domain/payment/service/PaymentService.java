@@ -112,6 +112,7 @@ public class PaymentService {
                     .orderName(prepare.orderName())
                     .amount(prepare.amount())
                     .status(Status.PENDING)
+                    .idempotentKey(prepare.idempotentKey())
                     .user(user)
                     .store(store)
                     .build();
@@ -137,16 +138,13 @@ public class PaymentService {
         // 예약 가능한지 검증!
         Payment payment = paymentRepository.findByOrderIdAndStatus(susscess.orderId() , Status.PENDING).orElseThrow(() -> new PaymentNotFoundException(ResponseCode.PAYMENT_NOT_FOUND));
 
-        ResponseEntity<String> responseEntity;
-        String responseBody;
-        JsonNode jsonNode;
         ObjectMapper mapper = new ObjectMapper();
 
         RedirectView redirectView = new RedirectView();
 
-        responseEntity = tossPaymentsService.confirm(susscess.paymentKey() , susscess.orderId() , String.valueOf(susscess.amount()));
-        responseBody = responseEntity.getBody();
-        jsonNode = mapper.readTree(responseBody);
+        ResponseEntity<String> responseEntity = tossPaymentsService.confirm(susscess.paymentKey() , susscess.orderId() , String.valueOf(susscess.amount()));
+        String responseBody = responseEntity.getBody();
+        JsonNode jsonNode = mapper.readTree(responseBody);
         if (responseEntity.getStatusCode() == HttpStatus.OK) {
             confirmPayment(jsonNode);
 

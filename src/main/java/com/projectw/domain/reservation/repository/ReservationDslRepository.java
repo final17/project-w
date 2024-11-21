@@ -8,5 +8,5 @@ import org.springframework.data.domain.Pageable;
 public interface ReservationDslRepository {
     public Page<ReserveResponse.Infos> getOwnerReservations(Long userId, Long storeId, ReserveRequest.OwnerParameter parameter, Pageable pageable);
 
-    Page<ReserveResponse.Infos> getUserReservations(Long userId , ReserveRequest.Parameter parameter , Pageable pageable);
+    Page<ReserveResponse.Infos> getReservations(Long userId , ReserveRequest.Parameter parameter , Pageable pageable);
 }
