@@ -1,5 +1,6 @@
 package com.projectw.domain.settlement.entity;
 
+import com.projectw.common.entity.Timestamped;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -9,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "settlement_fees")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class SettlementFees {
+public class SettlementFees extends Timestamped {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

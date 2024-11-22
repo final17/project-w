@@ -1,5 +1,6 @@
 package com.projectw.domain.payment.entity;
 
+import com.projectw.common.entity.Timestamped;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -9,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "payment_fail")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class PaymentFail {
+public class PaymentFail extends Timestamped {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

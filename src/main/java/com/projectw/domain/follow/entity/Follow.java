@@ -1,5 +1,6 @@
 package com.projectw.domain.follow.entity;
 
+import com.projectw.common.entity.Timestamped;
 import com.projectw.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -8,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor
-public class Follow {
+public class Follow extends Timestamped {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -1,5 +1,6 @@
 package com.projectw.domain.waiting.entity;
 
+import com.projectw.common.entity.Timestamped;
 import com.projectw.domain.store.entity.Store;
 import com.projectw.domain.user.entity.User;
 import com.projectw.domain.waiting.enums.WaitingStatus;
@@ -14,7 +15,7 @@ import java.time.LocalDateTime;
 @Getter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class WaitingHistory{
+public class WaitingHistory extends Timestamped {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

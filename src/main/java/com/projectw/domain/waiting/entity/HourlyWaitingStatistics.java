@@ -1,5 +1,6 @@
 package com.projectw.domain.waiting.entity;
 
+import com.projectw.common.entity.Timestamped;
 import com.projectw.domain.store.entity.Store;
 import jakarta.persistence.*;
 import lombok.*;
@@ -12,7 +13,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Getter
 @Builder
-public class HourlyWaitingStatistics {
+public class HourlyWaitingStatistics extends Timestamped {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

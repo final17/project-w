@@ -1,5 +1,6 @@
 package com.projectw.domain.reservation.entity;
 
+import com.projectw.common.entity.Timestamped;
 import com.projectw.domain.menu.entity.Menu;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -10,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @Table(name = "reservation_menu")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ReservationMenu {
+public class ReservationMenu extends Timestamped {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

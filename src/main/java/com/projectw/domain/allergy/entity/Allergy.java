@@ -1,5 +1,6 @@
 package com.projectw.domain.allergy.entity;
 
+import com.projectw.common.entity.Timestamped;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -10,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor
-public class Allergy {
+public class Allergy extends Timestamped {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

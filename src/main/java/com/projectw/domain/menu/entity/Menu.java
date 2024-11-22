@@ -1,5 +1,6 @@
 package com.projectw.domain.menu.entity;
 
+import com.projectw.common.entity.Timestamped;
 import com.projectw.domain.allergy.entity.Allergy;
 import com.projectw.domain.store.entity.Store;
 import jakarta.persistence.*;
@@ -12,7 +13,7 @@ import java.util.Set;
 @Entity
 @Getter
 @NoArgsConstructor
-public class Menu {
+public class Menu extends Timestamped {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
